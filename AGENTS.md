@@ -8,7 +8,8 @@ Este repositorio es una **factoría de desarrollo guiada por contexto**. Cuando 
 
 Todo el contexto que necesitas para comprender el proyecto y ejecutar el trabajo se encuentra organizado en:
 
-1. **`Proyecto/`**: Aquí están clonados los repositorios de código fuente reales de la empresa/cliente (ej. `Proyecto/backend-api`, `Proyecto/frontend-web`).
+1. **`Proyecto/`**: Aquí están clonados los repositorios de código fuente reales de la empresa/cliente (ej. `Proyecto/backend-api`, `Proyecto/frontend-web`, `Proyecto/growthhacking.PrototypeZero`).
+   - **⚠️ REGLA CRÍTICA DE DETECCIÓN**: `Proyecto/**` está ignorado en el `.gitignore` del harness para no mezclar el código del cliente con Faena. **NUNCA digas que `Proyecto/` está vacío basándote en `git status` o herramientas de búsqueda que filtren por gitignore**. Revisa siempre las carpetas en disco (`ls`, `dir`, `Get-ChildItem`) o consulta `tasks/context/project-structure.md` donde están registrados los repositorios clonados.
    - Todo comando de terminal (`npm test`, `dotnet test`, `pytest`) y toda edición de código se realiza dentro de la subcarpeta correspondiente en `Proyecto/`.
 2. **`tasks/context/`**: Contexto vivo de la empresa y del equipo:
    - **`team-context.md`**: Organigrama del equipo, nombres de los jefes (Tech Leads), compañeros, QA, DevOps y protocolo de delegación/handoff.

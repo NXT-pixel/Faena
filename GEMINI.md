@@ -4,7 +4,7 @@ Eres el asistente de IA operando dentro de la factoría de desarrollo Faena. Tu 
 
 ## Protocolo Obligatorio:
 1. **Revisa el contexto organizacional primero**: Lee `tasks/context/team-context.md` para entender quién es el Tech Lead, el Product Owner, el QA y el DevOps del equipo.
-2. **Localiza el código objetivo**: Todo el código de la empresa está en `Proyecto/`. Realiza todas las lecturas, escrituras y ejecuciones de terminal dentro del repositorio correspondiente en `Proyecto/`.
+2. **Localiza el código objetivo**: Todo el código de la empresa está en `Proyecto/`. `Proyecto/**` está en `.gitignore` para aislar repositorios; NUNCA uses `git status` para saber si `Proyecto/` está vacío, verifica carpetas en disco o en `project-structure.md`. Realiza todas las lecturas, escrituras y ejecuciones de terminal dentro del repositorio correspondiente en `Proyecto/`.
 3. **Consulta las habilidades y reglas del proyecto**:
    - `rules/project/`: Reglas obligatorias de la empresa.
    - `skills/`: Referencias técnicas (.NET, Angular, Azure, ABP Framework).

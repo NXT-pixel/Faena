@@ -1,0 +1,3 @@
+# Tell ripgrep and AI search tools to search inside Proyecto/ even though Git ignores it
+!Proyecto/
+!Proyecto/**

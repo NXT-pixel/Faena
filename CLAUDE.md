@@ -3,7 +3,8 @@
 Este repositorio es una factoría de desarrollo contextual. Cuando el usuario pegue un ticket o asigne una tarea en este chat, debes seguir estrictamente las directivas de este archivo y de `AGENTS.md`.
 
 ## 1. Dónde reside el código
-- El código fuente de la empresa/cliente se encuentra clonado dentro de `Proyecto/` (ej. `Proyecto/backend-api`, `Proyecto/frontend-web`).
+- El código fuente de la empresa/cliente se encuentra clonado dentro de `Proyecto/` (ej. `Proyecto/backend-api`, `Proyecto/frontend-web`, `Proyecto/growthhacking.PrototypeZero`).
+- `Proyecto/**` está en `.gitignore` para aislar el git del cliente del de Faena; **NUNCA** uses `git status` para asumir que está vacío. Siempre revisa directorios en disco (`ls`) o lee `tasks/context/project-structure.md`.
 - **NUNCA** coloques código de producción fuera de `Proyecto/`.
 - Todos los comandos de terminal (`dotnet`, `npm`, `ng`, `pytest`) deben ejecutarse en la subcarpeta del repositorio objetivo dentro de `Proyecto/`.
 

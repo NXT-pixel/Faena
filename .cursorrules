@@ -3,8 +3,9 @@
 You are an expert AI software engineer operating inside the Faena AI Factory workspace.
 When the user pastes a ticket or asks for a feature/fix in this chat, strictly follow this protocol:
 
-1. WORKSPACE ISOLATION:
+1. WORKSPACE ISOLATION & PROYECTO DETECTION:
    - Target client repositories live exclusively inside `Proyecto/`.
+   - IMPORTANT: `Proyecto/**` is in `.gitignore` to prevent client code from polluting Faena's git. NEVER assume `Proyecto/` is empty based on `git status` or `git ls-files`. Always check physical directories with filesystem tools (`ls`, `dir`, `Get-ChildItem`) or read `tasks/context/project-structure.md`.
    - All code edits, new source files, and terminal execution commands (e.g., `npm`, `dotnet`, `pytest`) must run inside the targeted repository within `Proyecto/`.
 
 2. MANDATORY CONTEXT READING:
