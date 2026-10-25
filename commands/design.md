@@ -1,4 +1,4 @@
-﻿---
+---
 name: design
 description: Facilitates collaborative design conversations through clarifying questions, then creates comprehensive design documentation. Loads project context, explores requirements through dialogue, and produces implementation-ready design docs in tasks/ folder.
 agent: /agents/design/design-facilitator.md
@@ -376,7 +376,10 @@ Typical flow:
 8. Agent: Writes design document to tasks/design-{name}.md
 9. User: Reviews and may request changes
 10. Agent: Iterates on design as needed
-11. After approval: User runs `/update-context` to capture design in project context
+11. After approval: 
+    - Output next step for user:
+      > 👉 **Siguiente paso:** Arrastra al chat `@commands/create-trd.md tasks/design-{name}.md`
+    - User runs `/update-context` to capture design in project context
 
 ## Exit Conditions
 

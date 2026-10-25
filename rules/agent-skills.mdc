@@ -1,4 +1,4 @@
-﻿---
+---
 description: Index of all project-specific agent skills. Read the referenced SKILL.md before writing or reviewing code in the corresponding domain.
 alwaysApply: true
 ---
@@ -7,11 +7,9 @@ alwaysApply: true
 
 Domain skills live in two locations. **Before writing or reviewing code in a domain below, read the matching `SKILL.md` with the Read tool.**
 
-For **IAEmpresarial** product behavior (editions, vertical features, WhatsApp → AI → MCP), also read **`tasks/context/saas-multi-tenancy-and-features.md`**.
-
 ## ABP Framework skills (`skills/`)
 
-Primary references for this solution (ABP **10.3**, microservice template, **service-nolayer** hosts). Prefer these over the legacy `abp-microservice` copy under `agents/coding/skills/`.
+Primary references for ABP applications (ABP microservices, module architecture, and **service-nolayer** hosts).
 
 | Skill | Path | Use when… |
 |---|---|---|
@@ -24,8 +22,6 @@ Primary references for this solution (ABP **10.3**, microservice template, **ser
 | `abp-multitenancy` | `skills/abp-multitenancy/SKILL.md` | `IMultiTenant`, `CurrentTenant`, tenant resolution, data filters |
 | `abp-angular` | `skills/abp-angular/SKILL.md` | Angular UI, proxies, `ListService`, `ConfigStateService`, feature-gated routes |
 | `abp-cli` | `skills/abp-cli/SKILL.md` | `abp generate-proxy`, `install-libs`, Suite, module commands |
-
-**IAEmpresarial vertical gating:** combine `abp-infrastructure` (Features) + `abp-multitenancy` with **`tasks/context/saas-multi-tenancy-and-features.md`** — child tenants get one of `Gym.Enabled`, `Store.Enabled`, `Restaurant.Enabled`, `BarberShop.Enabled` from editions in `services/saas`.
 
 ## Backend & architecture skills (`agents/coding/skills/`)
 

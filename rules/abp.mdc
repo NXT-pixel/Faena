@@ -1,5 +1,6 @@
 ---
-alwaysApply: true
+description: Reglas de arquitectura y desarrollo para proyectos y módulos basados en ABP Framework
+alwaysApply: false
 ---
 # ABP Framework – Cursor Rules
 # Scope: ABP Framework repository (abpframework/abp) — for developing ABP itself, not ABP-based applications.

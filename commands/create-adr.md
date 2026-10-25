@@ -1,4 +1,4 @@
-Create an ADR markdown file in `/docs/tech/ADRs` that is based on the template in this document that starts after the text `--- ADR Template Starts Here ---`. The file name should follow the pattern in the `FILE NAME, **IMPORTANT**` section below.
+Create an ADR markdown file in `docs/tech/ADRs` (create the directory if it does not exist) that is based on the template in this document that starts after the text `--- ADR Template Starts Here ---`. The file name should follow the pattern in the `FILE NAME, **IMPORTANT**` section below.
 
 If the content of the ADR isn't clear, ask the user to answer questions one at a time until it is.
 

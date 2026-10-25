@@ -1,4 +1,4 @@
-﻿---
+---
 name: load-context
 description: Loads and synthesizes project context from tasks/context/ for design discussions. Reads all context files in priority order and provides a comprehensive project understanding summary.
 agent: /agents/design/project-context-analyst.md
@@ -53,23 +53,25 @@ Report any issues:
 
 Load context files in priority order optimized for design discussions:
 
-**Priority 1 - Vision & Product (load first):**
-1. `project-vision.md` - Long-term direction and strategic goals
-2. `project-brief.md` - Core purpose and project scope
-3. `product-context.md` - User needs, personas, and requirements
+**Priority 1 - Team & Vision (load first):**
+1. `team-context.md` - Team hierarchy, Tech Lead, QA, DevOps, colleagues and delegation protocol
+2. `project-vision.md` - Long-term direction and strategic goals
+3. `project-brief.md` - Core purpose and project scope
+4. `product-context.md` - User needs, personas, and requirements
 
-**Priority 2 - Current State (load second):**
-4. `progress.md` - Current status, recent work, and immediate focus
-5. `project-overview.md` - Feature list, maturity, and capabilities
+**Priority 2 - Current State & Memory (load second):**
+5. `progress.md` - Current status, recent work, and immediate focus
+6. `learnings.md` - Continuous memory, gotchas, conventions and previous ticket insights
+7. `project-overview.md` - Feature list, maturity, and capabilities
 
 **Priority 3 - Technical Foundation (load third):**
-6. `tech-context.md` - Technology stack, dependencies, and tools
-7. `system-patterns.md` - Architecture patterns and design principles
-8. `project-structure.md` - Directory organization and file layout
+8. `tech-context.md` - Technology stack, dependencies, and tools
+9. `system-patterns.md` - Architecture patterns and design principles
+10. `project-structure.md` - Directory organization, repos in Proyecto/, and file layout
 
 **Priority 4 - Standards (load last):**
-9. `project-style-guide.md` - Coding conventions and patterns
-10. `common-imports.md` - Import patterns and public APIs
+11. `project-style-guide.md` - Coding conventions and company standards
+12. `common-imports.md` - Import patterns and public APIs
 
 ### 2. Validation During Loading
 
@@ -114,10 +116,10 @@ git branch --show-current 2>/dev/null
 git status --short 2>/dev/null
 ```
 
-**Project Root Files:**
-- Read `README.md` first paragraph if exists (additional context)
-- Check for `.env.example` (environment requirements)
-- For **PrototypeZero**: note Docker layout — `etc/docker/containers/*.yml` (dependencies), `docker/docker-compose.apps.yml` (all hosts + Angular), and the developer entry `.\.cursor\scripts\start-env.ps1` (see `scripts/README.md`); a root `docker-compose.yml` may be absent
+**Project Structure & Repositories in Proyecto/:**
+- Inspect `Proyecto/` to list all cloned client repositories (e.g. `Proyecto/backend-api`, `Proyecto/frontend-web`)
+- Check for `.env.example`, `docker-compose.yml` or container definitions inside `Proyecto/<repo>`
+- Read `README.md` in `Proyecto/<repo>` if available for local execution instructions
 
 ### 5. Error Recovery
 

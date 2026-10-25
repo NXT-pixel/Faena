@@ -1,17 +1,11 @@
-﻿---
-description: PrototypeZero full local stack in Docker (first-time and rebuild)
-alwaysApply: true
+---
+description: Directrices para entorno de desarrollo local con Docker en los repositorios de Proyecto/
+alwaysApply: false
 ---
 
-# Local environment (PrototypeZero + Docker)
+# Entorno Local con Docker (Proyecto/)
 
-- **Full stack (infrastructure, .NET publish in a container, all app services + Angular):** from the repo root run `.\.cursor\scripts\start-env.ps1` (PowerShell) or `bash scripts/start-env.sh` (Bash). That runs `scripts/start-dev-environment.*` and then `docker/docker-compose.apps.yml`. Only **Docker Desktop** (or Engine + Compose) is required; no local .NET/Node/ABP CLI for that path. See **`scripts/README.md`** and **`scripts/README.md`**.
-
-- **After changing** service code: the same script or re-run `docker compose` from **`docker/`** (often with `publish` still needed—use `-SkipInfra` when only apps changed). The **`scripts/publish-all-docker.sh`** (and **`docker/publish-all.ps1`** with local SDK) must run before app images pick up new binaries if Dockerfiles `COPY` from `bin/.../publish`.
-
-- **Angular Docker image** builds with `build:docker` and copies `dist/.../browser` into nginx (**`apps/angular/Dockerfile`**, `environment.docker.ts`).
-
-- **OpenIddict** uses **`openiddict.pfx`** in `apps/auth-server/PrototypeZero.AuthServer/`. The start script creates it in an SDK container if missing.
-
-- **Stop:** `.\scripts\stop-dev-environment.ps1` (add `-StopInfra` to tear down `etc/docker` too).
-
+- **Aislamiento**: Cualquier contenedor o `docker-compose.yml` debe ejecutarse dentro de la subcarpeta del repositorio correspondiente en `Proyecto/<nombre-del-repo>/`.
+- **Detección**: Antes de levantar servicios, consulta el `README.md` o la documentación de despliegue específica del repositorio en `Proyecto/`.
+- **Variables de Entorno**: Verifica si el repositorio requiere un archivo `.env` a partir de un `.env.example`.
+- **Detener servicios**: Asegúrate de detener los contenedores una vez terminadas las pruebas para no consumir recursos del sistema.
