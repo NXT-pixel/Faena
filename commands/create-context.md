@@ -1,4 +1,4 @@
-﻿---
+---
 name: create-context
 description: Generates comprehensive project context documentation in tasks/context/ by analyzing the codebase, detecting technologies, and creating 9 context files with real timestamps.
 agent: /agents/design/project-context-analyst.md
@@ -23,16 +23,18 @@ Before proceeding, complete these validation steps silently (don't report progre
   - Count existing files: `ls -1 tasks/context/*.md 2>/dev/null | wc -l`
   - Ask user: "⚠️ Found {count} existing context files. Overwrite all context? (yes/no)"
   - Only proceed with explicit 'yes' confirmation
+  - **CRITICAL**: Never overwrite or delete `tasks/context/team-context.md` or `tasks/context/learnings.md` as they store essential team hierarchy and accumulated organizational memory.
   - If user says no, suggest: "Back up existing files or update them individually"
 
-### 2. Project Type Detection
-- Check for project indicators:
-  - Node.js: `test -f package.json && echo "Node.js project detected"`
-  - Python: `test -f requirements.txt || test -f pyproject.toml && echo "Python project detected"`
-  - Rust: `test -f Cargo.toml && echo "Rust project detected"`
-  - Go: `test -f go.mod && echo "Go project detected"`
-- Run: `git status 2>/dev/null` to confirm this is a git repository
-- If not a git repo, ask: "⚠️ Not a git repository. Continue anyway? (yes/no)"
+### 2. Project Type Detection in Proyecto/
+- In Faena, the client code lives in `Proyecto/`.
+- Inspect `Proyecto/` to detect cloned repositories:
+  - Node.js / Angular / React / Vue: `package.json` inside `Proyecto/`
+  - .NET / C#: `*.csproj` or `*.sln` inside `Proyecto/`
+  - Python: `requirements.txt` or `pyproject.toml` inside `Proyecto/`
+  - Rust: `Cargo.toml` inside `Proyecto/`
+  - Go: `go.mod` inside `Proyecto/`
+
 
 ### 3. Directory Creation
 - If `tasks/` doesn't exist, create it: `mkdir -p tasks/context/`
