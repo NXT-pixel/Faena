@@ -64,12 +64,57 @@ Abre [`tasks/context/team-context.md`](tasks/context/team-context.md) y anota lo
 - **QA**: Nombre de tu tester asignado (para handoffs de pruebas).
 - **DevOps**: Nombre del encargado de infraestructura (para secretos y variables).
 
-### Paso 3: Abrir tu chat de IA y pegar el ticket
-Abre la carpeta en tu editor de IA favorito (**Cursor**, **Claude Code**, **Antigravity**, etc.) y en el chat simplemente escribe:
+### Paso 3: El Flujo por Comandos Arrastrables (Drag & Drop en el Chat)
 
-> *"Trabajemos en este ticket: [Pega aquí el requerimiento o la historia de Jira/Azure DevOps]"*
+El flujo de trabajo está diseñado para ser 100% interactivo mediante el arrastre de comandos markdown (`@commands/...`) directamente a tu chat:
 
-La IA leerá automáticamente [`AGENTS.md`](AGENTS.md), [`CLAUDE.md`](CLAUDE.md), [`GEMINI.md`](GEMINI.md) o [`.cursorrules`](.cursorrules), entenderá el organigrama de la empresa, localizará los repositorios en `Proyecto/` y desarrollará la solución paso a paso.
+```mermaid
+flowchart LR
+    C1["1️⃣ Arrastra @commands/ticket.md\n+ Pegas el ticket"] --> O1["tasks/design-nombre.md\n(Requerimientos)"]
+    O1 --> C2["2️⃣ Arrastra @commands/create-trd.md\n+ tasks/design-nombre.md"]
+    C2 --> O2["tasks/task-nombre/trd-nombre.md\n+ test-spec-nombre.md\n(Arquitectura & Handoffs)"]
+    O2 --> C3["3️⃣ Arrastra @commands/create-tasks.md\n+ tasks/task-nombre/trd.md"]
+    C3 --> O3["task01-setup, task02-red, task03-green\n+ README.md (Checklist)"]
+    O3 --> C4["4️⃣ Arrastra @task01, @task02...\n(Ejecución TDD en Proyecto/)"]
+    C4 --> O4["5️⃣ Security Review\n+ Handoff listo para QA"]
+```
+
+#### 1. Crear los Requerimientos desde el Ticket
+Arrastra al chat el comando de intake y pega el texto del ticket (Jira, DevOps, Slack):
+```markdown
+@commands/ticket.md
+Ticket: #4321 - Implementar autenticación JWT con Refresh Tokens en el portal y backend
+```
+- **Qué hace la IA**: Lee `tasks/context/team-context.md`, identifica qué repositorio en `Proyecto/` será afectado y genera el documento de alcance en `tasks/design-<nombre>.md`.
+
+#### 2. Generar el TRD (Requerimientos Técnicos) y Test Spec
+Arrastra al chat el comando para crear las especificaciones técnicas:
+```markdown
+@commands/create-trd.md tasks/design-<nombre>.md
+```
+- **Qué hace la IA**: Diseña los diagramas de arquitectura Mermaid, define responsabilidades de módulos en `Proyecto/`, especifica los tests Given-When-Then y genera las secciones de **QA Handoff** y **DevOps Handoff** para tu equipo. Crea `tasks/task-<nombre>/trd-<nombre>.md` y `test-spec-<nombre>.md`.
+
+#### 3. Generar las Tareas Atómicas de Implementación
+Arrastra al chat el comando para crear el desglose TDD:
+```markdown
+@commands/create-tasks.md tasks/task-<nombre>/trd-<nombre>.md
+```
+- **Qué hace la IA**: Crea la lista ordenada de tareas atómicas (`task01-setup-*.md`, `task02-red-*.md`, `task03-green-*.md`) y un `README.md` con casillas de verificación (`- [ ]`).
+
+#### 4. Ejecutar las Tareas una a una (TDD en `Proyecto/`)
+Arrastra cada archivo de tarea secuencialmente al chat:
+```markdown
+@tasks/task-<nombre>/task01-setup-...md
+```
+- **Fase RED**: La IA escribe los tests en `Proyecto/` y corre el comando en terminal (`npm test`, `dotnet test`) verificando que fallen por la causa esperada.
+- **Fase GREEN**: La IA implementa la solución en `Proyecto/`, corre los tests en terminal hasta que pasen todos y valida compilación/linter.
+- La IA marca automáticamente `[x]` en el `README.md`.
+
+#### 5. Auditoría de Seguridad y Entrega para QA
+Al completar la última tarea:
+- La IA audita el `git diff` con el rol de `security-reviewer.md`.
+- Registra descubrimientos en `tasks/context/learnings.md`.
+- Genera el reporte final de entrega con endpoints y payloads listo para que tu tester de QA certifique el ticket.
 
 ---
 

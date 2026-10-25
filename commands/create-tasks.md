@@ -1,4 +1,4 @@
-﻿---
+---
 name: create-tasks
 description: Generates RED, GREEN, and VERIFY phase task files from an approved TRD. Auto-discovers coding agents and creates folder-based implementation tasks with strict phase separation. Requires TRD path as input.
 model: sonnet
@@ -716,12 +716,10 @@ Feature 2:
 
 Total: [N] tasks, estimated [X-Y hours]
 
-README: README.md
+README: tasks/task-[feature-name]/README.md
 
-Next steps:
-1. Review task files for clarity
-2. Execute tasks in order
-3. Mark tasks complete in README checklist
+👉 **Siguiente paso:** Para comenzar la implementación en `Proyecto/`, arrastra la primera tarea al chat:
+`@tasks/task-[feature-name]/task01-setup-[name].md` (o `@tasks/task-[feature-name]/task02-red-[module].md`)
 ```
 
 ## Task Sizing Guidelines

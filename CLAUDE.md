@@ -14,10 +14,9 @@ Antes de proponer una solución o escribir código, consulta obligatoriamente:
 - `rules/project/`: Estándares de arquitectura obligatorios de esta empresa.
 - `skills/`: Habilidades especializadas (Angular en `skills/angular-developer/`, .NET en `skills/dotnet-patterns/` y `skills/csharp-testing/`, ABP en `skills/abp-*/`, Azure en `skills/azure-function/`).
 
-## 3. Protocolo TDD al recibir un Ticket
-1. **Comprensión**: Identifica al Tech Lead, QA y DevOps mencionados en `team-context.md`.
-2. **Arquitectura (TRD)**: Diseña la solución y crea `tasks/task-<nombre>/trd-<nombre>.md` y `test-spec-<nombre>.md`. Incluye la sección de handoff para QA y DevOps.
-3. **Tareas TDD**: Desglosa en tareas atómicas `task01-setup`, `task02-red`, `task03-green` con `README.md` de seguimiento.
-4. **Ejecución**: Escribe tests primero (RED) -> Ejecuta y confirma que fallen -> Implementa código (GREEN) -> Ejecuta hasta pasar -> Corre quality gates (VERIFY).
-5. **Auditoría de Seguridad (ECC Gate)**: Revisa el `git diff` con el criterio de `security-reviewer.md` para evitar secretos o vulnerabilidades.
-6. **Memoria**: Guarda las lecciones aprendidas en `tasks/context/learnings.md`.
+## 3. Protocolo de Comandos por Chat (Drag & Drop)
+1. **Paso 1 (`@commands/ticket.md`)**: El usuario arrastra el comando y pega el ticket. Lees `tasks/context/team-context.md`, identificas el repo en `Proyecto/` y creas `tasks/design-<nombre>.md`.
+2. **Paso 2 (`@commands/create-trd.md tasks/design-<nombre>.md`)**: Diseñas la arquitectura y creas `tasks/task-<nombre>/trd-<nombre>.md` y `test-spec-<nombre>.md` con las secciones de handoff para QA y DevOps.
+3. **Paso 3 (`@commands/create-tasks.md tasks/task-<nombre>/trd-<nombre>.md`)**: Desglosas en tareas atómicas `task01-setup`, `task02-red`, `task03-green` con `README.md` de seguimiento con checkboxes.
+4. **Paso 4 (`@tasks/task-<nombre>/taskNN-...`)**: Ejecutas cada tarea en `Proyecto/`. En RED escribes tests y confirmas que fallen en terminal. En GREEN implementas hasta que pasen todos y validas lint/build. Actualizas el checkbox en `README.md`.
+5. **Paso 5 (Auditoría ECC Gate & Handoff)**: Revisas el `git diff` con el criterio de `security-reviewer.md`, registras lecciones en `tasks/context/learnings.md` y entregas el resumen listo para el tester QA.

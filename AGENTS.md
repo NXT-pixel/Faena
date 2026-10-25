@@ -32,26 +32,27 @@ Todo el contexto que necesitas para comprender el proyecto y ejecutar el trabajo
 
 ---
 
-## ⚡ EL PROTOCOLO OBLIGATORIO CUANDO EL USUARIO PEGA UN TICKET
+## ⚡ EL PROTOCOLO OBLIGATORIO POR COMANDOS (DRAG & DROP EN EL CHAT)
 
-Cuando el usuario diga *"Aquí está este ticket"*, pegue un requerimiento o te asigne una tarea:
+El usuario trabajará contigo arrastrando comandos de `/commands/` directamente a este chat de texto:
 
 ```mermaid
 flowchart TD
-    T["🎫 Ticket del Usuario"] --> P1["Paso 1: Lectura de Contexto\n(team-context.md + Proyecto/ + rules/)"]
-    P1 --> P2["Paso 2: Arquitectura y TRD\n(Adopta software-architect / dotnet-architect)"]
-    P2 --> P3["Paso 3: Desglose TDD\n(RED -> GREEN -> VERIFY en tasks/task-slug/)"]
-    P3 --> P4["Paso 4: Ejecución TDD en Proyecto/\n(Herramientas de edición y terminal)"]
-    P4 --> P5["Paso 5: Review de Seguridad y Entrega\n(security-reviewer + Handoff para QA)"]
+    T["1️⃣ Arrastra @commands/ticket.md + Pega Ticket"] --> P1["Genera tasks/design-nombre.md\n(Requerimientos + team-context.md)"]
+    P1 --> P2["2️⃣ Arrastra @commands/create-trd.md tasks/design-nombre.md\n(Genera trd-nombre.md + test-spec-nombre.md)"]
+    P2 --> P3["3️⃣ Arrastra @commands/create-tasks.md tasks/task-nombre/trd-nombre.md\n(Genera task01-setup, task02-red, task03-green + README.md)"]
+    P3 --> P4["4️⃣ Arrastra @tasks/task-nombre/task01-...md\n(Ejecución TDD en Proyecto/)"]
+    P4 --> P5["5️⃣ Security Review & Handoff para QA\n(Audita git diff + learnings.md)"]
 ```
 
-### Paso 1: Carga y Validación de Contexto
+### Paso 1: `@commands/ticket.md` (Requerimientos desde el Ticket)
 1. **Identifica a las personas**: Lee `tasks/context/team-context.md`. Identifica si el ticket menciona acuerdos con el Tech Lead (ej. David), compañeros de frontend/backend, o delegación hacia QA (ej. Laura) o DevOps (ej. Sofía).
 2. **Identifica el repositorio afectado**: Mira dentro de `Proyecto/` para determinar en cuál repositorio debe implementarse la solución.
 3. **Revisa skills necesarias**: Si el ticket requiere una tecnología que no esté en `skills/` (ej. Django, Vue, Kubernetes), búscalas en el repositorio de ECC local (`C:\Users\santi\Documents\GitHub\ECC\skills\`) o remoto (`https://github.com/affaan-m/ECC`) y aplica sus mejores prácticas.
+4. **Genera**: `tasks/design-<nombre-del-ticket>.md`.
 
-### Paso 2: Generar el TRD (Documento de Requerimientos Técnicos)
-Crea una carpeta `tasks/task-<nombre-del-ticket>/` y genera:
+### Paso 2: `@commands/create-trd.md` (Documento de Requerimientos Técnicos & Test Spec)
+Genera dentro de `tasks/task-<nombre-del-ticket>/`:
 - **`trd-<nombre>.md`**:
   - Resumen del problema y alcance.
   - Diagrama Mermaid de arquitectura y componentes.
@@ -61,7 +62,7 @@ Crea una carpeta `tasks/task-<nombre-del-ticket>/` y genera:
     - **DevOps Handoff**: Variables de entorno, secretos o infraestructura requerida.
 - **`test-spec-<nombre>.md`**: Especificación de pruebas Given-When-Then con casos de éxito y de borde.
 
-### Paso 3: Desglose Atómico de Tareas TDD (RED-GREEN-VERIFY)
+### Paso 3: `@commands/create-tasks.md` (Desglose Atómico de Tareas TDD)
 En la misma carpeta `tasks/task-<nombre-del-ticket>/`, genera los archivos de tareas y un `README.md` con casillas de progreso:
 - `task01-setup-...md` (Scaffolding o dependencias si aplica)
 - `task02-red-...md` (Escribir pruebas que definan el comportamiento; DEBEN fallar primero)

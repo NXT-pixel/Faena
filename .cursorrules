@@ -22,3 +22,10 @@ When the user pastes a ticket or asks for a feature/fix in this chat, strictly f
 4. CODE REVIEW & SECURITY:
    - Review git diffs against OWASP Top 10 and secret leaks using `agents/coding/security-reviewer.md`.
    - Record newly discovered project patterns in `tasks/context/learnings.md`.
+
+5. CHAT COMMAND DRAG & DROP FLOW:
+   - Step 1: User drags `@commands/ticket.md` + pastes ticket -> Generates `tasks/design-<name>.md`.
+   - Step 2: User drags `@commands/create-trd.md tasks/design-<name>.md` -> Generates `trd-<name>.md` and `test-spec-<name>.md`.
+   - Step 3: User drags `@commands/create-tasks.md tasks/task-<name>/trd-<name>.md` -> Generates atomic task files (`task01-setup`, `task02-red`, `task03-green`) and `README.md`.
+   - Step 4: User drags `@tasks/task-<name>/taskNN-...` -> Executes that specific task in `Proyecto/` and marks checkbox.
+
