@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "faena"
+version = "1.0.0"
+description = "Autonomous AI Factory for End-to-End Ticket Implementation across any LLM Provider."
+readme = "README.md"
+requires-python = ">=3.9"
+authors = [
+  { name = "Faena Team" }
+]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Topic :: Software Development :: Build Tools",
+  "Topic :: Software Development :: Testing",
+]
+
+[project.scripts]
+faena = "faena.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["faena*"]

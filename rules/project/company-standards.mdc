@@ -1,0 +1,23 @@
+---
+description: Reglas y estándares obligatorios de desarrollo para esta empresa
+globs: Proyecto/**/*
+alwaysApply: true
+---
+# Estándares de Ingeniería de la Empresa
+
+Estas reglas aplican a todos los repositorios dentro del directorio `Proyecto/`.
+
+## 1. Convenciones de Arquitectura
+- Separación clara entre capas de dominio, infraestructura y presentación.
+- Todo endpoint de API debe validar parámetros de entrada usando schemas/DTOs.
+- No colocar lógica de negocio directamente dentro de controladores o rutas HTTP.
+
+## 2. Estándares de Pruebas (TDD)
+- Todo nuevo feature o corrección de bug DEBE incluir pruebas unitarias o de integración.
+- Los tests deben seguir la estructura Arrange-Act-Assert (o Given-When-Then).
+- No hacer mock indiscriminado de tipos internos de dominio.
+
+## 3. Manejo de Errores y Logging
+- Utilizar códigos de error estructurados o excepciones específicas de dominio.
+- Nunca silenciar excepciones con bloques `try/catch` vacíos.
+- No imprimir credenciales ni datos sensibles en logs.

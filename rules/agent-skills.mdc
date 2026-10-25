@@ -1,0 +1,80 @@
+﻿---
+description: Index of all project-specific agent skills. Read the referenced SKILL.md before writing or reviewing code in the corresponding domain.
+alwaysApply: true
+---
+
+# Project Agent Skills
+
+Domain skills live in two locations. **Before writing or reviewing code in a domain below, read the matching `SKILL.md` with the Read tool.**
+
+For **IAEmpresarial** product behavior (editions, vertical features, WhatsApp → AI → MCP), also read **`tasks/context/saas-multi-tenancy-and-features.md`**.
+
+## ABP Framework skills (`skills/`)
+
+Primary references for this solution (ABP **10.3**, microservice template, **service-nolayer** hosts). Prefer these over the legacy `abp-microservice` copy under `agents/coding/skills/`.
+
+| Skill | Path | Use when… |
+|---|---|---|
+| `abp-core` | `skills/abp-core/SKILL.md` | Module system, DI, base classes, `BusinessException`, localization, async conventions |
+| `abp-microservices` | `skills/abp-microservices/SKILL.MD` | Microservice layout, integration services, distributed events, outbox/inbox, gateways, inter-service HTTP |
+| `abp-no-layers` | `skills/abp-no-layers/SKILL.md` | **Service-nolayer** structure used by `services/*` (single host + Contracts) |
+| `abp-ef-core` | `skills/abp-ef-core/SKILL.md` | DbContext, repositories, migrations, entity configuration |
+| `abp-authorization` | `skills/abp-authorization/SKILL.md` | Permissions, `[Authorize]`, policies, `ICurrentUser` |
+| `abp-infrastructure` | `skills/abp-infrastructure/SKILL.md` | Settings, **features**, caching, local/distributed event bus, background jobs |
+| `abp-multitenancy` | `skills/abp-multitenancy/SKILL.md` | `IMultiTenant`, `CurrentTenant`, tenant resolution, data filters |
+| `abp-angular` | `skills/abp-angular/SKILL.md` | Angular UI, proxies, `ListService`, `ConfigStateService`, feature-gated routes |
+| `abp-cli` | `skills/abp-cli/SKILL.md` | `abp generate-proxy`, `install-libs`, Suite, module commands |
+
+**IAEmpresarial vertical gating:** combine `abp-infrastructure` (Features) + `abp-multitenancy` with **`tasks/context/saas-multi-tenancy-and-features.md`** — child tenants get one of `Gym.Enabled`, `Store.Enabled`, `Restaurant.Enabled`, `BarberShop.Enabled` from editions in `services/saas`.
+
+## Backend & architecture skills (`agents/coding/skills/`)
+
+| Skill | Path | Use when… |
+|---|---|---|
+| `azure-function` | `agents/coding/skills/azure-function/SKILL.md` | Azure Functions (.NET isolated worker), triggers, Durable Functions |
+| `masstransit` | `agents/coding/skills/masstransit/SKILL.md` | Cross-service messaging, consumers, sagas, RabbitMQ/Azure Service Bus |
+| `cqrs-implementation` | `agents/coding/skills/cqrs-implementation/SKILL.md` | Read/write separation, command/query handlers, event sourcing |
+| `event-store-design` | `agents/coding/skills/event-store-design/SKILL.md` | Event store infrastructure and persistence choices |
+| `microservices-patterns` | `agents/coding/skills/microservices-patterns/SKILL.md` | Service boundaries, resilience, distributed systems |
+| `architecture-patterns` | `agents/coding/skills/architecture-patterns/SKILL.md` | Clean/hexagonal architecture, DDD layering |
+| `api-design-principles` | `agents/coding/skills/api-design-principles/SKILL.md` | REST/GraphQL API design and review |
+| `saga-orchestration` | `agents/coding/skills/saga-orchestration/SKILL.md` | Sagas, compensating transactions, long-running workflows |
+| `projection-patterns` | `agents/coding/skills/projection-patterns/SKILL.md` | CQRS read models, materialized views |
+| `workflow-orchestration-patterns` | `agents/coding/skills/workflow-orchestration-patterns/SKILL.md` | Temporal durable workflows |
+| `temporal-python-testing` | `agents/coding/skills/temporal-python-testing/SKILL.md` | Temporal workflow tests (pytest, replay) |
+| `python-backend-development` | `agents/coding/skills/python-backend-development/SKILL.md` | FastAPI, SQLAlchemy, pytest (`services/sdr-system`) |
+
+## .NET / C# skills
+
+| Skill | Path | Use when… |
+|---|---|---|
+| `dotnet-backend-patterns` | `agents/dotnet-contribution/skills/dotnet-backend-patterns/SKILL.md` | C#/.NET async, DI, EF Core, caching, xUnit |
+
+## Database design skills
+
+| Skill | Path | Use when… |
+|---|---|---|
+| `mssql-table-design` | `agents/database-design/skills/mssql/SKILL.md` | SQL Server schema, indexing, performance |
+| `elasticsearch-search-design` | `agents/database-design/skills/elasticsearch/SKILL.md` | Elasticsearch indexes, search, relevance |
+
+## QA skills
+
+| Skill | Path | Use when… |
+|---|---|---|
+| `test-plan-design` | `agents/qa-development/skills/test-plan-design/SKILL.md` | Risk-based test plans |
+| `bug-reporting-standards` | `agents/qa-development/skills/bug-reporting-standards/SKILL.md` | Defect reports and triage |
+| `regression-strategy` | `agents/qa-development/skills/regression-strategy/SKILL.md` | Regression and change-impact |
+| `test-data-management` | `agents/qa-development/skills/test-data-management/SKILL.md` | Test data preparation |
+| `release-signoff-checklist` | `agents/qa-development/skills/release-signoff-checklist/SKILL.md` | Release go/no-go |
+
+## Project context (`tasks/context/`)
+
+| Document | Use when… |
+|---|---|
+| `saas-multi-tenancy-and-features.md` | Tenants, editions, vertical features, WhatsApp/AI/MCP/payment flow |
+| `project-overview.md` | Service map and feature areas |
+| `system-patterns.md` | Architecture, MCP, events, Angular patterns |
+| `product-context.md` | Users, workflows, capabilities |
+| `project-structure.md` | Repo layout and naming |
+| `tech-context.md` | Stack versions, Docker, build commands |
+

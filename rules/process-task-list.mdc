@@ -1,0 +1,240 @@
+﻿---
+description: used to implement the code for a markdown file in the `/tasks` folder that is prefixed with `tasks-`.
+globs: tasks/**/tasks-*.md
+alwaysApply: false
+---
+# Task List Management
+
+Guidelines for managing task lists in markdown files to track progress on completing an ERD
+
+## Task Implementation
+
+### Implementation Protocol
+- **Follow Technical Requirements:** All implementation must follow the architecture patterns, technologies, and approaches already established in the Technical Requirements section of the task file
+- **One sub-task at a time:** Do **NOT** start the next sub‑task until you ask the user for permission and they say "yes" or "y"
+- **MANDATORY TDD Cycle Compliance:** 
+  - **RED Phase (Test sub-tasks)**: Write test → Run test (MUST fail) → Mark complete → Wait for approval
+  - **GREEN Phase (Implementation sub-tasks)**: Implement code → Run tests (MUST pass) → Run quality gate → Mark complete → Wait for approval
+  - **PATTERN ENFORCEMENT**: NEVER implement code without a test sub-task first. AI agents MUST follow X.1 Test → X.2 Implementation → X.3 Quality Gate pattern
+- **Follow established patterns:** Implement according to the architecture patterns identified in Technical Requirements
+- **Document discoveries:** Add strategic documentation tasks for architectural decisions or deviations from established patterns (follow minimal documentation philosophy from `.cursorrules`)
+- **Maintain doc accuracy:** Add update tasks when code changes invalidate existing documentation
+
+### TDD Cycle Enforcement - Enhanced
+
+**MANDATORY TDD Pattern: X.1 → X.2 → X.3**
+1. **X.1 Test Sub-Task (RED Phase)**:
+   - Write test file first
+   - IMMEDIATELY run test: `npm test -- [path/to/test/file]` or `npx jest [path/to/test/file]`
+   - Test MUST fail initially (confirms test validity)
+   - Mark sub-task [x] and wait for approval
+
+2. **X.2 Implementation Sub-Task (GREEN Phase)**:
+   - Implement code to make tests pass
+   - Run ALL tests that depend on your code
+   - Run quality gate: `npm run verify:quick` 
+   - Mark sub-task [x] and wait for approval
+
+3. **X.3 Quality Gate Sub-Task (VERIFY Phase)**:
+   - Final verification of the complete feature
+   - Mark sub-task [x] and proceed to next parent task
+
+**Enforcement Rules:**
+- **NEVER start X.2 without completing X.1 first**
+- **NEVER substitute individual commands for quality gates**
+- **STOP immediately if tests don't behave as expected**
+
+### Task Interdependency Protocol
+When implementing a task that creates code imported by previous tasks:
+1. **Identify dependent tests**: Search for test files that import from your implementation path
+2. **Run dependent tests**: Execute all tests that depend on your code (even if they're from previous tasks)
+3. **Expected behavior**: Tests may still fail if they depend on future implementations, but they should fail for the RIGHT reasons (missing future code, not missing current code)
+4. **Document test status**: Note which tests pass vs. fail and explain why
+### Quality Gate Protocol
+
+#### Pre-Quality Gate Verification (MANDATORY)
+**Before running any quality gate, MUST verify script availability:**
+
+1. **Verify working directory**: Ensure you're in correct workspace context
+2. **Test script exists**: Run `npm run verify:quick --help` or check the "scripts" section in package.json to verify the script exists
+3. **If script missing**: STOP immediately, investigate workspace structure, resolve before proceeding
+4. **Directory guidance**: 
+   - Monorepo quality gates typically run from **root directory**
+   - Individual workspace gates run from **workspace directory** 
+   - When in doubt, check root package.json for script definitions
+
+#### Universal Completion Rule (ALL Task Types)
+**Every sub-task follows this simple pattern:**
+
+1. **Do the work** (write tests, implement code, create schemas, etc.)
+2. **Complete Pre-Quality Gate Verification** (above)
+3. **Run quality gate**: `npm run verify:quick`
+4. **If fails**: Fix errors → Return to step 3
+5. **When passes**: Mark task complete
+
+#### Additional Verification by Task Type
+- **Test tasks**: Also run the test to verify it fails as expected (TDD Red)
+- **Implementation tasks**: Also run dependent tests and verify they pass (TDD Green)
+- **Schema/Type tasks**: Verify dependent files still compile
+
+#### Recovery When Quality Gate Fails
+1. **First, re-verify script availability** using Pre-Quality Gate Verification steps
+2. Check specific errors (lint, type-check, tests)
+3. Fix using individual commands for debugging
+4. **Always re-run `npm run verify:quick` after fixes**
+5. Repeat until it passes
+
+#### Parent Task Verification
+- **Full Verification:** Before marking parent tasks complete, run:
+  ```bash
+  npm run verify  # Standard gate (lint + type-check + unit tests) for task completion
+  ```
+- **Complete Verification:** For final integration testing, run:
+  ```bash
+  npm run verify:full  # Complete verification (includes E2E tests) for final integration
+  ```
+
+
+
+## Completion Protocols (Two Different Types)
+
+### Protocol 1: Sub-Task Completion
+**MANDATORY AFTER EVERY SUB-TASK:**
+1. **Update task file** - Mark `[x]` in markdown file
+2. **Update todo tracker** - Use todo_write tool
+3. **Run quality gates** - Execute verification
+4. **Complete pre-approval checklist** (below)
+5. **Ask for user approval**
+
+**Test Writing Sub-Tasks:**
+- Run the test and verify it fails (TDD Red phase)
+- Follow the 5 mandatory steps above
+
+**All Sub-Tasks (Regardless of Type):**
+- Complete the specific work required
+- Run any task-specific verification (tests, compilation checks)
+- **MANDATORY**: Run `npm run verify:quick` until it passes
+- Update task file [x] and todo tracker
+- Ask for user approval
+
+**No sub-task is complete until quality gate passes**
+
+---
+
+### Protocol 2: Parent Task Completion (WHEN ALL SUB-TASKS DONE)
+When ALL sub-tasks (1.1-1.9) of a parent task (1.0) are complete:
+
+1. **Run comprehensive verification** - `npm run verify` or `npm run verify:full`
+2. **Mark parent task complete** - Update `[x] 1.0` in task file
+3. **Update todo tracker** - Mark parent completed
+4. **Ask for approval** - Wait before proceeding to next parent task
+
+## Protocol Decision Tree
+
+**After completing ANY sub-task, automatically determine task type:**
+- If ALL sub-tasks under the parent task are complete → Execute Parent Task Completion Protocol (full verification)
+- If there are remaining uncompleted sub-tasks → Execute Sub-Task Completion Protocol (incremental verification)
+
+## Pre-Approval Checklist (MANDATORY)
+
+Before asking for user approval, verify:
+
+- [ ] **Work completed** - Task requirements fulfilled
+- [ ] **Quality gate PASSED** - `npm run verify:quick` shows zero errors
+- [ ] **Task file updated** - `[x]` marked in markdown
+- [ ] **Todo tracker updated** - Progress reflected
+
+**If quality gate fails, task is not complete - continue working**
+
+**Only ask for approval AFTER this checklist is complete.**
+
+### Mandatory Parent Task Completion Check
+Before marking parent task complete, verify:
+- [ ] ALL sub-tasks marked [x]
+- [ ] Parent completion protocol executed
+- [ ] Full quality verification passed
+
+## Task List Maintenance
+
+## Dual Progress Tracking System
+
+**You MUST maintain TWO separate tracking systems:**
+
+1. **Task File Updates (Primary)**: Update the actual markdown task file with `[x]` - this is the official record users see
+2. **Todo Tracker (Internal)**: Use `todo_write` tool for workflow management - supplements but does NOT replace task file updates
+
+**Both systems must be updated together after every sub-task completion.**
+
+### Task File Update Examples
+
+**Before completing sub-task 1.1:**
+```markdown
+- [ ] 1.1 **Write Tests**: Create Zod validation schema tests
+```
+
+**After completing sub-task 1.1:**
+```markdown
+- [x] 1.1 **Write Tests**: Create Zod validation schema tests
+```
+
+**Template for completion message:**
+"Task 1.1 Complete ✅ - Updated task file with [x] checkmark and todo tracker. Ready for approval to proceed to task 1.2."
+
+### Recovery Protocol
+If you realize you forgot to update the task file:
+1. **Stop current work immediately**
+2. **Review all completed sub-tasks** since last update
+3. **Update task file with ALL missing `[x]` checkmarks**
+4. **Acknowledge the oversight** to the user
+5. **Resume work** only after task file is current
+
+1. **Maintain the "Relevant Files" section:**
+   - List every file created or modified (including documentation).
+   - Give each file a one‑line description of its purpose.
+
+## Documentation Management
+
+**Documentation Requirements:**
+- Follow patterns in `docs/tech/`
+- Use templates from `docs/tech/*/templates/`
+- Ensure discoverability via README files
+- Include metadata and keywords
+
+**Documentation Quality Gates:**
+- Markdown linting (if configured)
+- Link validation
+- Template compliance
+
+**Documentation follows same completion protocol as code tasks.**
+
+## AI Instructions
+
+When working with task lists, the AI must:
+
+### Pre-Work Requirements
+1. **Read Technical Requirements section** before starting any implementation work
+2. **Identify architecture patterns** that must be followed from the Technical Requirements
+3. **Consult referenced architecture docs** (e.g., database-service-patterns.md) for implementation guidance
+4. **Verify technology choices** align with established stack from `.cursorrules`
+
+### Implementation Requirements  
+5. **Follow established patterns** specified in Technical Requirements section
+6. **One sub-task at a time** - pause for user approval between sub-tasks
+7. **MANDATORY TDD Pattern**: ALWAYS follow X.1 → X.2 → X.3:
+   - **X.1 Test sub-tasks (RED)**: Write test → Run test (MUST fail) → Mark complete → Wait for approval  
+   - **X.2 Implementation sub-tasks (GREEN)**: Implement → Run tests (MUST pass) → Quality gate → Mark complete → Wait for approval
+   - **X.3 Quality Gate sub-tasks (VERIFY)**: Final verification → Mark complete → Proceed to next parent task
+8. **Architecture compliance** - ensure implementation follows the patterns identified during task creation
+9. **Quality gate integration** - use appropriate verification commands (`verify:quick`, `verify`, `verify:full`)
+10. **Script missing = STOP**: If verification command returns "Missing script" error, STOP immediately and resolve before continuing
+11. **NEVER proceed without verification** - all quality checks must pass before continuing
+12. **TDD Pattern Validation**: If a task file doesn't follow X.1 Test → X.2 Implementation → X.3 Quality Gate pattern, STOP and inform user that task file needs to be updated to follow mandatory TDD pattern before proceeding
+
+### Task Management Requirements
+13. **Dual tracking compliance**: Always update both task file `[x]` and todo tracker after each sub-task
+14. **Pre-approval verification**: Complete checklist before each user approval request  
+15. **Follow completion protocol**: Test execution → Quality gates → Update both systems → Wait for approval
+16. **Mark parent tasks**: Change to `[x]` only when all subtasks complete AND quality verification passes
+17. **Maintain accuracy**: Keep "Relevant Files" section updated with all created/modified files
+
+
