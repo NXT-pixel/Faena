@@ -21,10 +21,19 @@ Guidelines:
    - Setup tasks (if new project setup or dependencies needed)
    - RED tasks (writing failing unit/integration tests)
    - GREEN tasks (implementing code to pass tests + VERIFY quality gate)
+6. TEAM CONTEXT & HANDOFFS (CRITICAL):
+   - Review `team-context.md` in the project context.
+   - When tickets mention team members, tech leads, QA engineers, or DevOps:
+     - Respect approved architectural decisions made by leads.
+     - Delineate development work from peer handoffs.
+     - Include a "Team Coordination & Handoffs" section specifying:
+       * QA Handoff: Test scenarios, sample payloads, and verification steps for QA testers.
+       * DevOps Handoff: Any cloud infrastructure, environment variables, or secrets needed.
+       * Peer Dependencies: APIs or UI contracts to coordinate with other developers.
 
 You MUST structure your response into TWO clearly separated markdown sections:
 ---DOCUMENT 1: TRD---
-[Full TRD Markdown Content including Mermaid Architecture Diagram and Task Breakdown Section]
+[Full TRD Markdown Content including Mermaid Architecture Diagram, Team Coordination & Handoffs Section, and Task Breakdown Section]
 ---DOCUMENT 2: TEST SPEC---
 [Full Test Specification Markdown Content with Given-When-Then scenarios]
 """

@@ -159,6 +159,7 @@ class ContextEngine:
             "- `skills/project/`: Company-specific domain knowledge, internal SDKs, and patterns",
             "- `agents/project/`: Company-specific personas and custom roles",
             "- `tasks/tickets/`: Assigned client tickets, specs, and user stories",
+            "- `tasks/context/team-context.md`: Organigrama del equipo, roles (Tech Lead, QA, DevOps) y protocolos de delegación",
             "- `tasks/context/`: Architecture, technology stack, and progress docs",
         ]
         if sub_repos:
@@ -193,6 +194,33 @@ class ContextEngine:
 """
             pattern_file.write_text(pattern_content, encoding="utf-8")
             created_files["system-patterns"] = pattern_file
+
+        # 5. Team Context & Organization
+        team_file = self.context_dir / "team-context.md"
+        if not team_file.exists():
+            team_content = f"""# Contexto del Equipo, Organización y Responsabilidades
+**Created**: {now}
+
+## 🏢 Información de la Empresa / Proyecto
+- **Empresa / Cliente**: [Nombre de la Empresa / Cliente]
+- **Nombre del Proyecto**: [Nombre del Proyecto]
+- **Mi Rol**: [ej. Desarrollador Full-Stack / Backend Lead]
+
+## 👥 Roster del Equipo y Contactos Clave
+| Nombre | Rol / Cargo | Responsabilidades | Cuándo Escalar o Handoff |
+| :--- | :--- | :--- | :--- |
+| **[Tech Lead]** | Tech Lead / Manager | Decisiones de arquitectura y aprobaciones. | Decisiones de diseño mayor. |
+| **[Product Owner]** | Product Owner / PM | Criterios de aceptación y alcance. | Dudas en requerimientos de negocio. |
+| **[QA Lead]** | QA Engineer / Tester | Certificación y pruebas funcionales. | Entrega de features terminados para QA. |
+| **[DevOps]** | DevOps / Cloud Engineer | Infraestructura, nube, permisos. | Creación de recursos o secretos. |
+
+## 🎯 Protocolo de Delegación y Handoff
+- Desarrollo propio: Implementación, pruebas unitarias/integración, DTOs y migraciones.
+- Handoff a QA: Documentar pasos de prueba y casos de borde para el QA asignado.
+- Handoff a DevOps: Documentar variables de entorno y recursos requeridos.
+"""
+            team_file.write_text(team_content, encoding="utf-8")
+            created_files["team-context"] = team_file
 
         return created_files
 

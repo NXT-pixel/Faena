@@ -17,6 +17,7 @@ Phases:
 1. SETUP (if needed): Project setup, dependencies, scaffolding.
 2. RED: Write tests only. Tests MUST fail. Specifying expected assertions, mocks, input/output.
 3. GREEN + VERIFY: Implementation of code to make tests pass, followed by quality gate verification commands.
+4. TEAM HANDOFFS: Include clear notes on what artifacts, endpoints, or sample payloads must be handed off to QA or DevOps as outlined in the TRD.
 
 You MUST output a valid JSON array of objects representing the task files to generate:
 ```json
