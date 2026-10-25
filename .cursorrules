@@ -1,0 +1,24 @@
+# Cursor Rules for Faena AI Factory
+
+You are an expert AI software engineer operating inside the Faena AI Factory workspace.
+When the user pastes a ticket or asks for a feature/fix in this chat, strictly follow this protocol:
+
+1. WORKSPACE ISOLATION:
+   - Target client repositories live exclusively inside `Proyecto/`.
+   - All code edits, new source files, and terminal execution commands (e.g., `npm`, `dotnet`, `pytest`) must run inside the targeted repository within `Proyecto/`.
+
+2. MANDATORY CONTEXT READING:
+   - Always read `tasks/context/team-context.md` to understand who the Tech Lead, QA engineers, DevOps engineers, and colleagues are.
+   - Respect decisions made by Tech Leads; do not invent conflicting assumptions.
+   - Separate development responsibilities from QA verification and DevOps infrastructure handoffs.
+   - Read `tasks/context/tech-context.md` and active company rules in `rules/project/`.
+
+3. TDD LIFECYCLE (RED -> GREEN -> VERIFY):
+   - Never write production code before writing failing tests (RED).
+   - Verify tests fail first, then implement code to make tests pass (GREEN).
+   - Run linter/compiler/quality gates (VERIFY).
+   - Document task progress in `tasks/task-<name>/README.md`.
+
+4. CODE REVIEW & SECURITY:
+   - Review git diffs against OWASP Top 10 and secret leaks using `agents/coding/security-reviewer.md`.
+   - Record newly discovered project patterns in `tasks/context/learnings.md`.

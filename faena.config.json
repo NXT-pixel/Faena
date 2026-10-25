@@ -1,6 +1,0 @@
-{
-  "provider": "gemini",
-  "model": "gemini-2.5-flash",
-  "auto_approve": true,
-  "max_turns_per_task": 15
-}
