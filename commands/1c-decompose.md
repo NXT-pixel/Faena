@@ -499,11 +499,11 @@ Created: /tasks/feature-[name]/
 Next Steps:
 
 Level 2 (TRD-Ready) Phases:
-- phase01-[name].md → Run: /create-trd phase01-[name].md
-- phase03-[name].md → Run: /create-trd phase03-[name].md
+- phase01-[name].md → Arrastra: @commands/2-create-trd.md phase01-[name].md
+- phase03-[name].md → Arrastra: @commands/2-create-trd.md phase03-[name].md
 
 Level 1 (Feature Spec) Phases - Need Further Decomposition:
-- phase02-[name].md → Run: /decompose phase02-[name].md
+- phase02-[name].md → Arrastra: @commands/1c-decompose.md phase02-[name].md
 
 Original document preserved: [original path]
 ```

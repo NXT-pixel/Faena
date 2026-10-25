@@ -315,7 +315,7 @@ Show the user:
   - Address any open questions
   - Share with team for feedback
   - Use as specification for implementation
-  - Run /update-context after approval to capture design decisions
+  - Run @commands/4-update-context.md after approval to capture design decisions
 ```
 
 ### 6. Iteration Support
@@ -379,7 +379,7 @@ Typical flow:
 11. After approval: 
     - Output next step for user:
       > 👉 **Siguiente paso:** Arrastra al chat `@commands/2-create-trd.md tasks/design-{name}.md`
-    - User runs `/update-context` to capture design in project context
+    - User can run `@commands/4-update-context.md` to capture design in project context
 
 ## Exit Conditions
 

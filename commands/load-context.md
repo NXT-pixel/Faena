@@ -98,7 +98,7 @@ After loading frontmatter from all files:
 - Identify oldest file: "📅 Stalest: {file} updated {date}"
 
 If any file is >90 days old:
-- Suggest: "💡 Consider running /update-context to refresh stale context"
+- Suggest: "💡 Consider running @commands/4-update-context.md to refresh stale context"
 
 ### 4. Supplementary Information
 
@@ -139,7 +139,7 @@ git status --short 2>/dev/null
 
 **If context is incomplete:**
 - Inform user which files are missing or problematic
-- Suggest: "💡 Run /update-context to refresh problematic files"
+- Suggest: "💡 Arrastra @commands/4-update-context.md para refrescar los archivos"
 - Continue with partial context but clearly note limitations
 - DO NOT fail completely - work with what's available
 
@@ -329,6 +329,6 @@ Typical workflow:
 2. Agent loads and synthesizes all context
 3. Agent provides comprehensive summary
 4. Agent is now primed for design discussion with full project understanding
-5. At end of session, user runs `/update-context` to capture any decisions made
+5. At end of session, user can drag `@commands/4-update-context.md` to capture any decisions made
 
 
