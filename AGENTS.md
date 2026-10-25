@@ -38,20 +38,20 @@ El usuario trabajará contigo arrastrando comandos de `/commands/` directamente 
 
 ```mermaid
 flowchart TD
-    T["1️⃣ Arrastra @commands/ticket.md + Pega Ticket"] --> P1["Genera tasks/design-nombre.md\n(Requerimientos + team-context.md)"]
-    P1 --> P2["2️⃣ Arrastra @commands/create-trd.md tasks/design-nombre.md\n(Genera trd-nombre.md + test-spec-nombre.md)"]
-    P2 --> P3["3️⃣ Arrastra @commands/create-tasks.md tasks/task-nombre/trd-nombre.md\n(Genera task01-setup, task02-red, task03-green + README.md)"]
+    T["1️⃣ Arrastra @commands/1-ticket.md + Pega Ticket"] --> P1["Genera tasks/design-nombre.md\n(Requerimientos + team-context.md)"]
+    P1 --> P2["2️⃣ Arrastra @commands/2-create-trd.md tasks/design-nombre.md\n(Genera trd-nombre.md + test-spec-nombre.md)"]
+    P2 --> P3["3️⃣ Arrastra @commands/3-create-tasks.md tasks/task-nombre/trd-nombre.md\n(Genera task01-setup, task02-red, task03-green + README.md)"]
     P3 --> P4["4️⃣ Arrastra @tasks/task-nombre/task01-...md\n(Ejecución TDD en Proyecto/)"]
     P4 --> P5["5️⃣ Security Review & Handoff para QA\n(Audita git diff + learnings.md)"]
 ```
 
-### Paso 1: `@commands/ticket.md` (Requerimientos desde el Ticket)
+### Paso 1: `@commands/1-ticket.md` (Requerimientos desde el Ticket)
 1. **Identifica a las personas**: Lee `tasks/context/team-context.md`. Identifica si el ticket menciona acuerdos con el Tech Lead (ej. David), compañeros de frontend/backend, o delegación hacia QA (ej. Laura) o DevOps (ej. Sofía).
 2. **Identifica el repositorio afectado**: Mira dentro de `Proyecto/` para determinar en cuál repositorio debe implementarse la solución.
 3. **Revisa skills necesarias**: Si el ticket requiere una tecnología que no esté en `skills/` (ej. Django, Vue, Kubernetes), búscalas en el repositorio de ECC local (`C:\Users\santi\Documents\GitHub\ECC\skills\`) o remoto (`https://github.com/affaan-m/ECC`) y aplica sus mejores prácticas.
 4. **Genera**: `tasks/design-<nombre-del-ticket>.md`.
 
-### Paso 2: `@commands/create-trd.md` (Documento de Requerimientos Técnicos & Test Spec)
+### Paso 2: `@commands/2-create-trd.md` (Documento de Requerimientos Técnicos & Test Spec)
 Genera dentro de `tasks/task-<nombre-del-ticket>/`:
 - **`trd-<nombre>.md`**:
   - Resumen del problema y alcance.
@@ -62,7 +62,7 @@ Genera dentro de `tasks/task-<nombre-del-ticket>/`:
     - **DevOps Handoff**: Variables de entorno, secretos o infraestructura requerida.
 - **`test-spec-<nombre>.md`**: Especificación de pruebas Given-When-Then con casos de éxito y de borde.
 
-### Paso 3: `@commands/create-tasks.md` (Desglose Atómico de Tareas TDD)
+### Paso 3: `@commands/3-create-tasks.md` (Desglose Atómico de Tareas TDD)
 En la misma carpeta `tasks/task-<nombre-del-ticket>/`, genera los archivos de tareas y un `README.md` con casillas de progreso:
 - `task01-setup-...md` (Scaffolding o dependencias si aplica)
 - `task02-red-...md` (Escribir pruebas que definan el comportamiento; DEBEN fallar primero)

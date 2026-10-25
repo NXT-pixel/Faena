@@ -378,7 +378,7 @@ Typical flow:
 10. Agent: Iterates on design as needed
 11. After approval: 
     - Output next step for user:
-      > 👉 **Siguiente paso:** Arrastra al chat `@commands/create-trd.md tasks/design-{name}.md`
+      > 👉 **Siguiente paso:** Arrastra al chat `@commands/2-create-trd.md tasks/design-{name}.md`
     - User runs `/update-context` to capture design in project context
 
 ## Exit Conditions

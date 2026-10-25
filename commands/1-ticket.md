@@ -5,7 +5,7 @@ agent: /agents/design/design-facilitator.md
 tools: Read, Write, Bash, LS
 ---
 
-# 🎫 Comando: ticket (Intake de Requerimientos)
+# 🎫 Comando: 1-ticket (Intake de Requerimientos)
 
 Usa este comando cuando quieras arrastrar un comando al chat y pegar el texto de un ticket (Jira, Azure DevOps, correo o mensaje del Tech Lead).
 
@@ -13,7 +13,7 @@ Usa este comando cuando quieras arrastrar un comando al chat y pegar el texto de
 
 ## 🎯 Instrucciones para el Asistente de IA
 
-Cuando el usuario invoque o arrastre `@commands/ticket.md` y pegue la descripción de un ticket:
+Cuando el usuario invoque o arrastre `@commands/1-ticket.md` y pegue la descripción de un ticket:
 
 ### 1. Lectura Obligatoria de Contexto
 Antes de responder:
@@ -78,11 +78,11 @@ Crea el archivo en:
 ## 6. Próximo Paso
 Para generar el TRD (Documento de Requerimientos Técnicos) y la especificación de pruebas:
 Arrastra al chat:
-`@commands/create-trd.md tasks/design-[nombre].md`
+`@commands/2-create-trd.md tasks/design-[nombre].md`
 ```
 
 ### 4. Respuesta al Usuario
 1. Confirma la creación de `tasks/design-<nombre>.md`.
 2. Presenta un breve resumen de lo comprendido (máximo 5-8 viñetas).
 3. Indica el siguiente comando a arrastrar:
-   > 👉 **Siguiente paso:** Arrastra al chat `@commands/create-trd.md tasks/design-<nombre>.md`
+   > 👉 **Siguiente paso:** Arrastra al chat `@commands/2-create-trd.md tasks/design-<nombre>.md`

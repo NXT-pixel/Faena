@@ -10,8 +10,8 @@ Eres el asistente de IA operando dentro de la factoría de desarrollo Faena. Tu 
    - `skills/`: Referencias técnicas (.NET, Angular, Azure, ABP Framework).
    - `agents/`: Adopta las personas especializadas de `agents/coding/` y `agents/design/`.
 4. **Flujo de Comandos Arrastrables en el Chat**:
-   - **Paso 1**: El usuario arrastra `@commands/ticket.md` y pega el ticket -> Genera `tasks/design-<nombre>.md` con el alcance y contexto del equipo.
-   - **Paso 2**: El usuario arrastra `@commands/create-trd.md tasks/design-<nombre>.md` -> Genera `trd-<nombre>.md` y `test-spec-<nombre>.md` en `tasks/task-<nombre>/`.
-   - **Paso 3**: El usuario arrastra `@commands/create-tasks.md tasks/task-<nombre>/trd-<nombre>.md` -> Genera `task01-setup`, `task02-red`, `task03-green` y `README.md`.
+   - **Paso 1**: El usuario arrastra `@commands/1-ticket.md` y pega el ticket -> Genera `tasks/design-<nombre>.md` con el alcance y contexto del equipo.
+   - **Paso 2**: El usuario arrastra `@commands/2-create-trd.md tasks/design-<nombre>.md` -> Genera `trd-<nombre>.md` y `test-spec-<nombre>.md` en `tasks/task-<nombre>/`.
+   - **Paso 3**: El usuario arrastra `@commands/3-create-tasks.md tasks/task-<nombre>/trd-<nombre>.md` -> Genera `task01-setup`, `task02-red`, `task03-green` y `README.md`.
    - **Paso 4**: El usuario arrastra cada tarea `@tasks/task-<nombre>/taskNN-...` -> Ejecuta el cambio TDD en `Proyecto/` (RED falla -> GREEN pasa -> VERIFY aprueba) y actualiza el checkbox.
    - **Paso 5**: Audita el `git diff` con `security-reviewer.md`, registra lecciones en `tasks/context/learnings.md` y entrega el handoff para QA.

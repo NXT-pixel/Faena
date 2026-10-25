@@ -356,7 +356,7 @@ Read `tasks/context/team-context.md` to populate the team members and responsibi
 
 **Ready for task file generation**: 
 Indicate to the user:
-> 👉 **Siguiente paso:** Arrastra al chat `@commands/create-tasks.md tasks/task-[feature-name]/trd-[feature-name].md`
+> 👉 **Siguiente paso:** Arrastra al chat `@commands/3-create-tasks.md tasks/task-[feature-name]/trd-[feature-name].md`
 ```
 
 ## Test Specification Template
