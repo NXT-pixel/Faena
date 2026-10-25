@@ -15,6 +15,7 @@ from faena.orchestrator.trd_engine import TRDEngine
 from faena.orchestrator.task_engine import TaskEngine
 from faena.orchestrator.executor import TaskExecutor
 from faena.orchestrator.review_engine import ReviewEngine
+from faena.orchestrator.sync_engine import ECCSyncEngine
 
 
 class FaenaPipeline:
@@ -33,6 +34,7 @@ class FaenaPipeline:
         self.context_engine = ContextEngine(self.workspace_root, self.provider)
         self.trd_engine = TRDEngine(self.workspace_root, self.provider, self.registry)
         self.task_engine = TaskEngine(self.workspace_root, self.provider)
+        self.sync_engine = ECCSyncEngine(self.workspace_root)
         self.executor = TaskExecutor(
             self.workspace_root,
             self.provider,
@@ -102,6 +104,19 @@ class FaenaPipeline:
         slug = self._slugify(ticket_title)
         task_dir = self.workspace_root / "tasks" / f"task-{slug}"
         state_file = task_dir / "state.json"
+
+        # JIT Auto-Discovery & Import from ECC for missing skills/agents
+        jit_results = self.sync_engine.auto_discover_and_import(ticket_content)
+        if jit_results["skills"] or jit_results["agents"]:
+            self._log("\n📥 [JIT ECC IMPORT] Ticket requires technologies not yet in Faena:")
+            for s in jit_results["skills"]:
+                self._log(f"   + Auto-imported skill from ECC: {s}")
+            for a in jit_results["agents"]:
+                self._log(f"   + Auto-imported agent from ECC: {a}")
+            # Refresh agent registry so newly imported agents are immediately available
+            self.registry = AgentRegistry(self.workspace_root)
+            self.trd_engine.registry = self.registry
+            self.executor.registry = self.registry
 
         # Check for resume
         if resume and state_file.exists():

@@ -47,13 +47,13 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
-# Client / Company Repositories inside Proyecto/
-/Proyecto/*
-!/Proyecto/.gitkeep
-!/Proyecto/README.md
-/projects/*
-!/projects/.gitkeep
-!/projects/README.md
+# Client / Company Repositories inside Proyecto/ (Strictly isolated from Faena)
+Proyecto/**
+!Proyecto/.gitkeep
+!Proyecto/README.md
+projects/**
+!projects/.gitkeep
+!projects/README.md
 
 # Faena transient runs & outputs (optional)
 # tasks/task-*/
