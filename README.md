@@ -128,6 +128,12 @@ python faena_cli.py agents
 
 # Ver sesiones y tickets activos en el repositorio
 python faena_cli.py status
+
+# Sincronización y actualización con ECC (Enterprise Coding Companion)
+python faena_cli.py sync                        # Compara agentes y skills con ECC
+python faena_cli.py sync --update               # Actualiza todos los agentes y skills desactualizados
+python faena_cli.py sync --import-skill <skill> # Importa un nuevo skill de ECC (ej. docker-patterns)
+python faena_cli.py sync --import-agent <agent> # Importa un nuevo agente de ECC (ej. go-build-resolver.md)
 ```
 
 ---

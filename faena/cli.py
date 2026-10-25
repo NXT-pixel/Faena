@@ -80,6 +80,13 @@ def create_parser() -> argparse.ArgumentParser:
     # Command: status
     subparsers.add_parser("status", help="Show active tickets and execution progress")
 
+    # Command: sync
+    sync_parser = subparsers.add_parser("sync", help="Compare and synchronize agents & skills with upstream ECC repo")
+    sync_parser.add_argument("--update", "-u", action="store_true", help="Apply updates to all outdated tracked agents and skills")
+    sync_parser.add_argument("--import-agent", help="Import a specific agent from ECC (e.g. 'django-reviewer.md')")
+    sync_parser.add_argument("--import-skill", help="Import a specific skill directory from ECC (e.g. 'docker-patterns')")
+    sync_parser.add_argument("--ecc-path", help="Path to local ECC repository")
+
     return parser
 
 
@@ -283,6 +290,73 @@ def cmd_status(root: Path):
             continue
 
 
+def cmd_sync(args, root: Path, config: dict):
+    from faena.orchestrator.sync_engine import ECCSyncEngine
+    ecc_path = Path(args.ecc_path) if args.ecc_path else Path(config.get("ecc_path", r"C:\Users\santi\Documents\GitHub\ECC"))
+    engine = ECCSyncEngine(workspace_root=root, ecc_path=ecc_path)
+
+    if not engine.is_ecc_available():
+        print(f"❌ ECC repository not found at: {ecc_path}", file=sys.stderr)
+        print("  Specify the path with --ecc-path <path> or in faena.config.json ('ecc_path')", file=sys.stderr)
+        sys.exit(1)
+
+    print(f"🔄 Comparing with ECC at: {ecc_path}\n")
+
+    if args.import_agent:
+        name = args.import_agent if args.import_agent.endswith(".md") else f"{args.import_agent}.md"
+        ok = engine.update_agent(name)
+        if ok:
+            print(f"✅ Successfully imported agent '{name}' into Faena (agents/coding/)")
+        else:
+            print(f"❌ Agent '{name}' not found in ECC agents/", file=sys.stderr)
+        return
+
+    if args.import_skill:
+        ok = engine.update_skill(args.import_skill)
+        if ok:
+            print(f"✅ Successfully imported skill '{args.import_skill}' into Faena (skills/)")
+        else:
+            print(f"❌ Skill '{args.import_skill}' not found in ECC skills/", file=sys.stderr)
+        return
+
+    if args.update:
+        up_agents, up_skills = engine.sync_tracked()
+        print(f"🚀 Updated {len(up_agents)} agent(s) and {len(up_skills)} skill(s) from ECC:")
+        for a in up_agents:
+            print(f"   - Agent updated: {a}")
+        for s in up_skills:
+            print(f"   - Skill updated: {s}")
+        if not up_agents and not up_skills:
+            print("   ✨ Everything tracked is already up to date!")
+        return
+
+    agent_comp = engine.compare_agents()
+    skill_comp = engine.compare_skills()
+
+    print("📊 AGENTS COMPARISON:")
+    print(f"  🟢 Up to date with ECC:  {len(agent_comp['up_to_date'])}")
+    print(f"  🔄 Outdated (updates):   {len(agent_comp['outdated'])}")
+    for item in agent_comp['outdated']:
+        print(f"     - {item['name']}")
+    print(f"  ⭐ Faena Custom:         {len(agent_comp['faena_custom'])}")
+    print(f"  💡 Available in ECC:     {len(agent_comp['available_in_ecc'])}")
+
+    print("\n📊 SKILLS COMPARISON:")
+    print(f"  🟢 Up to date with ECC:  {len(skill_comp['up_to_date'])}")
+    print(f"  🔄 Outdated (updates):   {len(skill_comp['outdated'])}")
+    for item in skill_comp['outdated']:
+        print(f"     - {item['name']}")
+    print(f"  ⭐ Faena Custom:         {len(skill_comp['faena_custom'])}")
+    print(f"  💡 Available in ECC:     {len(skill_comp['available_in_ecc'])}")
+
+    if agent_comp['outdated'] or skill_comp['outdated']:
+        print("\n💡 Run `faena sync --update` to apply upstream updates to existing tracked files.")
+    else:
+        print("\n✨ All tracked agents and skills match ECC upstream.")
+    print("💡 To import a new skill: `faena sync --import-skill <skill-name>`")
+    print("💡 To import a new agent: `faena sync --import-agent <agent-name>`")
+
+
 def main():
     root = Path.cwd()
     load_env_file(root / ".env")
@@ -313,6 +387,8 @@ def main():
         cmd_agents(root)
     elif args.command == "status":
         cmd_status(root)
+    elif args.command == "sync":
+        cmd_sync(args, root, config)
 
 
 if __name__ == "__main__":
