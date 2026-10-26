@@ -14,6 +14,18 @@ Los agentes de Faena leen este documento para interpretar correctamente las menc
 
 ---
 
+## 🛡️ Identidad Git Corporativa (Obligatorio para Commits en Proyecto/)
+
+Para evitar que se filtren cuentas personales de GitHub o correos personales (ej. la cuenta personal con la que se creó Faena), **todo commit o push dentro de cualquier repositorio en `Proyecto/` DEBE atribuirse a la identidad corporativa de la empresa/cliente**:
+
+- **Nombre Git Corporativo (`user.name`)**: [ej. Santiago Guerrero]
+- **Email Git Corporativo (`user.email`)**: [ej. santiago.guerrero@pevaar.com]
+- **Dominio Corporativo Permitido**: [ej. @pevaar.com]
+
+> ⚠️ **Regla de Oro**: Antes de ejecutar cualquier `git commit` o `git push` en cualquier repositorio en `Proyecto/`, el agente DEBE verificar con `git -C Proyecto/<repo> config --local user.email` que la identidad local corresponda a la corporativa aquí indicada. Si no está configurada, debe configurarse a nivel `--local` antes de commitear. NUNCA depender de la configuración `--global`.
+
+---
+
 ## 👥 Roster del Equipo y Contactos Clave
 
 | Nombre | Rol / Cargo | Responsabilidades Principales | Cuándo Consultar o Escalar |

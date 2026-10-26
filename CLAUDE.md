@@ -20,4 +20,7 @@ Antes de proponer una solución o escribir código, consulta obligatoriamente:
 2. **Paso 2 (`@commands/2-create-trd.md tasks/design-<nombre>.md`)**: Diseñas la arquitectura y creas `tasks/task-<nombre>/trd-<nombre>.md` y `test-spec-<nombre>.md` con las secciones de handoff para QA y DevOps.
 3. **Paso 3 (`@commands/3-create-tasks.md tasks/task-<nombre>/trd-<nombre>.md`)**: Desglosas en tareas atómicas `task01-setup`, `task02-red`, `task03-green` con `README.md` de seguimiento con checkboxes.
 4. **Paso 4 (`@tasks/task-<nombre>/taskNN-...`)**: Ejecutas cada tarea en `Proyecto/`. En RED escribes tests y confirmas que fallen en terminal. En GREEN implementas hasta que pasen todos y validas lint/build. Actualizas el checkbox en `README.md`.
-5. **Paso 5 (Auditoría ECC Gate & Handoff)**: Revisas el `git diff` con el criterio de `security-reviewer.md`, registras lecciones en `tasks/context/learnings.md` y entregas el resumen listo para el tester QA.
+5. **Paso 5 (Auditoría ECC Gate, Seguridad & Identidad Git)**:
+   - **Identidad Git Corporativa**: Antes de cualquier commit o push en `Proyecto/`, verifica `git config --local user.email` contra el correo corporativo en `team-context.md`. NUNCA hagas commit con la cuenta personal global del desarrollador. Configúralo localmente si no está asignado.
+   - Revisa el `git diff` con el criterio de `security-reviewer.md`.
+   - Registra lecciones en `tasks/context/learnings.md` y entrega el resumen listo para el tester QA.

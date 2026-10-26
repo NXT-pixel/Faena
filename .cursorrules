@@ -20,7 +20,8 @@ When the user pastes a ticket or asks for a feature/fix in this chat, strictly f
    - Run linter/compiler/quality gates (VERIFY).
    - Document task progress in `tasks/task-<name>/README.md`.
 
-4. CODE REVIEW & SECURITY:
+4. CODE REVIEW, SECURITY & GIT IDENTITY:
+   - Before ANY git commit or push in `Proyecto/<repo>`, verify that `git config --local user.email` matches the corporate identity in `tasks/context/team-context.md`. NEVER commit with a personal email/account.
    - Review git diffs against OWASP Top 10 and secret leaks using `agents/coding/security-reviewer.md`.
    - Record newly discovered project patterns in `tasks/context/learnings.md`.
 

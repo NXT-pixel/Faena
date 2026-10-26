@@ -3,6 +3,7 @@
 ## Mandatory Security Checks
 
 Before ANY commit:
+- [ ] Corporate Git Identity verified (`git config --local user.email` matches corporate email from `team-context.md`, NOT personal global email)
 - [ ] No hardcoded secrets (API keys, passwords, tokens)
 - [ ] All user inputs validated
 - [ ] SQL injection prevention (parameterized queries)

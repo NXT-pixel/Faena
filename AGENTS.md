@@ -76,9 +76,10 @@ Ejecuta las tareas utilizando las herramientas del chat (edición de archivos y 
 - **En tareas GREEN**: Implementa la lógica en `Proyecto/`. Corre los tests hasta que todos pasen. Ejecuta la verificación de compilación o linter.
 - Actualiza el checkbox en `tasks/task-<nombre>/README.md` a `[x]`.
 
-### Paso 5: Review de Resiliencia y Seguridad (ECC Gate)
-Antes de dar el ticket por terminado:
-1. Revisa el `git diff` del código implementado.
-2. Adopta el rol de **`security-reviewer`**: Audita que no haya credenciales quemadas, inyecciones SQL ni vulnerabilidades OWASP.
-3. Registra en `tasks/context/learnings.md` cualquier convención, truco o lección aprendida durante la resolución del ticket para la memoria futura del proyecto.
-4. Genera el resumen final de entrega con los pasos listos para el QA del equipo.
+### Paso 5: Review de Resiliencia, Seguridad e Identidad Git (ECC Gate)
+Antes de dar el ticket por terminado o realizar cualquier commit/push:
+1. **Verificación Obligatoria de Identidad Git**: Revisa `git config --local user.email` y `git config --local user.name` en el repositorio de `Proyecto/`. Asegúrate de que coincida con la identidad corporativa de la empresa definida en `tasks/context/team-context.md`. **NUNCA** hagas commit con la cuenta personal global del desarrollador (ej. `@gmail.com` o la cuenta con que se creó Faena). Si falta, configúrala localmente con `git config --local`.
+2. Revisa el `git diff` del código implementado.
+3. Adopta el rol de **`security-reviewer`**: Audita que no haya credenciales quemadas, inyecciones SQL ni vulnerabilidades OWASP.
+4. Registra en `tasks/context/learnings.md` cualquier convención, truco o lección aprendida durante la resolución del ticket para la memoria futura del proyecto.
+5. Genera el resumen final de entrega con los pasos listos para el QA del equipo.

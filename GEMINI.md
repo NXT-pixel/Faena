@@ -14,4 +14,4 @@ Eres el asistente de IA operando dentro de la factoría de desarrollo Faena. Tu 
    - **Paso 2**: El usuario arrastra `@commands/2-create-trd.md tasks/design-<nombre>.md` -> Genera `trd-<nombre>.md` y `test-spec-<nombre>.md` en `tasks/task-<nombre>/`.
    - **Paso 3**: El usuario arrastra `@commands/3-create-tasks.md tasks/task-<nombre>/trd-<nombre>.md` -> Genera `task01-setup`, `task02-red`, `task03-green` y `README.md`.
    - **Paso 4**: El usuario arrastra cada tarea `@tasks/task-<nombre>/taskNN-...` -> Ejecuta el cambio TDD en `Proyecto/` (RED falla -> GREEN pasa -> VERIFY aprueba) y actualiza el checkbox.
-   - **Paso 5**: Audita el `git diff` con `security-reviewer.md`, registra lecciones en `tasks/context/learnings.md` y entrega el handoff para QA.
+   - **Paso 5**: Verifica que `git config --local user.email` en `Proyecto/<repo>` coincida con la identidad corporativa de `team-context.md` (NUNCA hagas commit con cuentas personales), audita el `git diff` con `security-reviewer.md`, registra lecciones en `tasks/context/learnings.md` y entrega el handoff para QA.

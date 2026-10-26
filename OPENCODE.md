@@ -26,6 +26,10 @@ Eres el asistente de desarrollo dentro de la factoría de software **Faena**, ej
    - **En tareas RED**: Solo escribe los archivos de prueba. Ejecuta el comando en terminal (`dotnet test`, `npm test`) y confirma que la prueba falle por la razón esperada. NO implementes la solución aún.
    - **En tareas GREEN**: Implementa la lógica mínima necesaria en `Proyecto/` hasta que todos los tests pasen en verde al 100%. Valida linter y compilación. Marca `[x]` en el `README.md`.
 
-5. **Directivas de Estilo para Modelos Locales**:
+5. **Identidad Git Corporativa Obligatoria**:
+   - ANTES de realizar cualquier commit o push en `Proyecto/<repo>`, verifica `git config --local user.email` contra la identidad definida en `tasks/context/team-context.md`.
+   - NUNCA hagas commit con cuentas personales de desarrollo (ej. `@gmail.com`). Configura el usuario localmente con `git config --local` si no está definido.
+
+6. **Directivas de Estilo para Modelos Locales**:
    - Sé conciso y directo al grano en tus respuestas para ahorrar tiempo de inferencia y memoria VRAM.
    - No inventes dependencias ni patrones nuevos; sigue estrictamente lo especificado en el TRD.
