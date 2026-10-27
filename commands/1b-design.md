@@ -208,18 +208,18 @@ graph TB
 
 ### 5. Design Documentation Output
 
-**Write the design document to the tasks/ folder.**
+**Write the design document inside a dedicated task folder under tasks/.**
 
 **Filename convention:**
 ```
-tasks/design-{brief-descriptive-name}.md
+tasks/task-{brief-descriptive-name}/design-{brief-descriptive-name}.md
 ```
 
 **Examples:**
-- `tasks/design-user-authentication.md`
-- `tasks/design-payment-processing-api.md`
-- `tasks/design-real-time-notifications.md`
-- `tasks/design-reporting-dashboard.md`
+- `tasks/task-user-authentication/design-user-authentication.md`
+- `tasks/task-payment-processing-api/design-payment-processing-api.md`
+- `tasks/task-real-time-notifications/design-real-time-notifications.md`
+- `tasks/task-reporting-dashboard/design-reporting-dashboard.md`
 
 **Document structure:**
 
@@ -301,7 +301,7 @@ tasks/design-{brief-descriptive-name}.md
 
 Show the user:
 ```
-✅ Design document created: tasks/design-{name}.md
+✅ Design document created: tasks/task-{name}/design-{name}.md
 
 📋 Document includes:
   - Problem statement and goals
@@ -373,12 +373,12 @@ Typical flow:
 5. Agent: Asks follow-up questions as needed
 6. User: Provides more details
 7. Agent: Synthesizes design with diagrams
-8. Agent: Writes design document to tasks/design-{name}.md
+8. Agent: Writes design document to tasks/task-{name}/design-{name}.md
 9. User: Reviews and may request changes
 10. Agent: Iterates on design as needed
 11. After approval: 
     - Output next step for user:
-      > 👉 **Siguiente paso:** Arrastra al chat `@commands/2-create-trd.md tasks/design-{name}.md`
+      > 👉 **Siguiente paso:** Arrastra al chat `@commands/2-create-trd.md tasks/task-{name}/design-{name}.md`
     - User can run `@commands/4-update-context.md` to capture design in project context
 
 ## Exit Conditions

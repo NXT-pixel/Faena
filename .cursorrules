@@ -26,9 +26,9 @@ When the user pastes a ticket or asks for a feature/fix in this chat, strictly f
    - Record newly discovered project patterns in `tasks/context/learnings.md`.
 
 5. CHAT COMMAND DRAG & DROP FLOW:
-   - Step 1: User drags `@commands/1-ticket.md` + pastes ticket -> Generates `tasks/design-<name>.md`.
-   - Step 2: User drags `@commands/2-create-trd.md tasks/design-<name>.md` -> Generates `trd-<name>.md` and `test-spec-<name>.md`.
-   - Step 3: User drags `@commands/3-create-tasks.md tasks/task-<name>/trd-<name>.md` -> Generates atomic task files (`task01-setup`, `task02-red`, `task03-green`) and `README.md`.
+   - Step 1: User drags `@commands/1-ticket.md` + pastes ticket -> Generates dedicated folder `tasks/task-<name>/design-<name>.md`.
+   - Step 2: User drags `@commands/2-create-trd.md tasks/task-<name>/design-<name>.md` -> Generates `trd-<name>.md` and `test-spec-<name>.md` inside the same `tasks/task-<name>/` folder.
+   - Step 3: User drags `@commands/3-create-tasks.md tasks/task-<name>/trd-<name>.md` -> Generates atomic task files (`task01-setup`, `task02-red`, `task03-green`) and `README.md` inside that same folder.
    - Step 4: User drags `@tasks/task-<name>/taskNN-...` -> Executes that specific task in `Proyecto/` and marks checkbox.
    - Step 5: User can drag `@commands/4-update-context.md` at end of session to sync context.
 

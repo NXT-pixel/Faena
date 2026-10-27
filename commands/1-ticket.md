@@ -1,6 +1,6 @@
 ---
 name: ticket
-description: Inicia el flujo de trabajo procesando un ticket o requerimiento pegado por el usuario en el chat. Carga el contexto del equipo, identifica los repositorios en Proyecto/ y genera el documento de diseño y requerimientos en tasks/design-<nombre>.md.
+description: Inicia el flujo de trabajo procesando un ticket o requerimiento pegado por el usuario en el chat. Carga el contexto del equipo, identifica los repositorios en Proyecto/ y genera la carpeta del ticket con el documento de diseño y requerimientos en tasks/task-<nombre>/design-<nombre>.md.
 agent: /agents/design/design-facilitator.md
 tools: Read, Write, Bash, LS
 ---
@@ -34,11 +34,12 @@ Extrae del texto pegado:
   - ¿Hay tareas de DevOps (ej. secretos en KeyVault, variables en CI/CD)?
   - ¿Hay dependencias con otros desarrolladores?
 
-### 3. Generar el Documento de Requerimientos
-Crea el archivo en:
-`tasks/design-<nombre-del-ticket>.md` (usa un slug descriptivo en minúsculas, ej. `tasks/design-auth-login-flow.md`).
+### 3. Generar el Documento de Requerimientos en su Carpeta Dedicada
+Crea la carpeta del ticket y el archivo de diseño dentro de ella:
+`tasks/task-<nombre-del-ticket>/design-<nombre-del-ticket>.md` (usa un slug descriptivo en minúsculas, ej. `tasks/task-auth-login-flow/design-auth-login-flow.md`).
+*(De esta forma, todos los artefactos del requerimiento —diseño, TRD, especificación de pruebas y tareas TDD— residirán juntos dentro de `tasks/task-<nombre>/`).*
 
-#### Estructura del Documento `tasks/design-<nombre>.md`:
+#### Estructura del Documento `tasks/task-<nombre>/design-<nombre>.md`:
 ```markdown
 # Requerimientos y Diseño: [Nombre del Requerimiento]
 
@@ -78,11 +79,11 @@ Crea el archivo en:
 ## 6. Próximo Paso
 Para generar el TRD (Documento de Requerimientos Técnicos) y la especificación de pruebas:
 Arrastra al chat:
-`@commands/2-create-trd.md tasks/design-[nombre].md`
+`@commands/2-create-trd.md tasks/task-[nombre]/design-[nombre].md`
 ```
 
 ### 4. Respuesta al Usuario
-1. Confirma la creación de `tasks/design-<nombre>.md`.
+1. Confirma la creación de `tasks/task-<nombre>/design-<nombre>.md`.
 2. Presenta un breve resumen de lo comprendido (máximo 5-8 viñetas).
 3. Indica el siguiente comando a arrastrar:
-   > 👉 **Siguiente paso:** Arrastra al chat `@commands/2-create-trd.md tasks/design-<nombre>.md`
+   > 👉 **Siguiente paso:** Arrastra al chat `@commands/2-create-trd.md tasks/task-<nombre>/design-<nombre>.md`

@@ -16,8 +16,8 @@ Antes de proponer una solución o escribir código, consulta obligatoriamente:
 - `skills/`: Habilidades especializadas (Angular en `skills/angular-developer/`, .NET en `skills/dotnet-patterns/` y `skills/csharp-testing/`, ABP en `skills/abp-*/`, Azure en `skills/azure-function/`).
 
 ## 3. Protocolo de Comandos por Chat (Drag & Drop)
-1. **Paso 1 (`@commands/1-ticket.md`)**: El usuario arrastra el comando y pega el ticket. Lees `tasks/context/team-context.md`, identificas el repo en `Proyecto/` y creas `tasks/design-<nombre>.md`.
-2. **Paso 2 (`@commands/2-create-trd.md tasks/design-<nombre>.md`)**: Diseñas la arquitectura y creas `tasks/task-<nombre>/trd-<nombre>.md` y `test-spec-<nombre>.md` con las secciones de handoff para QA y DevOps.
+1. **Paso 1 (`@commands/1-ticket.md`)**: El usuario arrastra el comando y pega el ticket. Lees `tasks/context/team-context.md`, identificas el repo en `Proyecto/` y creas la carpeta dedicada con su diseño: `tasks/task-<nombre>/design-<nombre>.md`.
+2. **Paso 2 (`@commands/2-create-trd.md tasks/task-<nombre>/design-<nombre>.md`)**: Diseñas la arquitectura y creas dentro de la misma carpeta `tasks/task-<nombre>/trd-<nombre>.md` y `test-spec-<nombre>.md` con las secciones de handoff para QA y DevOps.
 3. **Paso 3 (`@commands/3-create-tasks.md tasks/task-<nombre>/trd-<nombre>.md`)**: Desglosas en tareas atómicas `task01-setup`, `task02-red`, `task03-green` con `README.md` de seguimiento con checkboxes.
 4. **Paso 4 (`@tasks/task-<nombre>/taskNN-...`)**: Ejecutas cada tarea en `Proyecto/`. En RED escribes tests y confirmas que fallen en terminal. En GREEN implementas hasta que pasen todos y validas lint/build. Actualizas el checkbox en `README.md`.
 5. **Paso 5 (Auditoría ECC Gate, Seguridad & Identidad Git)**:

@@ -17,8 +17,8 @@ Eres el asistente de desarrollo dentro de la factoría de software **Faena**, ej
    - Consulta `rules/project/` para aplicar los estándares de ingeniería de la empresa.
 
 3. **Flujo de Comandos (Drag & Drop o Mencionar en Chat)**:
-   - **Paso 1 (`@commands/1-ticket.md`)**: Recibe el ticket y genera `tasks/design-<nombre>.md`.
-   - **Paso 2 (`@commands/2-create-trd.md tasks/design-...`)**: Genera la arquitectura técnica `trd-<nombre>.md`, la especificación de pruebas y los handoffs para QA/DevOps.
+   - **Paso 1 (`@commands/1-ticket.md`)**: Recibe el ticket y genera la carpeta del ticket con `tasks/task-<nombre>/design-<nombre>.md`.
+   - **Paso 2 (`@commands/2-create-trd.md tasks/task-.../design-...`)**: Genera la arquitectura técnica `trd-<nombre>.md`, la especificación de pruebas y los handoffs dentro de esa misma carpeta.
    - **Paso 3 (`@commands/3-create-tasks.md tasks/task-.../trd-...`)**: Desglosa el trabajo en tareas atómicas (`task01-setup`, `task02-red`, `task03-green`) y crea `README.md`.
    - **Paso 4 (`@tasks/task-.../taskNN-...`)**: Ejecuta cada tarea con disciplina TDD estricta.
 

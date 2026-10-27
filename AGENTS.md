@@ -39,8 +39,8 @@ El usuario trabajará contigo arrastrando comandos de `/commands/` directamente 
 
 ```mermaid
 flowchart TD
-    T["1️⃣ Arrastra @commands/1-ticket.md + Pega Ticket"] --> P1["Genera tasks/design-nombre.md\n(Requerimientos + team-context.md)"]
-    P1 --> P2["2️⃣ Arrastra @commands/2-create-trd.md tasks/design-nombre.md\n(Genera trd-nombre.md + test-spec-nombre.md)"]
+    T["1️⃣ Arrastra @commands/1-ticket.md + Pega Ticket"] --> P1["Genera tasks/task-nombre/design-nombre.md\n(Carpeta dedicada + Requerimientos)"]
+    P1 --> P2["2️⃣ Arrastra @commands/2-create-trd.md tasks/task-nombre/design-nombre.md\n(Genera trd-nombre.md + test-spec-nombre.md en la misma carpeta)"]
     P2 --> P3["3️⃣ Arrastra @commands/3-create-tasks.md tasks/task-nombre/trd-nombre.md\n(Genera task01-setup, task02-red, task03-green + README.md)"]
     P3 --> P4["4️⃣ Arrastra @tasks/task-nombre/task01-...md\n(Ejecución TDD en Proyecto/)"]
     P4 --> P5["5️⃣ Security Review & Handoff para QA\n(Audita git diff + learnings.md)"]
@@ -50,7 +50,7 @@ flowchart TD
 1. **Identifica a las personas**: Lee `tasks/context/team-context.md`. Identifica si el ticket menciona acuerdos con el Tech Lead (ej. David), compañeros de frontend/backend, o delegación hacia QA (ej. Laura) o DevOps (ej. Sofía).
 2. **Identifica el repositorio afectado**: Mira dentro de `Proyecto/` para determinar en cuál repositorio debe implementarse la solución.
 3. **Revisa skills necesarias**: Si el ticket requiere una tecnología que no esté en `skills/` (ej. Django, Vue, Kubernetes), búscalas en el repositorio de ECC local (`C:\Users\santi\Documents\GitHub\ECC\skills\`) o remoto (`https://github.com/affaan-m/ECC`) y aplica sus mejores prácticas.
-4. **Genera**: `tasks/design-<nombre-del-ticket>.md`.
+4. **Crea la carpeta dedicada y genera el diseño**: `tasks/task-<nombre-del-ticket>/design-<nombre-del-ticket>.md`. *(Todos los documentos del ticket, desde el diseño inicial hasta los tests y tareas, se concentrarán dentro de esta carpeta).*
 
 ### Paso 2: `@commands/2-create-trd.md` (Documento de Requerimientos Técnicos & Test Spec)
 Genera dentro de `tasks/task-<nombre-del-ticket>/`:
