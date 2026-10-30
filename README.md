@@ -70,8 +70,8 @@ El flujo de trabajo está diseñado para ser 100% interactivo mediante el arrast
 
 ```mermaid
 flowchart LR
-    C1["1️⃣ Arrastra @commands/1-ticket.md\n+ Pegas el ticket"] --> O1["tasks/design-nombre.md\n(Requerimientos)"]
-    O1 --> C2["2️⃣ Arrastra @commands/2-create-trd.md\n+ tasks/design-nombre.md"]
+    C1["1️⃣ Arrastra @commands/1-ticket.md\n+ Pegas el ticket"] --> O1["tasks/task-nombre/design-nombre.md\n(Requerimientos)"]
+    O1 --> C2["2️⃣ Arrastra @commands/2-create-trd.md\n+ tasks/task-nombre/design-nombre.md"]
     C2 --> O2["tasks/task-nombre/trd-nombre.md\n+ test-spec-nombre.md\n(Arquitectura & Handoffs)"]
     O2 --> C3["3️⃣ Arrastra @commands/3-create-tasks.md\n+ tasks/task-nombre/trd.md"]
     C3 --> O3["task01-setup, task02-red, task03-green\n+ README.md (Checklist)"]
@@ -85,12 +85,12 @@ Arrastra al chat el comando de intake y pega el texto del ticket (Jira, DevOps, 
 @commands/1-ticket.md
 Ticket: #4321 - Implementar autenticación JWT con Refresh Tokens en el portal y backend
 ```
-- **Qué hace la IA**: Lee `tasks/context/team-context.md`, identifica qué repositorio en `Proyecto/` será afectado y genera el documento de alcance en `tasks/design-<nombre>.md`.
+- **Qué hace la IA**: Lee `tasks/context/team-context.md`, identifica qué repositorio en `Proyecto/` será afectado y genera el documento de alcance en `tasks/task-<nombre>/design-<nombre>.md`.
 
 #### 2. Generar el TRD (Requerimientos Técnicos) y Test Spec
 Arrastra al chat el comando para crear las especificaciones técnicas:
 ```markdown
-@commands/2-create-trd.md tasks/design-<nombre>.md
+@commands/2-create-trd.md tasks/task-<nombre>/design-<nombre>.md
 ```
 - **Qué hace la IA**: Diseña los diagramas de arquitectura Mermaid, define responsabilidades de módulos en `Proyecto/`, especifica los tests Given-When-Then y genera las secciones de **QA Handoff** y **DevOps Handoff** para tu equipo. Crea `tasks/task-<nombre>/trd-<nombre>.md` y `test-spec-<nombre>.md`.
 
@@ -150,13 +150,25 @@ Faena/
 │   ├── azure-function/         # Azure Functions y bindings
 │   └── project/                # Skills y SDKs privados de la empresa
 │
-├── agents/                     # 🤖 47 Agentes y roles especializados
+├── commands/                   # 🧩 Comandos arrastrables del flujo
+│   ├── 1-ticket.md             # Intake del ticket → tasks/task-<nombre>/design-<nombre>.md
+│   ├── 1b-design.md            # (Opcional) Diseño colaborativo con design-facilitator
+│   ├── 1c-decompose.md         # (Opcional) Descompone specs grandes en fases
+│   ├── 2-create-trd.md         # TRD + Test Spec con handoffs QA/DevOps
+│   ├── 3-create-tasks.md       # Desglose TDD (setup / RED / GREEN+VERIFY)
+│   ├── 4-update-context.md     # Sincronización del contexto del proyecto
+│   ├── design-to-blueprint-process/  # Pipeline UI opcional: 0 inventario → 7 paquete de ejecución
+│   ├── page-structure-process/       # Estructura y breakpoints de página (PAGE-STRUCTURE.txt)
+│   └── ...                     # create-adr, create-gherkins, create/load-context, design-ux-ui, make-agent
+│
+├── agents/                     # 🤖 28 agentes/roles + 12 agent-skills
 │   ├── coding/                 # Implementadores, testers TDD, reviewers de seguridad
 │   └── design/                 # Arquitectos de software y analistas de contexto
 │
 ├── AGENTS.md                   # 📜 Protocolo universal para agentes de IA
 ├── CLAUDE.md                   # 📜 Directivas para Claude Code
 ├── GEMINI.md                   # 📜 Directivas para Gemini / Antigravity
+├── OPENCODE.md                 # 📜 Directivas para OpenCode / Ollama local
 ├── .cursorrules                # 📜 Directivas para Cursor
 └── .gitignore                  # 🔒 Aislamiento estricto de Proyecto/**
 ```

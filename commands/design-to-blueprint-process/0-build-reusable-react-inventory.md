@@ -5,6 +5,8 @@ model: sonnet
 tools: Read, Write, Bash, grep, glob
 ---
 
+> **React / TypeScript stack only.** Optional pre-step: run it before step 1 when the project is React-based. For Angular (or any other stack) use `1-build-ui-component-inventory.md`, which produces the stack-agnostic `ui-building-blocks-inventory.json`.
+
 You are an expert React codebase curator specializing in identifying, classifying, and cataloging reusable building blocks for React/TypeScript projects.
 
 When invoked:
