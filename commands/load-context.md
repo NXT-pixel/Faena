@@ -27,8 +27,8 @@ Complete these validation steps silently (don't report individual checks to user
   - Tell user: "❌ No context found. Please run /create-context first to establish project context."
   - Exit gracefully
 - Count available context files: `ls -1 tasks/context/*.md 2>/dev/null | wc -l`
-- Expected: 10 context files (9 core + common-imports.md)
-- Minimum: 5 for partial context
+- Expected: 6 context files (team, learnings, tech, project-structure, progress, system-patterns)
+- Minimum: 4 for partial context
 
 ### 2. File Integrity Check
 For each expected context file:
@@ -53,25 +53,19 @@ Report any issues:
 
 Load context files in priority order optimized for design discussions:
 
-**Priority 1 - Team & Vision (load first):**
+**Priority 1 - Team (load first):**
 1. `team-context.md` - Team hierarchy, Tech Lead, QA, DevOps, colleagues and delegation protocol
-2. `project-vision.md` - Long-term direction and strategic goals
-3. `project-brief.md` - Core purpose and project scope
-4. `product-context.md` - User needs, personas, and requirements
 
-**Priority 2 - Current State & Memory (load second):**
-5. `progress.md` - Current status, recent work, and immediate focus
-6. `learnings.md` - Continuous memory, gotchas, conventions and previous ticket insights
-7. `project-overview.md` - Feature list, maturity, and capabilities
+**Priority 2 - Memory & current state (load second):**
+2. `learnings.md` - Continuous memory, gotchas, conventions and previous ticket insights
+3. `progress.md` - Current status, recent work, and immediate focus
 
-**Priority 3 - Technical Foundation (load third):**
-8. `tech-context.md` - Technology stack, dependencies, and tools
-9. `system-patterns.md` - Architecture patterns and design principles
-10. `project-structure.md` - Directory organization, repos in Proyecto/, and file layout
+**Priority 3 - Technical foundation (load third):**
+4. `tech-context.md` - Technology stack, dependencies, and tools
+5. `project-structure.md` - Directory organization, repos in Proyecto/, and file layout
+6. `system-patterns.md` - Architecture patterns and design principles
 
-**Priority 4 - Standards (load last):**
-11. `project-style-guide.md` - Coding conventions and company standards
-12. `common-imports.md` - Import patterns and public APIs
+**Standards are not context files:** coding conventions live in `rules/project/` and in the domain skill (`skills/<domain>/SKILL.md`). Read them directly; do not expect a style guide inside `tasks/context/`.
 
 ### 2. Validation During Loading
 
@@ -125,9 +119,9 @@ git status --short 2>/dev/null
 
 **If critical files are missing:**
 
-- `project-brief.md` OR `project-vision.md` missing:
-  - Attempt to understand from README.md
-  - Note limitation: "⚠️ Project goals unclear - missing brief/vision"
+- `team-context.md` missing:
+  - Note limitation: "⚠️ Tech Lead, QA and DevOps unknown - team-context.md missing"
+  - Do not invent names, roles or handoff contacts
   
 - `progress.md` missing:
   - Fall back to recent git commits for status
@@ -229,25 +223,25 @@ Provide comprehensive summary optimized for design discussions:
 If some files fail to load or are missing:
 
 **Minimum Viable Context** (can proceed):
-- Have at least 5/10 files
-- Must have: progress.md, project-overview.md, tech-context.md
-- Nice to have: common-imports.md (prevents import hallucination)
-- Can work around missing vision/style guide files
+- Have at least 4/6 files
+- Must have: team-context.md, tech-context.md, project-structure.md
+- Nice to have: system-patterns.md, progress.md
 
 **Insufficient Context** (should warn):
-- Fewer than 5/10 files loaded
-- Missing critical files: progress.md or project-overview.md
+- Fewer than 4/6 files loaded
+- Missing critical files: team-context.md, tech-context.md or project-structure.md
 - Tell user: "⚠️ Context is incomplete. Design decisions may not align with project goals."
-- Suggest: "Run /create-context to rebuild all context files"
+- Suggest: "Run /create-context to rebuild the detectable context files"
 
 **For each missing/failed file:**
 - Note what information is unavailable
 - Suggest remediation steps
 - Explain impact on design discussions:
-  - Missing `project-vision.md`: "Cannot assess long-term alignment"
-  - Missing `product-context.md`: "User needs unclear"
+  - Missing `team-context.md`: "Tech Lead, QA and DevOps unknown"
+  - Missing `tech-context.md`: "Stack and build commands unknown"
+  - Missing `project-structure.md`: "Repository layout unknown"
   - Missing `system-patterns.md`: "Architectural patterns unknown"
-  - Missing `project-style-guide.md`: "Coding conventions unclear"
+  - Missing `progress.md`: "Current status uncertain"
 
 ### 9. Context Summary for AI
 

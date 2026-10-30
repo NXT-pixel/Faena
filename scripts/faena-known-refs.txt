@@ -11,11 +11,6 @@
 agents/react-reviewer.md
 # Placeholder de plantilla ("/agents/coding/agent-name.md" como ejemplo de Path Format).
 agents/coding/agent-name.md
-# Contexto que solo genera commands/create-context.md, fuera del flujo de 5 pasos.
-tasks/context/project-style-guide.md
-tasks/context/common-imports.md
-# Sonda efimera de permisos (touch + rm), no un archivo del repo.
-tasks/context/.test
 # scripts/ esta obsoleto: quedaron de PrototypeZero y sus destinos no existen.
 scripts/start-dev-environment.ps1
 scripts/start-dev-environment.sh
