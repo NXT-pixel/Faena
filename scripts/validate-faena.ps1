@@ -4,13 +4,16 @@
     Verifica la integridad interna del harness Faena.
 
 .DESCRIPTION
-    Cinco chequeos, pensados para correr en local y en CI:
+    Seis chequeos, pensados para correr en local y en CI:
 
       1. skill-location   Todo SKILL.md vive en skills/<nombre>/ o skills/project/<nombre>/.
       2. skill-metadata   Cada SKILL.md tiene name y description, y name == nombre de la carpeta.
       3. skills-catalog   skills/README.md esta al dia (mismo generador que build-skills-index.ps1).
       4. rules-extension  No queda ningun .mdc fuera de .cursor/rules/.
-      5. path-references  Toda ruta skills/|rules/|agents/|commands/|scripts/|tasks/context/
+      5. protocol-adapters  PROTOCOL.md existe y AGENTS.md, CLAUDE.md, GEMINI.md, OPENCODE.md
+                          y .cursorrules lo referencian. Un adaptador que no apunta al
+                          protocolo es un fork esperando a divergir.
+      6. path-references  Toda ruta skills/|rules/|agents/|commands/|scripts/|tasks/context/
                           citada en la documentacion existe, con mayusculas exactas.
                           Solo se verifican rutas de archivo (con extension): referencias
                           a carpetas son indistinguibles de prosa como "agents/commands".
@@ -175,7 +178,35 @@ Add-CheckResult -Name 'rules-extension' -Ok ($strayRuleFiles.Count -eq 0) `
     -Lines $strayRuleFiles
 
 # --------------------------------------------------------------------------
-# 5. Referencias a rutas
+# 5. Protocolo unico y adaptadores
+# --------------------------------------------------------------------------
+
+$adapterNames = @('AGENTS.md', 'CLAUDE.md', 'GEMINI.md', 'OPENCODE.md', '.cursorrules')
+$adapterProblems = New-Object System.Collections.ArrayList
+
+if (-not (Test-Path -LiteralPath (Join-Path $repoRoot 'PROTOCOL.md') -PathType Leaf)) {
+    [void] $adapterProblems.Add('falta PROTOCOL.md en la raiz')
+}
+
+foreach ($adapterName in $adapterNames) {
+    $adapterPath = Join-Path $repoRoot $adapterName
+    if (-not (Test-Path -LiteralPath $adapterPath -PathType Leaf)) {
+        [void] $adapterProblems.Add(('falta el adaptador {0}' -f $adapterName))
+        continue
+    }
+
+    $adapterText = Read-FaenaText -Path $adapterPath
+    if ($adapterText -notmatch 'PROTOCOL\.md') {
+        [void] $adapterProblems.Add(('{0} no referencia PROTOCOL.md' -f $adapterName))
+    }
+}
+
+Add-CheckResult -Name 'protocol-adapters' -Ok ($adapterProblems.Count -eq 0) `
+    -Detail ('{0} adaptadores apuntan al protocolo' -f $adapterNames.Count) `
+    -Lines @($adapterProblems)
+
+# --------------------------------------------------------------------------
+# 6. Referencias a rutas
 # --------------------------------------------------------------------------
 
 $knownRefs = @{}

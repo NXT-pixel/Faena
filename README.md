@@ -175,13 +175,16 @@ Faena/
 ├── .github/workflows/          # ✅ CI: valida el harness en cada push y PR
 ├── .githooks/pre-commit        # ✅ Hook opcional: git config core.hooksPath .githooks
 │
-├── AGENTS.md                   # 📜 Protocolo universal para agentes de IA
-├── CLAUDE.md                   # 📜 Directivas para Claude Code
-├── GEMINI.md                   # 📜 Directivas para Gemini / Antigravity
-├── OPENCODE.md                 # 📜 Directivas para OpenCode / Ollama local
-├── .cursorrules                # 📜 Directivas para Cursor
+├── PROTOCOL.md                 # 📜 Fuente única de verdad del flujo y las invariantes
+├── AGENTS.md                   # 🔌 Adaptador: apunta a PROTOCOL.md
+├── CLAUDE.md                   # 🔌 Adaptador para Claude Code
+├── GEMINI.md                   # 🔌 Adaptador para Gemini / Antigravity
+├── OPENCODE.md                 # 🔌 Adaptador para OpenCode / Ollama local
+├── .cursorrules                # 🔌 Adaptador para Cursor
 └── .gitignore                  # 🔒 Aislamiento estricto de Proyecto/**
 ```
+
+> **Un protocolo, cinco adaptadores.** Todo el comportamiento normativo vive en [`PROTOCOL.md`](PROTOCOL.md). `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `OPENCODE.md` y `.cursorrules` son archivos de ~20 líneas que solo apuntan ahí y añaden notas del host. Si el flujo cambia, se edita `PROTOCOL.md` y ningún adaptador.
 
 ---
 
