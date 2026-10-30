@@ -14,3 +14,6 @@ agents/coding/agent-name.md
 # scripts/ esta obsoleto: quedaron de PrototypeZero y sus destinos no existen.
 scripts/start-dev-environment.ps1
 scripts/start-dev-environment.sh
+# TRD de un ticket GH cita un contexto que nunca se creo en este repo.
+# Arreglarlo = crear el archivo o corregir el TRD; despues, borrar esta linea.
+tasks/context/saas-multi-tenancy-and-features.md
