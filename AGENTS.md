@@ -18,13 +18,14 @@ Todo el contexto que necesitas para comprender el proyecto y ejecutar el trabajo
    - **`learnings.md`**: Memoria continua y descubrimientos de tickets anteriores.
 3. **`rules/`**: Reglas y directivas de calidad:
    - **`rules/project/`**: Reglas y estándares obligatorios de esta empresa (Clean Architecture, seguridad, naming conventions).
-   - **`rules/process-task-list.mdc`**: Disciplina estricta de TDD (RED-GREEN-VERIFY).
+   - **`rules/process-task-list.md`**: Disciplina estricta de TDD (RED-GREEN-VERIFY).
    - **`rules/security/`**: Reglas de seguridad para prevenir OWASP Top 10 y fuga de secretos.
 4. **`skills/`**: Conocimiento técnico especializado:
    - **Angular 18/19/20**: Reactividad con Signals, `linkedSignal`, `resource`, routing, testing en `skills/angular-developer/`.
    - **.NET 8/9 & C#**: Patrones en `skills/dotnet-patterns/` y testing con xUnit en `skills/csharp-testing/`.
    - **ABP Framework**: DDD, EF Core, multitenancy, microservicios y Angular en `skills/abp-*/`.
    - **Azure**: Serverless, bindings y cloud en `skills/azure-function/`.
+   - **Catálogo completo**: `skills/README.md` (generado por `scripts/build-skills-index.ps1`). La regla `rules/skills-routing.md` obliga a abrir el `SKILL.md` del dominio antes de escribir código.
 5. **`agents/`**: Personas y roles especializados que debes adoptar según la fase:
    - Arquitectura: `agents/design/software-architecture.md`, `agents/coding/dotnet-architect.md`.
    - Testing TDD (Fase RED): `agents/coding/jest-tester.md`, `agents/coding/xunit-tester.md`, `agents/coding/pytest-tester.md`.

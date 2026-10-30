@@ -337,7 +337,7 @@ Read `tasks/context/team-context.md` to populate the team members and responsibi
   - Team context: [team-context.md](/tasks/context/team-context.md)
   - Architecture patterns: [system-patterns.md](/tasks/context/system-patterns.md)
   - Tech stack: [tech-context.md](/tasks/context/tech-context.md)
-  - Coding standards: [company-standards.mdc](/rules/project/company-standards.mdc)
+  - Coding standards: [company-standards.md](/rules/project/company-standards.md)
   - Project structure: [project-structure.md](/tasks/context/project-structure.md)
 - **Skills & Agents**: Reference `skills/` or ECC (`C:\Users\santi\Documents\GitHub\ECC\skills\`).
 - **Existing Schemas**: `[path/to/related/schemas]`

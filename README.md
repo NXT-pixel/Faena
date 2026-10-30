@@ -140,9 +140,11 @@ Faena/
 ├── rules/                      # 📏 Reglas y directivas de calidad
 │   ├── project/                # Reglas específicas de la empresa (máxima prioridad)
 │   ├── security/               # Directivas de seguridad OWASP y prevención de fugas
-│   └── process-task-list.mdc   # Protocolo estricto TDD
+│   ├── skills-routing.md       # Enrutamiento obligatorio a la skill del dominio
+│   └── process-task-list.md    # Protocolo estricto TDD
 │
-├── skills/                     # 🧠 Habilidades y patrones técnicos profundos
+├── skills/                     # 🧠 Habilidades y patrones técnicos profundos (única fuente)
+│   ├── README.md               # Catálogo generado por scripts/build-skills-index.ps1
 │   ├── angular-developer/      # Reactividad moderna en Angular (Signals, resource, forms)
 │   ├── dotnet-patterns/        # C# idiomático, Clean Architecture, inmutabilidad
 │   ├── csharp-testing/         # Testing con xUnit, FluentAssertions, Moq
@@ -161,9 +163,17 @@ Faena/
 │   ├── page-structure-process/       # Estructura y breakpoints de página (PAGE-STRUCTURE.txt)
 │   └── ...                     # create-adr, create-gherkins, create/load-context, design-ux-ui, make-agent
 │
-├── agents/                     # 🤖 28 agentes/roles + 12 agent-skills
+├── agents/                     # 🤖 28 agentes/roles (las skills viven solo en skills/)
 │   ├── coding/                 # Implementadores, testers TDD, reviewers de seguridad
 │   └── design/                 # Arquitectos de software y analistas de contexto
+│
+├── scripts/                    # 🛠️ Utilidades del harness
+│   ├── build-skills-index.ps1  # Regenera skills/README.md desde los SKILL.md
+│   ├── validate-faena.ps1      # Verifica la integridad del harness (CI + pre-commit)
+│   └── faena-known-refs.txt    # Deuda tolerada: referencias históricas rotas
+│
+├── .github/workflows/          # ✅ CI: valida el harness en cada push y PR
+├── .githooks/pre-commit        # ✅ Hook opcional: git config core.hooksPath .githooks
 │
 ├── AGENTS.md                   # 📜 Protocolo universal para agentes de IA
 ├── CLAUDE.md                   # 📜 Directivas para Claude Code
