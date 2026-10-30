@@ -18,7 +18,7 @@ Todo el contexto que necesitas para comprender el proyecto y ejecutar el trabajo
    - **`learnings.md`**: Memoria continua y descubrimientos de tickets anteriores.
 3. **`rules/`**: Reglas y directivas de calidad:
    - **`rules/project/`**: Reglas y estándares obligatorios de esta empresa (Clean Architecture, seguridad, naming conventions).
-   - **`rules/process-task-list.mdc`**: Disciplina estricta de TDD (RED-GREEN-VERIFY).
+   - **`rules/process-task-list.md`**: Disciplina estricta de TDD (RED-GREEN-VERIFY).
    - **`rules/security/`**: Reglas de seguridad para prevenir OWASP Top 10 y fuga de secretos.
 4. **`skills/`**: Conocimiento técnico especializado:
    - **Angular 18/19/20**: Reactividad con Signals, `linkedSignal`, `resource`, routing, testing en `skills/angular-developer/`.

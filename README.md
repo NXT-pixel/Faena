@@ -140,7 +140,8 @@ Faena/
 ├── rules/                      # 📏 Reglas y directivas de calidad
 │   ├── project/                # Reglas específicas de la empresa (máxima prioridad)
 │   ├── security/               # Directivas de seguridad OWASP y prevención de fugas
-│   └── process-task-list.mdc   # Protocolo estricto TDD
+│   ├── skills-routing.md       # Enrutamiento obligatorio a la skill del dominio
+│   └── process-task-list.md    # Protocolo estricto TDD
 │
 ├── skills/                     # 🧠 Habilidades y patrones técnicos profundos (única fuente)
 │   ├── README.md               # Catálogo generado por scripts/build-skills-index.ps1
