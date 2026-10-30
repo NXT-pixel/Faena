@@ -206,7 +206,7 @@ This feature is decomposed into the following phases:
 
 ## Project Context References
 
-**Architectural Patterns**: See [system-patterns.md](/tasks/context/system-patterns.md#L20-L95) for established patterns
+**Architectural Patterns**: See [system-patterns.md](/tasks/context/system-patterns.md) for established patterns
 
 Example from project (Schema-First Validation):
 ```typescript
@@ -215,11 +215,11 @@ export const modelSchema = z.object({...}).strict()
 export type Model = z.infer<typeof modelSchema>
 ```
 
-Full pattern details: [system-patterns.md#L20-L45](/tasks/context/system-patterns.md#L20-L45)
+Full pattern details: [system-patterns.md](/tasks/context/system-patterns.md)
 
 **Technology Stack**: [tech-context.md](/tasks/context/tech-context.md)
 
-**Coding Conventions**: [project-style-guide.md](/tasks/context/project-style-guide.md)
+**Coding Conventions**: `rules/project/` (company standards) + the domain skill in `skills/<domain>/SKILL.md`
 
 ---
 
@@ -337,7 +337,7 @@ Full pattern details: [system-patterns.md#L20-L45](/tasks/context/system-pattern
 See project context for implementation guidance:
 - Architecture patterns: [system-patterns.md](/tasks/context/system-patterns.md)
 - Technology choices: [tech-context.md](/tasks/context/tech-context.md)
-- Coding standards: [project-style-guide.md](/tasks/context/project-style-guide.md)
+- Coding standards: `rules/project/` (company) + `rules/` (technical rules)
 
 ---
 

@@ -1,0 +1,16 @@
+# Referencias historicas rotas que la validacion del harness tolera.
+#
+# Formato: una ruta por linea, relativa a la raiz del repo. Se comparan sin
+# distinguir que documento las cita.
+#
+# Esta lista es deuda tecnica, no un mecanismo para silenciar errores nuevos.
+# Cuando arregles una referencia, BORRA su linea de aqui: el chequeo
+# path-references vuelve a marcarla como nueva si el archivo desaparece.
+
+# Falta el archivo de agente al que se apunta.
+agents/react-reviewer.md
+# Placeholder de plantilla ("/agents/coding/agent-name.md" como ejemplo de Path Format).
+agents/coding/agent-name.md
+# scripts/ esta obsoleto: quedaron de PrototypeZero y sus destinos no existen.
+scripts/start-dev-environment.ps1
+scripts/start-dev-environment.sh

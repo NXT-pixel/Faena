@@ -9,4 +9,4 @@ Utiliza este espacio para documentar y hacer cumplir los estándares particulare
 - **Seguridad y secretos**: Reglas sobre autenticación, tokens JWT, headers de tenant, CORS.
 - **Testing**: Cobertura mínima exigida por la empresa (ej. 80%), frameworks de test obligatorios (`jest`, `pytest`, `xunit`).
 
-Cualquier archivo `.mdc` o `.md` creado aquí será cargado automáticamente por los agentes de Faena al analizar y ejecutar tareas en los repositorios de `Proyecto/`.
+Los agentes de Faena **no cargan esta carpeta automáticamente**. Las reglas de aquí se aplican porque `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `OPENCODE.md` y `.cursorrules` ordenan leer `rules/project/` antes de analizar o modificar código en `Proyecto/`. Escribe las reglas en `.md` y el agente las lee con su herramienta de lectura de archivos.
