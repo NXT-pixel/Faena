@@ -40,6 +40,11 @@ venv.bak/
 *.swp
 *.swo
 
+# Obsidian vault state (per-machine UI state, rewrites on every session)
+# Si abres Faena como vault de Obsidian, agrega Proyecto/ a userIgnoreFilters
+# en la configuracion del vault: es local, no se versiona.
+.obsidian/
+
 # Node / JS
 node_modules/
 npm-debug.log*
