@@ -59,3 +59,7 @@ Proyecto/**
 
 # Faena transient runs & outputs (optional)
 # tasks/task-*/
+
+# Índice local de tickets: se regenera con .\scripts\index-tasks.cmd y difiere
+# por rama y por máquina, así que versionarlo solo produce conflictos.
+tasks/INDEX.md

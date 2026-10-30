@@ -190,6 +190,7 @@ Faena/
 │   └── <repo>/                 # Uno o varios repos clonados aquí
 │
 ├── tasks/
+│   ├── README.md               # Convención de carpetas y cómo ver el estado
 │   ├── context/                # Contexto vivo (6 archivos)
 │   │   ├── team-context.md     # Equipo, roles e identidad Git corporativa
 │   │   ├── tech-context.md     # Stack, versiones y comandos reales
@@ -201,6 +202,7 @@ Faena/
 │   └── task-<nombre>/          # Todos los artefactos de un ticket, juntos
 │
 ├── rules/                      # 📏 Reglas y disciplina
+│   ├── README.md               # Índice: qué regla aplica y cuándo
 │   ├── project/                # Estándares de la empresa (máxima prioridad)
 │   ├── security/               # OWASP, secretos, checklist de commit
 │   ├── skills-routing.md       # Obliga a leer la skill del dominio
@@ -213,12 +215,14 @@ Faena/
 │   └── project/                # Skills privadas de la empresa
 │
 ├── commands/                   # 🧩 Comandos arrastrables del flujo
+│   └── templates/              # Plantillas que un comando carga solo al usarlas
 ├── agents/                     # 🤖 28 personas/roles por fase
 │
 ├── scripts/                    # 🛠️ Mantenimiento del harness
 │   ├── doctor.ps1              # Diagnóstico del entorno + el arreglo de cada aviso
 │   ├── validate-faena.ps1      # 7 chequeos de integridad
 │   ├── build-skills-index.ps1  # Regenera skills/README.md
+│   ├── build-tasks-index.ps1   # Genera tasks/INDEX.md (local, no versionado)
 │   ├── faena-known-refs.txt    # Deuda tolerada (vacía a propósito)
 │   └── *.cmd                   # Wrappers para Windows: no pasan por ExecutionPolicy
 │
@@ -243,6 +247,7 @@ Faena/
 | Diagnosticar el entorno | `.\scripts\doctor.cmd` |
 | Validar el harness | `.\scripts\validate.cmd` |
 | Regenerar el catálogo de skills | `.\scripts\rebuild-skills.cmd` |
+| Ver el estado de los tickets | `.\scripts\index-tasks.cmd` |
 | Añadir una skill | Crea `skills/<nombre>/SKILL.md` con `name` y `description`; el hook o el rebuild regeneran el catálogo |
 | Añadir una regla de empresa | Un `.md` en `rules/project/` |
 | Añadir un agente o comando | Arrastra `@commands/make-agent.md` |
