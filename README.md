@@ -12,17 +12,20 @@ git clone https://github.com/tu-usuario/Faena.git Mi-Empresa
 cd Mi-Empresa
 git clone git@github.com:empresa/backend-api.git Proyecto/backend-api   # uno o varios repos del cliente
 
-# Windows
-.\scripts\validate-faena.ps1
+# Windows (los wrappers .cmd no pasan por la política de ejecución)
+.\scripts\doctor.cmd
+.\scripts\validate.cmd
 # macOS / Linux
+pwsh ./scripts/doctor.ps1
 pwsh ./scripts/validate-faena.ps1
 ```
 
 1. Rellena `tasks/context/team-context.md` (organigrama **e** identidad Git corporativa).
-2. Opcional: `git config core.hooksPath .githooks` para validar en cada commit.
-3. Arrastra `@commands/1-ticket.md` al chat y pega el ticket.
+2. Opcional: `git config core.hooksPath .githooks` para validar —y autoreparar el catálogo— en cada commit.
+3. Arrastra `@commands/0-verify-agent.md` al chat: confirma que el agente cargó el protocolo.
+4. Arrastra `@commands/1-ticket.md` al chat y pega el ticket.
 
-Si la validación sale en verde (`OK: harness integro.`) y tu agente abre `PROTOCOL.md`, ya está funcionando.
+Si `doctor` no marca ningún fallo y el smoke test devuelve `PROTOCOLO CARGADO: SÍ`, ya está funcionando.
 
 ---
 
@@ -105,20 +108,23 @@ Analiza `Proyecto/`, detecta stack, gestores de paquetes y comandos reales de te
 ### 4. Validar la instalación
 
 ```powershell
-.\scripts\validate-faena.ps1
+.\scripts\doctor.cmd      # diagnóstico del entorno, con el arreglo de cada aviso
+.\scripts\validate.cmd    # siete chequeos de integridad del harness
 ```
 
-Seis chequeos: ubicación y metadata de skills, catálogo al día, ausencia de `.mdc` sueltos, adaptadores apuntando a `PROTOCOL.md` y referencias de rutas existentes. Sale con código 1 si algo está roto, así que sirve igual en local que en CI.
+Los siete chequeos: ubicación y metadata de skills, catálogo al día, ausencia de `.mdc` sueltos, adaptadores apuntando a `PROTOCOL.md`, repositorios de `Proyecto/` documentados en `project-structure.md` y referencias de rutas existentes. Sale con código 1 si algo está roto, así que sirve igual en local que en CI.
+
+Los wrappers `.cmd` existen para que la política de ejecución de Windows no te bloquee: un `.cmd` no la consulta.
 
 Opcional pero recomendado:
 
 ```bash
-git config core.hooksPath .githooks   # valida antes de cada commit
+git config core.hooksPath .githooks   # valida (y regenera el catálogo) antes de cada commit
 ```
 
 ### 5. Elegir host y empezar
 
-Abre el repo con tu editor y arrastra el primer comando. Nada más.
+Abre el repo con tu editor y arrastra `@commands/0-verify-agent.md`: es el smoke test que te dice si el agente cargó el protocolo antes de que descubras lo contrario a mitad de un ticket.
 
 ---
 
@@ -210,9 +216,11 @@ Faena/
 ├── agents/                     # 🤖 28 personas/roles por fase
 │
 ├── scripts/                    # 🛠️ Mantenimiento del harness
-│   ├── validate-faena.ps1      # 6 chequeos de integridad
+│   ├── doctor.ps1              # Diagnóstico del entorno + el arreglo de cada aviso
+│   ├── validate-faena.ps1      # 7 chequeos de integridad
 │   ├── build-skills-index.ps1  # Regenera skills/README.md
-│   └── faena-known-refs.txt    # Deuda tolerada (referencias rotas conocidas)
+│   ├── faena-known-refs.txt    # Deuda tolerada (vacía a propósito)
+│   └── *.cmd                   # Wrappers para Windows: no pasan por ExecutionPolicy
 │
 ├── .github/workflows/          # ✅ CI: valida en cada push a main y en PRs
 ├── .githooks/pre-commit        # ✅ Hook opcional (git config core.hooksPath .githooks)
@@ -232,25 +240,39 @@ Faena/
 
 | Tarea | Comando |
 | :--- | :--- |
-| Validar el harness | `.\scripts\validate-faena.ps1` |
-| Regenerar el catálogo de skills tras añadir una | `.\scripts\build-skills-index.ps1` |
-| Añadir una skill | Crea `skills/<nombre>/SKILL.md` con `name` y `description`, regenera el catálogo |
+| Diagnosticar el entorno | `.\scripts\doctor.cmd` |
+| Validar el harness | `.\scripts\validate.cmd` |
+| Regenerar el catálogo de skills | `.\scripts\rebuild-skills.cmd` |
+| Añadir una skill | Crea `skills/<nombre>/SKILL.md` con `name` y `description`; el hook o el rebuild regeneran el catálogo |
 | Añadir una regla de empresa | Un `.md` en `rules/project/` |
 | Añadir un agente o comando | Arrastra `@commands/make-agent.md` |
 
-La deuda conocida (referencias a archivos que aún no existen) está listada en `scripts/faena-known-refs.txt`. Cuando arregles una, **borra su línea**: la validación vuelve a marcarla como nueva si el archivo desaparece.
+En macOS/Linux, usa `pwsh ./scripts/<script>.ps1`.
+
+Con el hook activado, el catálogo se **regenera y se añade al commit** solo: no puedes olvidarte de él. En CI, un catálogo desactualizado sí falla (el CI no ejecuta hooks).
+
+La deuda conocida (referencias a archivos que aún no existen) vive en `scripts/faena-known-refs.txt` y hoy está vacía a propósito. Cuando arregles una, **borra su línea**: la validación vuelve a marcarla como nueva si el archivo desaparece.
 
 ---
 
-## 🧯 Problemas conocidos
+## 🧯 Si algo no funciona
+
+Empieza por el diagnóstico automático:
+
+```powershell
+.\scripts\doctor.cmd          # añade -Network para probar también el acceso al remoto
+```
+
+Comprueba repo, PowerShell, git, política de ejecución, hook, catálogo, repositorios clonados, `team-context.md` y backend TLS, y te imprime el comando exacto de cada arreglo.
+
+Quedan dos casos que dependen de tu entorno o de tu host, y no son automatizables:
 
 | Síntoma | Causa | Solución |
 | :--- | :--- | :--- |
-| `cannot be loaded. The file ... is not digitally signed` | Política de ejecución de Windows | `powershell -ExecutionPolicy Bypass -File .\scripts\validate-faena.ps1` |
-| El agente cree que `Proyecto/` está vacío | Herramientas que respetan `.gitignore` | Lista el disco (`Get-ChildItem Proyecto`); el `.gitignore` no se toca |
-| `skills-catalog` falla en CI | Añadiste una skill sin regenerar | `.\scripts\build-skills-index.ps1` y commitea `skills/README.md` |
-| `schannel: AcquireCredentialsHandle failed` al hacer push | Backend TLS de Windows en entornos restringidos | `git -c http.sslBackend=openssl push …` |
-| El agente no sigue el protocolo | Tu host no lee ninguno de los 5 adaptadores | Pega `PROTOCOL.md` en el chat al inicio |
+| `schannel: AcquireCredentialsHandle failed` al hacer push | Schannel de Windows detrás de proxy o inspección TLS | `git -c http.sslBackend=openssl push origin <rama>` |
+| El agente no sigue el protocolo y `@commands/0-verify-agent.md` devuelve `PROTOCOLO CARGADO: NO` | Tu host no lee ninguno de los 5 adaptadores | Pega el contenido de `PROTOCOL.md` al inicio del chat y repite el smoke test |
+
+Un caso que ya no es un problema pero conviene entender: `Proyecto/**` está en `.gitignore` **a propósito**, así que las herramientas que respetan gitignore (ripgrep, índices de algunos editores) no lo ven. Por eso el protocolo prohíbe deducir su contenido con `git status` y el validador comprueba que cada repo clonado esté documentado en `project-structure.md`.
 | `git merge` con ruido en `.obsidian/` | Estado del vault de Obsidian | Ya está en `.gitignore`; si añades una herramienta, revisa que no versiones su estado local |
 
 ---

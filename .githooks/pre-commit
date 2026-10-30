@@ -1,5 +1,7 @@
 #!/bin/sh
-# Faena pre-commit hook: impide commitear el harness en estado inconsistente.
+# Faena pre-commit hook: deja el harness consistente antes de commitear.
+#   1. Regenera skills/README.md si hay skills nuevas o editadas, y lo añade al commit.
+#   2. Valida la integridad completa del harness.
 # Activalo una vez por clon:
 #   git config core.hooksPath .githooks
 set -e
@@ -13,4 +15,12 @@ else
     exit 0
 fi
 
+# 1. Catalogo de skills: reparar en vez de fallar.
+"$powershell_bin" -NoProfile -ExecutionPolicy Bypass -File scripts/build-skills-index.ps1
+if ! git diff --quiet -- skills/README.md; then
+    git add skills/README.md
+    echo "faena: skills/README.md regenerado y anadido al commit."
+fi
+
+# 2. Integridad del harness.
 "$powershell_bin" -NoProfile -ExecutionPolicy Bypass -File scripts/validate-faena.ps1

@@ -83,3 +83,4 @@ _Generado por `scripts/build-skills-index.ps1`. No editar a mano._
 | [`temporal-python-testing`](temporal-python-testing/SKILL.md) | Test Temporal workflows with pytest, time-skipping, and mocking strategies. Covers unit testing, integration testing, replay testing, and local development setup. Use when implementing Temporal workflow tests or debugging test failures. |
 | [`workflow-orchestration-patterns`](workflow-orchestration-patterns/SKILL.md) | Design durable workflows with Temporal for distributed systems. Covers workflow vs activity separation, saga patterns, state management, and determinism constraints. Use when building long-running processes, distributed transactions, or microservice orchestration. |
 <!-- END:skills -->
+| `zz-stale` | fila inventada a mano |
