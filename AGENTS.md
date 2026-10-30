@@ -25,6 +25,7 @@ Todo el contexto que necesitas para comprender el proyecto y ejecutar el trabajo
    - **.NET 8/9 & C#**: Patrones en `skills/dotnet-patterns/` y testing con xUnit en `skills/csharp-testing/`.
    - **ABP Framework**: DDD, EF Core, multitenancy, microservicios y Angular en `skills/abp-*/`.
    - **Azure**: Serverless, bindings y cloud en `skills/azure-function/`.
+   - **Catálogo completo**: `skills/README.md` (generado por `scripts/build-skills-index.ps1`). La regla `rules/skills-routing.md` obliga a abrir el `SKILL.md` del dominio antes de escribir código.
 5. **`agents/`**: Personas y roles especializados que debes adoptar según la fase:
    - Arquitectura: `agents/design/software-architecture.md`, `agents/coding/dotnet-architect.md`.
    - Testing TDD (Fase RED): `agents/coding/jest-tester.md`, `agents/coding/xunit-tester.md`, `agents/coding/pytest-tester.md`.

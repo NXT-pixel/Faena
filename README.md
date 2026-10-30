@@ -142,7 +142,8 @@ Faena/
 │   ├── security/               # Directivas de seguridad OWASP y prevención de fugas
 │   └── process-task-list.mdc   # Protocolo estricto TDD
 │
-├── skills/                     # 🧠 Habilidades y patrones técnicos profundos
+├── skills/                     # 🧠 Habilidades y patrones técnicos profundos (única fuente)
+│   ├── README.md               # Catálogo generado por scripts/build-skills-index.ps1
 │   ├── angular-developer/      # Reactividad moderna en Angular (Signals, resource, forms)
 │   ├── dotnet-patterns/        # C# idiomático, Clean Architecture, inmutabilidad
 │   ├── csharp-testing/         # Testing con xUnit, FluentAssertions, Moq
@@ -161,7 +162,7 @@ Faena/
 │   ├── page-structure-process/       # Estructura y breakpoints de página (PAGE-STRUCTURE.txt)
 │   └── ...                     # create-adr, create-gherkins, create/load-context, design-ux-ui, make-agent
 │
-├── agents/                     # 🤖 28 agentes/roles + 12 agent-skills
+├── agents/                     # 🤖 28 agentes/roles (las skills viven solo en skills/)
 │   ├── coding/                 # Implementadores, testers TDD, reviewers de seguridad
 │   └── design/                 # Arquitectos de software y analistas de contexto
 │
