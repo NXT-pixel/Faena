@@ -7,10 +7,6 @@
 # Cuando arregles una referencia, BORRA su linea de aqui: el chequeo
 # path-references vuelve a marcarla como nueva si el archivo desaparece.
 
-# Falta el archivo de agente al que se apunta.
-agents/react-reviewer.md
-# Placeholder de plantilla ("/agents/coding/agent-name.md" como ejemplo de Path Format).
-agents/coding/agent-name.md
 # TRD de un ticket GH cita un contexto que nunca se creo en este repo.
 # Arreglarlo = crear el archivo o corregir el TRD; despues, borrar esta linea.
 tasks/context/saas-multi-tenancy-and-features.md

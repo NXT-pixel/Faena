@@ -43,7 +43,6 @@ Un **harness de contexto**: el código del cliente vive en `Proyecto/`, y todo l
 - **No ejecuta trabajo por su cuenta.** Los comandos los arrastra una persona; el agente no inicia tickets solo.
 - **No reemplaza** tu CI/CD, tu linter ni a tu QA. Los gates vienen del repo del cliente.
 - **No necesita Docker, base de datos ni dependencias.** Los dos scripts de `scripts/` son mantenimiento del harness, no parte del flujo de un ticket.
-- **`.env.example` es legado** de un modo con runtime que ya no se usa: el flujo por chat no lee variables de entorno. Puedes ignorarlo.
 
 ---
 

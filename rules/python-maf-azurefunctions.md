@@ -1,4 +1,4 @@
-﻿---
+---
 description: Python Microsoft Agent Framework + Azure Functions conventions
 globs: "**/function_app.py"
 alwaysApply: false
@@ -14,5 +14,5 @@ When editing the Azure Functions app entrypoint for Microsoft Agent Framework (P
 - Optionally set `enable_health_check=True` and `max_poll_retries=50` on `AgentFunctionApp` when needed.
 - Prefer a small factory (e.g. `_create_agent()`) that returns the agent, then `app = AgentFunctionApp(agents=[_create_agent()])`.
 
-For full patterns, tools, durable state, and multi-agent/workflow samples, use the **python-maf-azurefunctions** coding agent (documentation and best-practices in `agents/coding/python-maf-azurefunctions/`).
+For full patterns, tools, durable state, and multi-agent/workflow samples, apply this rule directly: this harness has no dedicated python-maf agent, and `skills/azure-function/SKILL.md` covers the .NET side.
 

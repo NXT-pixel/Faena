@@ -56,9 +56,6 @@ pnpm-debug.log*
 Proyecto/**
 !Proyecto/.gitkeep
 !Proyecto/README.md
-projects/**
-!projects/.gitkeep
-!projects/README.md
 
 # Faena transient runs & outputs (optional)
 # tasks/task-*/
