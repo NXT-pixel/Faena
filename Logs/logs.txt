@@ -1,0 +1,24 @@
+2026-10-26 14:43:29.375 -05:00 [INF] Starting PrototypeZero.CoreService
+2026-10-26 14:43:29.706 -05:00 [FTL] PrototypeZero.CoreService terminated unexpectedly!
+Volo.Abp.AbpInitializationException: An error occurred during ConfigureServicesAsync phase of the module PrototypeZero.CoreService.PrototypeZeroCoreServiceModule, PrototypeZero.CoreService, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null. See the inner exception for details.
+ ---> System.ArgumentNullException: Value cannot be null. (Parameter 'configuration')
+   at StackExchange.Redis.ConfigurationOptions.DoParse(String configuration, Boolean ignoreUnknown) in /_/src/StackExchange.Redis/ConfigurationOptions.cs:line 912
+   at StackExchange.Redis.ConfigurationOptions.Parse(String configuration, Boolean ignoreUnknown) in /_/src/StackExchange.Redis/ConfigurationOptions.cs:line 718
+   at StackExchange.Redis.ConfigurationOptions.Parse(String configuration) in /_/src/StackExchange.Redis/ConfigurationOptions.cs:line 708
+   at StackExchange.Redis.ConnectionMultiplexer.Connect(String configuration, TextWriter log) in /_/src/StackExchange.Redis/ConnectionMultiplexer.cs:line 663
+   at PrototypeZero.CoreService.PrototypeZeroCoreServiceModule.CreateRedisConnection(IConfiguration configuration) in C:\Users\santi\Documents\GitHub\Growth-Hacking\Proyecto\growthhacking.PrototypeZero\services\core\PrototypeZero.CoreService\PrototypeZeroCoreServiceModule.cs:line 239
+   at PrototypeZero.CoreService.PrototypeZeroCoreServiceModule.ConfigureServices(ServiceConfigurationContext context) in C:\Users\santi\Documents\GitHub\Growth-Hacking\Proyecto\growthhacking.PrototypeZero\services\core\PrototypeZero.CoreService\PrototypeZeroCoreServiceModule.cs:line 120
+   at Volo.Abp.Modularity.AbpModule.ConfigureServicesAsync(ServiceConfigurationContext context)
+   at Volo.Abp.AbpApplicationBase.ConfigureServicesAsync()
+   --- End of inner exception stack trace ---
+   at Volo.Abp.AbpApplicationBase.ConfigureServicesAsync()
+   at Volo.Abp.AbpApplicationFactory.CreateAsync[TStartupModule](IServiceCollection services, Action`1 optionsAction)
+   at Microsoft.Extensions.DependencyInjection.ServiceCollectionApplicationExtensions.AddApplicationAsync[TStartupModule](IServiceCollection services, Action`1 optionsAction)
+   at Microsoft.Extensions.DependencyInjection.WebApplicationBuilderExtensions.AddApplicationAsync[TStartupModule](WebApplicationBuilder builder, Action`1 optionsAction)
+   at PrototypeZero.CoreService.Program.Main(String[] args) in C:\Users\santi\Documents\GitHub\Growth-Hacking\Proyecto\growthhacking.PrototypeZero\services\core\PrototypeZero.CoreService\Program.cs:line 55
+2026-10-26 14:43:29.706 -05:00 [FTL] An error occurred during ConfigureServicesAsync phase of the module PrototypeZero.CoreService.PrototypeZeroCoreServiceModule, PrototypeZero.CoreService, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null. See the inner exception for details.
+2026-10-26 14:43:29.706 -05:00 [FTL]    at Volo.Abp.AbpApplicationBase.ConfigureServicesAsync()
+   at Volo.Abp.AbpApplicationFactory.CreateAsync[TStartupModule](IServiceCollection services, Action`1 optionsAction)
+   at Microsoft.Extensions.DependencyInjection.ServiceCollectionApplicationExtensions.AddApplicationAsync[TStartupModule](IServiceCollection services, Action`1 optionsAction)
+   at Microsoft.Extensions.DependencyInjection.WebApplicationBuilderExtensions.AddApplicationAsync[TStartupModule](WebApplicationBuilder builder, Action`1 optionsAction)
+   at PrototypeZero.CoreService.Program.Main(String[] args) in C:\Users\santi\Documents\GitHub\Growth-Hacking\Proyecto\growthhacking.PrototypeZero\services\core\PrototypeZero.CoreService\Program.cs:line 55
