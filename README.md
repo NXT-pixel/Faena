@@ -167,6 +167,14 @@ Faena/
 │   ├── coding/                 # Implementadores, testers TDD, reviewers de seguridad
 │   └── design/                 # Arquitectos de software y analistas de contexto
 │
+├── scripts/                    # 🛠️ Utilidades del harness
+│   ├── build-skills-index.ps1  # Regenera skills/README.md desde los SKILL.md
+│   ├── validate-faena.ps1      # Verifica la integridad del harness (CI + pre-commit)
+│   └── faena-known-refs.txt    # Deuda tolerada: referencias históricas rotas
+│
+├── .github/workflows/          # ✅ CI: valida el harness en cada push y PR
+├── .githooks/pre-commit        # ✅ Hook opcional: git config core.hooksPath .githooks
+│
 ├── AGENTS.md                   # 📜 Protocolo universal para agentes de IA
 ├── CLAUDE.md                   # 📜 Directivas para Claude Code
 ├── GEMINI.md                   # 📜 Directivas para Gemini / Antigravity

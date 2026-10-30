@@ -1,0 +1,18 @@
+name: Validate Faena harness
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  validate:
+    # Ubuntu + PowerShell: corre en un filesystem case-sensitive, que es donde
+    # se rompen los SKILL.md con mayusculas o las rutas con casing distinto.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate harness integrity
+        shell: pwsh
+        run: ./scripts/validate-faena.ps1

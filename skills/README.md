@@ -34,6 +34,10 @@ Este directorio es la **única fuente de verdad** del conocimiento técnico espe
 
    La validación falla si el catálogo quedó viejo, si hay un `SKILL.md` fuera de `skills/` o si un `name` no coincide con su carpeta.
 
+> En Windows, si la política de ejecución bloquea los scripts, usa:
+> `powershell -ExecutionPolicy Bypass -File .\scripts\build-skills-index.ps1`
+> y lo mismo para `validate-faena.ps1`.
+
 ## Skills privadas de la empresa
 
 Las skills internas de un cliente (SDKs propios, APIs privadas) van en [`skills/project/`](project/), no en `skills/` a secas. Ver ese README para el criterio de aislamiento.

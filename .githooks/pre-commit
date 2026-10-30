@@ -1,0 +1,16 @@
+#!/bin/sh
+# Faena pre-commit hook: impide commitear el harness en estado inconsistente.
+# Activalo una vez por clon:
+#   git config core.hooksPath .githooks
+set -e
+
+if command -v pwsh >/dev/null 2>&1; then
+    powershell_bin="pwsh"
+elif command -v powershell >/dev/null 2>&1; then
+    powershell_bin="powershell"
+else
+    echo "faena: PowerShell no encontrado; se omite la validacion del harness."
+    exit 0
+fi
+
+"$powershell_bin" -NoProfile -ExecutionPolicy Bypass -File scripts/validate-faena.ps1
