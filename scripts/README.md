@@ -1,71 +1,59 @@
-﻿# Scripts for new developers
+# 🛠️ Scripts del harness
 
-Run from **PrototypeZero repo root** (or invoke paths below from anywhere; they resolve the repo from `scripts`).
+Dos utilidades de mantenimiento. **Ninguna hace falta para trabajar un ticket**: el flujo por chat no ejecuta scripts.
+
+```powershell
+.\scripts\validate-faena.ps1          # ¿está el harness íntegro?
+.\scripts\build-skills-index.ps1      # regenera el catálogo de skills
+```
+
+> En Windows, si la política de ejecución bloquea los scripts:
+> `powershell -ExecutionPolicy Bypass -File .\scripts\validate-faena.ps1`
 
 ---
 
-## 1. Start the **full** environment (recommended for first-time setup)
+## `validate-faena.ps1`
 
-`start-env.ps1` and `start-env.sh` are thin wrappers. They run [`scripts/start-dev-environment.ps1`](../../scripts/start-dev-environment.ps1) (or the equivalent [`.sh`](../../scripts/start-dev-environment.sh)), which in one go:
+Seis chequeos, pensados para local y para CI:
 
-- Creates the `prototypezero` Docker network (if needed)
-- Starts **infrastructure** from `etc/docker/containers/*.yml` (SQL Server, Redis, RabbitMQ, monitoring, etc.)
-- Creates `openiddict.pfx` for the Auth host (in a .NET SDK container) if missing
-- **Publishes** all microservice/gateway projects (in a container; no local .NET required)
-- Runs **`docker/docker-compose.apps.yml`** (all app containers, including Angular on port 4200)
+| Chequeo | Qué verifica |
+| :--- | :--- |
+| `skill-location` | Todo `SKILL.md` vive en `skills/<nombre>/` o `skills/project/<nombre>/`, con mayúsculas exactas |
+| `skill-metadata` | Cada skill tiene `name` y `description`, y `name` coincide con su carpeta |
+| `skills-catalog` | `skills/README.md` está al día respecto a los `SKILL.md` |
+| `rules-extension` | No queda ningún `.mdc` fuera de `.cursor/rules/` |
+| `protocol-adapters` | `PROTOCOL.md` existe y los cinco adaptadores lo referencian |
+| `path-references` | Toda ruta `skills/`, `rules/`, `agents/`, `commands/`, `scripts/` o `tasks/context/` citada en la documentación existe, con mayúsculas exactas |
 
-**Requires:** [Docker Desktop](https://www.docker.com/products/docker-desktop/) (or Docker Engine) with Compose. You do **not** need a local .NET SDK, Node, or ABP CLI for this path.
+Sale con código 1 si algo falla, así que sirve tal cual en un pre-commit o en CI.
 
-### PowerShell (Windows)
+**Qué no revisa**: referencias a carpetas (indistinguibles de prosa como "agents/commands"), rutas absolutas de la máquina, ni los documentos bajo `skills/` que hablan del repo del cliente.
+
+## `build-skills-index.ps1`
+
+Regenera la tabla de `skills/README.md` a partir del front matter de cada `SKILL.md`. El catálogo es derivado: no se edita a mano.
 
 ```powershell
-.\.cursor\scripts\start-env.ps1
+.\scripts\build-skills-index.ps1 -Check   # no escribe; falla si está desactualizado
 ```
 
-| Flag | Purpose |
-|------|--------|
-| `-NoCache` | `docker compose down` each infra stack, then `up` again (clean infra) |
-| `-LocalSetup` | Optional: `abp install-libs` (if on PATH), `npm install` in `apps/angular`, `dotnet restore` (for local IDE / `ng serve` work) |
-| `-SkipInfra` | Skip `etc/docker` (use if infra is already up) |
-| `-SkipPublish` | Skip `dotnet publish` in container (faster if only changing frontend image build) |
-| `-RegenerateAuthCert` | Regenerate `openiddict.pfx` |
+`-Check` es lo que usa la validación y el CI. Añadir o renombrar una skill sin regenerar rompe el chequeo a propósito.
 
-**Stop the app stack:** `.\scripts\stop-dev-environment.ps1` (add `-StopInfra` to also stop `etc/docker`).
+## `faena-known-refs.txt`
 
-### Bash (WSL, macOS, Linux, Git Bash with Docker)
+Lista de referencias históricamente rotas que la validación tolera. No es un mecanismo para silenciar errores nuevos: cualquier ruta rota que no esté aquí hace fallar `path-references`. Cuando arregles una, borra su línea.
 
-```bash
-bash scripts/start-env.sh
-bash scripts/start-env.sh --no-cache --local-setup
-```
+## `common/SkillsCatalog.ps1`
 
-Same flags as long names: `--skip-infra`, `--skip-publish`, `--regenerate-auth-cert`.
-
-**When it finishes:** open [http://localhost:4200/](http://localhost:4200/) (Angular in Docker), [http://localhost:44368/](http://localhost:44368/) (gateway), [http://localhost:44333/](http://localhost:44333/) (Auth). More detail: [scripts/README.md](../../scripts/README.md), [docker/README.md](../../docker/README.md).
-
-**Infra only (no full stack):** you can still run `cd etc/docker` and `.\up.ps1` / `.\down.ps1` if you only need dependencies and run services on the host (ABP Studio, `dotnet run`, `ng serve`).
+Lógica compartida entre los dos scripts (lectura de front matter, render del catálogo). No se ejecuta por sí sola.
 
 ---
 
-## 2. Analyze imports (onboarding / context)
+## Legado pendiente de borrar
 
-Run when you want to see **where apps live** and **import/dependency patterns** (Angular, C#, Python).
+Estos archivos vienen del repo de un cliente (PrototypeZero) y **no funcionan aquí**: sus destinos (`start-dev-environment.ps1`, `etc/docker`, `.cursor/scripts`) no existen en este repositorio.
 
-### PowerShell
+- `analyze-imports.ps1`, `analyze-imports.sh`, `run-analyze-imports.ps1`, `README-analyze-imports.md`
+- `start-env.ps1`, `start-env.sh`
 
-```powershell
-.\.cursor\scripts\analyze-imports.ps1
-.\.cursor\scripts\analyze-imports.ps1 -Check   # project map only
-```
-
-If you see quote/terminator errors, use: `.\.cursor\scripts\run-analyze-imports.ps1` (this repo’s script targets a generic template; PrototypeZero layout may differ). 
-
-### Bash
-
-```bash
-bash scripts/analyze-imports.sh
-bash scripts/analyze-imports.sh --check
-```
-
-See [README-analyze-imports.md](README-analyze-imports.md) for details.
-
+Se dejan por ahora para no romper nada que los referencie; si nadie los usa, el siguiente paso es borrarlos.
