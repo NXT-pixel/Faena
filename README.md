@@ -1,192 +1,263 @@
-# 🏭 Faena: Context-Driven AI Factory Workspace
+# 🏭 Faena — Harness de contexto para desarrollo asistido por IA
 
-> **"Simplemente pega el ticket en el chat y el asistente de IA hace el trabajo con todo el contexto del proyecto."**
-> Un esqueleto de ingeniería de software diseñado para operar **directamente en el chat** de cualquier asistente de IA (**Cursor**, **Claude Code**, **ChatGPT**, **Gemini**, **Windsurf**, **Copilot** o **Antigravity**). Proporciona a cualquier LLM todo el contexto organizacional, arquitectónico, reglas de calidad y habilidades técnicas necesarias para resolver tickets de punta a punta.
-
----
-
-## 🎯 ¿Qué es Faena?
-
-**Faena** es un **harness y esqueleto de contexto** para trabajar en diferentes empresas y proyectos:
-
-- **100% Nativo en el Chat**: No requiere scripts de Python, dependencias externas ni configuración de CLI. Trabaja directamente en la ventana de chat del editor de IA que prefieras.
-- **Aislamiento Multi-Empresa**:
-  - Para cada cliente o empresa (**Proyecto A**), clonas este repo.
-  - En la carpeta **`Proyecto/`**, clonas los repositorios de código fuente reales de ese cliente (ej. `Proyecto/backend-api`, `Proyecto/frontend-web`).
-  - En **`tasks/context/team-context.md`**, registras el organigrama de la empresa (Tech Lead, QA, DevOps, compañeros) para que la IA comprenda las menciones a personas y sepa qué programar vs. qué delegar.
-  - En **`rules/project/`**, defines las reglas y convenciones obligatorias de esa empresa.
-  - Para otro cliente (**Proyecto B**), clonas Faena nuevamente y configuras sus respectivos repos en `Proyecto/` y su contexto de equipo.
-- **Flujo TDD Estricto**: Todo ticket se descompone en pruebas primero (**RED**), implementación que las hace pasar (**GREEN**) y verificación de calidad (**VERIFY**).
-- **Resiliencia & Review (Inspirado en ECC)**: La IA ejecuta una auditoría de seguridad y calidad sobre el `git diff` antes de dar el ticket por concluido y guarda los descubrimientos en `tasks/context/learnings.md`.
+> Pega el ticket en el chat y el asistente trabaja con el contexto real de tu empresa: quién decide qué, qué stack hay, qué reglas no se rompen y qué tests deben pasar.
+> Un repositorio que convierte Cursor, Claude Code, Gemini, OpenCode o cualquier agente que lea `AGENTS.md` en un ingeniero que conoce la organización y respeta la disciplina del equipo.
 
 ---
 
-## 🔄 El Flujo de Trabajo en el Chat
+## ⚡ Inicio rápido (5 minutos)
+
+```bash
+git clone https://github.com/tu-usuario/Faena.git Mi-Empresa
+cd Mi-Empresa
+git clone git@github.com:empresa/backend-api.git Proyecto/backend-api   # uno o varios repos del cliente
+
+# Windows
+.\scripts\validate-faena.ps1
+# macOS / Linux
+pwsh ./scripts/validate-faena.ps1
+```
+
+1. Rellena `tasks/context/team-context.md` (organigrama **e** identidad Git corporativa).
+2. Opcional: `git config core.hooksPath .githooks` para validar en cada commit.
+3. Arrastra `@commands/1-ticket.md` al chat y pega el ticket.
+
+Si la validación sale en verde (`OK: harness integro.`) y tu agente abre `PROTOCOL.md`, ya está funcionando.
+
+---
+
+## 🎯 Qué es Faena
+
+Un **harness de contexto**: el código del cliente vive en `Proyecto/`, y todo lo demás es el contexto que el modelo necesita para trabajar como alguien del equipo.
+
+- **Un protocolo, cinco adaptadores.** La política (invariantes, flujo, comandos) vive en [`PROTOCOL.md`](PROTOCOL.md). `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `OPENCODE.md` y `.cursorrules` son archivos de ~20 líneas que apuntan ahí y añaden notas del host. Si el flujo cambia, se edita un solo archivo.
+- **Aislamiento multi-cliente.** Un clon de Faena por empresa; los repos del cliente dentro de `Proyecto/`, que está en `.gitignore`. El cliente conserva sus ramas, remotos y reglas; Faena nunca los mezcla.
+- **TDD estricto.** Cada ticket se descompone en tests que fallan primero (**RED**), implementación mínima (**GREEN**) y gates de calidad (**VERIFY**). El detalle operativo está en [`rules/process-task-list.md`](rules/process-task-list.md).
+- **Conocimiento por dominio.** 29 skills en [`skills/`](skills/), indexadas por un catálogo generado: el agente abre la que corresponde antes de escribir código.
+- **Memoria entre tickets.** Convenciones, trampas y decisiones se acumulan en `tasks/context/learnings.md`, no en la cabeza de quien resolvió el ticket anterior.
+- **Review de seguridad y handoff.** Antes de cerrar, el agente audita el `git diff`, verifica la identidad Git corporativa y entrega el paquete de pruebas para QA.
+
+## 🚫 Qué NO es
+
+- **No es un runtime ni un agente autónomo.** No hay servidor, SDK propio ni proceso en segundo plano: el motor es el modelo que ya usas, en tu editor o en el chat.
+- **No ejecuta trabajo por su cuenta.** Los comandos los arrastra una persona; el agente no inicia tickets solo.
+- **No reemplaza** tu CI/CD, tu linter ni a tu QA. Los gates vienen del repo del cliente.
+- **No necesita Docker, base de datos ni dependencias.** Los dos scripts de `scripts/` son mantenimiento del harness, no parte del flujo de un ticket.
+- **`.env.example` es legado** de un modo con runtime que ya no se usa: el flujo por chat no lee variables de entorno. Puedes ignorarlo.
+
+---
+
+## ✅ Requisitos
+
+| Necesitas | Detalle |
+| :--- | :--- |
+| **git** | 2.30 o superior |
+| **Shell** | PowerShell 5.1+ (Windows) o `pwsh`/bash (macOS, Linux). Solo para validar y regenerar el catálogo. |
+| **Un host de IA** | Cualquiera de la tabla de abajo. |
+| **Docker** | Solo si el repositorio del cliente lo pide. Faena no lo usa. |
+
+### Hosts soportados
+
+| Host | Archivo que lee | Cómo recibe el protocolo |
+| :--- | :--- | :--- |
+| Cursor | `.cursorrules` (+ `AGENTS.md`) | automático |
+| Claude Code | `CLAUDE.md` (+ `AGENTS.md`) | automático |
+| Gemini CLI / Antigravity | `GEMINI.md` | automático |
+| OpenCode / Ollama local | `OPENCODE.md` | automático |
+| Codex, DeepSeek Harness y otros agentes | `AGENTS.md` | automático |
+| ChatGPT, Windsurf, Copilot (web o sin soporte de reglas) | — | **pega el contenido de `PROTOCOL.md`** al inicio del chat |
+
+---
+
+## 🛠️ Setup en 5 minutos
+
+### 1. Clonar Faena y los repos del cliente
+
+```bash
+git clone https://github.com/tu-usuario/Faena.git Mi-Empresa
+cd Mi-Empresa
+git clone git@github.com:empresa/backend-api.git Proyecto/backend-api
+git clone git@github.com:empresa/frontend-web.git Proyecto/frontend-web
+```
+
+No hace falta registrar los repos en ningún archivo: el agente los detecta listando `Proyecto/` en disco.
+
+### 2. Rellenar `tasks/context/team-context.md` (obligatorio)
+
+Es el único archivo que **debes** escribir a mano. Contiene:
+
+- **Equipo**: Tech Lead, Product Owner, QA y DevOps, y cuándo escalar a cada uno.
+- **Identidad Git corporativa**: `user.name` y `user.email` que deben usarse en los repos de `Proyecto/`.
+
+Sin el bloque de identidad, el protocolo no puede verificar los commits y el agente te lo reclamará. Faena **nunca** debe commitear código del cliente con una cuenta personal.
+
+### 3. Bootstrapear el resto del contexto
+
+Arrastra al chat:
+
+```markdown
+@commands/create-context.md
+```
+
+Analiza `Proyecto/`, detecta stack, gestores de paquetes y comandos reales de test, y rellena `tech-context.md`, `project-structure.md`, `progress.md` y `system-patterns.md`.
+
+`team-context.md` y `learnings.md` **nunca** se sobrescriben: son del equipo humano.
+
+### 4. Validar la instalación
+
+```powershell
+.\scripts\validate-faena.ps1
+```
+
+Seis chequeos: ubicación y metadata de skills, catálogo al día, ausencia de `.mdc` sueltos, adaptadores apuntando a `PROTOCOL.md` y referencias de rutas existentes. Sale con código 1 si algo está roto, así que sirve igual en local que en CI.
+
+Opcional pero recomendado:
+
+```bash
+git config core.hooksPath .githooks   # valida antes de cada commit
+```
+
+### 5. Elegir host y empezar
+
+Abre el repo con tu editor y arrastra el primer comando. Nada más.
+
+---
+
+## 🎫 Anatomía de un ticket
+
+Todos los artefactos de un ticket viven juntos en `tasks/task-<nombre>/`:
+
+| Archivo | Qué contiene |
+| :--- | :--- |
+| `design-<nombre>.md` | Alcance, criterios de aceptación, personas y handoffs iniciales |
+| `trd-<nombre>.md` | Arquitectura, módulos afectados, *Team Coordination & Handoffs* (QA y DevOps) |
+| `test-spec-<nombre>.md` | Escenarios Given-When-Then, casos de éxito y de borde |
+| `task01-setup-*.md` | Scaffolding o dependencias, si aplica |
+| `taskNN-red-*.md` | El test que debe fallar primero |
+| `taskNN-green-*.md` | Implementación + gates de calidad |
+| `README.md` | Índice de progreso con checkboxes y la sección **Quality Gates** del repo |
+
+El TRD es la fuente de las tareas: el agente no agrega, reordena ni renombra tareas por iniciativa propia.
+
+---
+
+## 🔄 El flujo de 5 pasos
 
 ```mermaid
 flowchart TD
-    T["🎫 Pegas el Ticket en el Chat"] --> S1["1. Lectura Automática de Contexto\n(team-context.md + Proyecto/ + rules/)"]
-    S1 --> S2["2. Generación de Arquitectura & TRD\n(Adopta software-architect / dotnet-architect)"]
-    S2 --> S3["3. Desglose TDD en tasks/\n(RED -> GREEN -> VERIFY)"]
-    S3 --> S4["4. Ejecución en Proyecto/\n(Usa las herramientas de edición y terminal del chat)"]
-    
-    subgraph S4_LOOP ["Bucle TDD en la subcarpeta de Proyecto/"]
-        R1["RED: Escribe Test"] --> R2["Ejecuta en Terminal -> Verifica Fallo"]
-        R2 --> G1["GREEN: Implementa Solución"]
-        G1 --> G2["Ejecuta en Terminal -> Corrige hasta Pasar"]
-        G2 --> V1["VERIFY: Corre Quality Gates"]
-    end
-    
-    S4 --> S4_LOOP
-    S4_LOOP --> S45["🛡️ 4.5 Adversarial Review & Security\n(security-reviewer + code-reviewer)\n+ Memoria continua en learnings.md"]
-    S45 --> S5["5. Entrega Final con Pasos para QA\n(Listo para certificar por tu tester)"]
+    T["🎫 Arrastras el ticket"] --> P1["1. 1-ticket<br/>design-<nombre>.md"]
+    P1 --> P2["2. 2-create-trd<br/>trd + test-spec"]
+    P2 --> P3["3. 3-create-tasks<br/>task01..taskNN + README"]
+    P3 --> P4["4. Arrastras cada task<br/>RED → GREEN → VERIFY en Proyecto/"]
+    P4 --> P5["5. Seguridad + handoff QA<br/>learnings.md"]
 ```
+
+| Paso | Arrastra | Resultado |
+| :--- | :--- | :--- |
+| 1 | `@commands/1-ticket.md` + el ticket | `design-<nombre>.md` |
+| 2 | `@commands/2-create-trd.md tasks/task-<nombre>/design-<nombre>.md` | `trd-<nombre>.md` + `test-spec-<nombre>.md` |
+| 3 | `@commands/3-create-tasks.md tasks/task-<nombre>/trd-<nombre>.md` | archivos de tarea + `README.md` |
+| 4 | `@tasks/task-<nombre>/taskNN-*.md` | código y tests en `Proyecto/<repo>/` |
+| 5 | (cierre) | auditoría del diff + handoff para QA |
+
+En el **paso 4** el agente escribe el test, lo ejecuta y demuestra que falla por la razón correcta antes de implementar. Si el test pasa de inmediato, el test está mal, no el requisito.
+
+Opcionales que no forman parte del camino crítico: `commands/1b-design.md` (diseño colaborativo), `commands/1c-decompose.md` (parte specs grandes en fases), `commands/4-update-context.md` (sincroniza contexto al cerrar). La lista completa está en [`PROTOCOL.md`](PROTOCOL.md) §4.
 
 ---
 
-## 🚀 Cómo Usarlo en tu Día a Día
+## 🚨 Invariantes que más duelen si se ignoran
 
-### Paso 1: Clonar y preparar los repositorios del cliente
-```bash
-git clone https://github.com/tu-usuario/Faena.git Mi-Empresa-A
-cd Mi-Empresa-A
+1. **`Proyecto/**` está en `.gitignore`.** Nunca concluyas que está vacío a partir de `git status`: lista el disco o lee `tasks/context/project-structure.md`. Los agentes que filtran por gitignore mienten sobre esta carpeta.
+2. **Identidad Git corporativa antes de cada commit.** `git config --local user.email` debe coincidir con `tasks/context/team-context.md`. Nunca la cuenta personal.
+3. **Ningún código de producción sin un test que falle primero.** Y está prohibido debilitar o saltar tests para obtener verde.
+4. **No inventar convenciones.** Si `rules/project/` está vacío, el agente lo dice; no supone estándares que el repo no define.
 
-# Clonas los repositorios del cliente dentro de Proyecto/
-cd Proyecto
-git clone git@github.com:empresa-a/backend-api.git
-git clone git@github.com:empresa-a/frontend-portal.git
-cd ..
-```
-
-### Paso 2: Configurar el equipo en `tasks/context/team-context.md`
-Abre [`tasks/context/team-context.md`](tasks/context/team-context.md) y anota los nombres de tus jefes y compañeros:
-- **Tech Lead**: Nombre de tu líder técnico (para aprobaciones de arquitectura).
-- **QA**: Nombre de tu tester asignado (para handoffs de pruebas).
-- **DevOps**: Nombre del encargado de infraestructura (para secretos y variables).
-
-### Paso 3: El Flujo por Comandos Arrastrables (Drag & Drop en el Chat)
-
-El flujo de trabajo está diseñado para ser 100% interactivo mediante el arrastre de comandos markdown (`@commands/...`) directamente a tu chat:
-
-```mermaid
-flowchart LR
-    C1["1️⃣ Arrastra @commands/1-ticket.md\n+ Pegas el ticket"] --> O1["tasks/task-nombre/design-nombre.md\n(Requerimientos)"]
-    O1 --> C2["2️⃣ Arrastra @commands/2-create-trd.md\n+ tasks/task-nombre/design-nombre.md"]
-    C2 --> O2["tasks/task-nombre/trd-nombre.md\n+ test-spec-nombre.md\n(Arquitectura & Handoffs)"]
-    O2 --> C3["3️⃣ Arrastra @commands/3-create-tasks.md\n+ tasks/task-nombre/trd.md"]
-    C3 --> O3["task01-setup, task02-red, task03-green\n+ README.md (Checklist)"]
-    O3 --> C4["4️⃣ Arrastra @task01, @task02...\n(Ejecución TDD en Proyecto/)"]
-    C4 --> O4["5️⃣ Security Review\n+ Handoff listo para QA"]
-```
-
-#### 1. Crear los Requerimientos desde el Ticket
-Arrastra al chat el comando de intake y pega el texto del ticket (Jira, DevOps, Slack):
-```markdown
-@commands/1-ticket.md
-Ticket: #4321 - Implementar autenticación JWT con Refresh Tokens en el portal y backend
-```
-- **Qué hace la IA**: Lee `tasks/context/team-context.md`, identifica qué repositorio en `Proyecto/` será afectado y genera el documento de alcance en `tasks/task-<nombre>/design-<nombre>.md`.
-
-#### 2. Generar el TRD (Requerimientos Técnicos) y Test Spec
-Arrastra al chat el comando para crear las especificaciones técnicas:
-```markdown
-@commands/2-create-trd.md tasks/task-<nombre>/design-<nombre>.md
-```
-- **Qué hace la IA**: Diseña los diagramas de arquitectura Mermaid, define responsabilidades de módulos en `Proyecto/`, especifica los tests Given-When-Then y genera las secciones de **QA Handoff** y **DevOps Handoff** para tu equipo. Crea `tasks/task-<nombre>/trd-<nombre>.md` y `test-spec-<nombre>.md`.
-
-#### 3. Generar las Tareas Atómicas de Implementación
-Arrastra al chat el comando para crear el desglose TDD:
-```markdown
-@commands/3-create-tasks.md tasks/task-<nombre>/trd-<nombre>.md
-```
-- **Qué hace la IA**: Crea la lista ordenada de tareas atómicas (`task01-setup-*.md`, `task02-red-*.md`, `task03-green-*.md`) y un `README.md` con casillas de verificación (`- [ ]`).
-
-#### 4. Ejecutar las Tareas una a una (TDD en `Proyecto/`)
-Arrastra cada archivo de tarea secuencialmente al chat:
-```markdown
-@tasks/task-<nombre>/task01-setup-...md
-```
-- **Fase RED**: La IA escribe los tests en `Proyecto/` y corre el comando en terminal (`npm test`, `dotnet test`) verificando que fallen por la causa esperada.
-- **Fase GREEN**: La IA implementa la solución en `Proyecto/`, corre los tests en terminal hasta que pasen todos y valida compilación/linter.
-- La IA marca automáticamente `[x]` en el `README.md`.
-
-#### 5. Auditoría de Seguridad y Entrega para QA
-Al completar la última tarea:
-- La IA audita el `git diff` con el rol de `security-reviewer.md`.
-- Registra descubrimientos en `tasks/context/learnings.md`.
-- Genera el reporte final de entrega con endpoints y payloads listo para que tu tester de QA certifique el ticket.
-- (Opcional): Arrastra `@commands/4-update-context.md` para sincronizar los archivos de contexto del proyecto.
+El resto está en [`PROTOCOL.md`](PROTOCOL.md) §2.
 
 ---
 
-## 📁 Estructura del Repositorio
+## 📁 Estructura del repositorio
 
 ```
 Faena/
-├── Proyecto/                   # 📁 Código fuente del cliente (100% ignorado en el git de Faena)
-│   ├── .gitkeep
-│   ├── README.md               # Guía de clonación de repos
-│   ├── backend-api/            # (Repo del cliente)
-│   └── frontend-web/           # (Repo del cliente)
+├── Proyecto/                   # 📁 Código del cliente (ignorado por el git de Faena)
+│   └── <repo>/                 # Uno o varios repos clonados aquí
 │
-├── tasks/                      # 🎫 Gestión de tickets y contexto
-│   ├── context/
-│   │   ├── team-context.md     # Organigrama del equipo, roles (Tech Lead, QA, DevOps)
-│   │   ├── tech-context.md     # Stack tecnológico detectado
-│   │   ├── project-structure.md# Estructura de repositorios
+├── tasks/
+│   ├── context/                # Contexto vivo (6 archivos)
+│   │   ├── team-context.md     # Equipo, roles e identidad Git corporativa
+│   │   ├── tech-context.md     # Stack, versiones y comandos reales
+│   │   ├── project-structure.md# Repos clonados y disposición de carpetas
+│   │   ├── system-patterns.md  # Patrones arquitectónicos observados
+│   │   ├── progress.md         # Estado y foco actual
 │   │   └── learnings.md        # Memoria continua entre tickets
-│   └── tickets/                # Tickets guardados como referencia
+│   ├── tickets/                # Tickets guardados como referencia
+│   └── task-<nombre>/          # Todos los artefactos de un ticket, juntos
 │
-├── rules/                      # 📏 Reglas y directivas de calidad
-│   ├── project/                # Reglas específicas de la empresa (máxima prioridad)
-│   ├── security/               # Directivas de seguridad OWASP y prevención de fugas
-│   ├── skills-routing.md       # Enrutamiento obligatorio a la skill del dominio
-│   └── process-task-list.md    # Protocolo estricto TDD
+├── rules/                      # 📏 Reglas y disciplina
+│   ├── project/                # Estándares de la empresa (máxima prioridad)
+│   ├── security/               # OWASP, secretos, checklist de commit
+│   ├── skills-routing.md       # Obliga a leer la skill del dominio
+│   ├── process-task-list.md    # Disciplina TDD RED → GREEN → VERIFY
+│   └── <stack>.md              # Reglas técnicas (angular, dotnet, abp, …)
 │
-├── skills/                     # 🧠 Habilidades y patrones técnicos profundos (única fuente)
-│   ├── README.md               # Catálogo generado por scripts/build-skills-index.ps1
-│   ├── angular-developer/      # Reactividad moderna en Angular (Signals, resource, forms)
-│   ├── dotnet-patterns/        # C# idiomático, Clean Architecture, inmutabilidad
-│   ├── csharp-testing/         # Testing con xUnit, FluentAssertions, Moq
-│   ├── abp-*/                  # Suite completa de ABP Framework (DDD, EF Core, Angular)
-│   ├── azure-function/         # Azure Functions y bindings
-│   └── project/                # Skills y SDKs privados de la empresa
+├── skills/                     # 🧠 Conocimiento técnico por dominio (fuente única)
+│   ├── README.md               # Catálogo generado
+│   ├── <dominio>/SKILL.md      # 29 skills + sus references/
+│   └── project/                # Skills privadas de la empresa
 │
 ├── commands/                   # 🧩 Comandos arrastrables del flujo
-│   ├── 1-ticket.md             # Intake del ticket → tasks/task-<nombre>/design-<nombre>.md
-│   ├── 1b-design.md            # (Opcional) Diseño colaborativo con design-facilitator
-│   ├── 1c-decompose.md         # (Opcional) Descompone specs grandes en fases
-│   ├── 2-create-trd.md         # TRD + Test Spec con handoffs QA/DevOps
-│   ├── 3-create-tasks.md       # Desglose TDD (setup / RED / GREEN+VERIFY)
-│   ├── 4-update-context.md     # Sincronización del contexto del proyecto
-│   ├── design-to-blueprint-process/  # Pipeline UI opcional: 0 inventario → 7 paquete de ejecución
-│   ├── page-structure-process/       # Estructura y breakpoints de página (PAGE-STRUCTURE.txt)
-│   └── ...                     # create-adr, create-gherkins, create/load-context, design-ux-ui, make-agent
+├── agents/                     # 🤖 28 personas/roles por fase
 │
-├── agents/                     # 🤖 28 agentes/roles (las skills viven solo en skills/)
-│   ├── coding/                 # Implementadores, testers TDD, reviewers de seguridad
-│   └── design/                 # Arquitectos de software y analistas de contexto
+├── scripts/                    # 🛠️ Mantenimiento del harness
+│   ├── validate-faena.ps1      # 6 chequeos de integridad
+│   ├── build-skills-index.ps1  # Regenera skills/README.md
+│   └── faena-known-refs.txt    # Deuda tolerada (referencias rotas conocidas)
 │
-├── scripts/                    # 🛠️ Utilidades del harness
-│   ├── build-skills-index.ps1  # Regenera skills/README.md desde los SKILL.md
-│   ├── validate-faena.ps1      # Verifica la integridad del harness (CI + pre-commit)
-│   └── faena-known-refs.txt    # Deuda tolerada: referencias históricas rotas
-│
-├── .github/workflows/          # ✅ CI: valida el harness en cada push y PR
-├── .githooks/pre-commit        # ✅ Hook opcional: git config core.hooksPath .githooks
+├── .github/workflows/          # ✅ CI: valida en cada push a main y en PRs
+├── .githooks/pre-commit        # ✅ Hook opcional (git config core.hooksPath .githooks)
 │
 ├── PROTOCOL.md                 # 📜 Fuente única de verdad del flujo y las invariantes
-├── AGENTS.md                   # 🔌 Adaptador: apunta a PROTOCOL.md
-├── CLAUDE.md                   # 🔌 Adaptador para Claude Code
-├── GEMINI.md                   # 🔌 Adaptador para Gemini / Antigravity
-├── OPENCODE.md                 # 🔌 Adaptador para OpenCode / Ollama local
-├── .cursorrules                # 🔌 Adaptador para Cursor
-└── .gitignore                  # 🔒 Aislamiento estricto de Proyecto/**
+├── AGENTS.md                   # 🔌 Adaptador genérico
+├── CLAUDE.md                   # 🔌 Adaptador: Claude Code
+├── GEMINI.md                   # 🔌 Adaptador: Gemini / Antigravity
+├── OPENCODE.md                 # 🔌 Adaptador: OpenCode / Ollama
+├── .cursorrules                # 🔌 Adaptador: Cursor
+└── .gitignore                  # 🔒 Aislamiento de Proyecto/**
 ```
-
-> **Un protocolo, cinco adaptadores.** Todo el comportamiento normativo vive en [`PROTOCOL.md`](PROTOCOL.md). `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `OPENCODE.md` y `.cursorrules` son archivos de ~20 líneas que solo apuntan ahí y añaden notas del host. Si el flujo cambia, se edita `PROTOCOL.md` y ningún adaptador.
 
 ---
 
-## 🔒 Aislamiento y Privacidad de Código
-El archivo `.gitignore` contiene la regla `Proyecto/**`. Esto asegura que el código de la empresa que esté dentro de `Proyecto/` **nunca se subirá a tu repositorio de Faena**, permitiendo que cada repositorio del cliente conserve sus propias ramas, remotos y políticas de seguridad independientes.
+## 🔧 Mantenimiento
+
+| Tarea | Comando |
+| :--- | :--- |
+| Validar el harness | `.\scripts\validate-faena.ps1` |
+| Regenerar el catálogo de skills tras añadir una | `.\scripts\build-skills-index.ps1` |
+| Añadir una skill | Crea `skills/<nombre>/SKILL.md` con `name` y `description`, regenera el catálogo |
+| Añadir una regla de empresa | Un `.md` en `rules/project/` |
+| Añadir un agente o comando | Arrastra `@commands/make-agent.md` |
+
+La deuda conocida (referencias a archivos que aún no existen) está listada en `scripts/faena-known-refs.txt`. Cuando arregles una, **borra su línea**: la validación vuelve a marcarla como nueva si el archivo desaparece.
+
+---
+
+## 🧯 Problemas conocidos
+
+| Síntoma | Causa | Solución |
+| :--- | :--- | :--- |
+| `cannot be loaded. The file ... is not digitally signed` | Política de ejecución de Windows | `powershell -ExecutionPolicy Bypass -File .\scripts\validate-faena.ps1` |
+| El agente cree que `Proyecto/` está vacío | Herramientas que respetan `.gitignore` | Lista el disco (`Get-ChildItem Proyecto`); el `.gitignore` no se toca |
+| `skills-catalog` falla en CI | Añadiste una skill sin regenerar | `.\scripts\build-skills-index.ps1` y commitea `skills/README.md` |
+| `schannel: AcquireCredentialsHandle failed` al hacer push | Backend TLS de Windows en entornos restringidos | `git -c http.sslBackend=openssl push …` |
+| El agente no sigue el protocolo | Tu host no lee ninguno de los 5 adaptadores | Pega `PROTOCOL.md` en el chat al inicio |
+| `git merge` con ruido en `.obsidian/` | Estado del vault de Obsidian | Ya está en `.gitignore`; si añades una herramienta, revisa que no versiones su estado local |
+
+---
+
+## 📄 Licencia y estado
+
+No hay `LICENSE` en el repositorio: es de uso interno. Si vas a compartirlo o publicarlo, añade una licencia antes de hacerlo público.
+
+El harness se valida a sí mismo en CI (`.github/workflows/validate-faena.yml`) y, si activas el hook, antes de cada commit.
