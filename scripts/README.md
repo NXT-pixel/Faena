@@ -46,14 +46,3 @@ Lista de referencias históricamente rotas que la validación tolera. No es un m
 ## `common/SkillsCatalog.ps1`
 
 Lógica compartida entre los dos scripts (lectura de front matter, render del catálogo). No se ejecuta por sí sola.
-
----
-
-## Legado pendiente de borrar
-
-Estos archivos vienen del repo de un cliente (PrototypeZero) y **no funcionan aquí**: sus destinos (`start-dev-environment.ps1`, `etc/docker`, `.cursor/scripts`) no existen en este repositorio.
-
-- `analyze-imports.ps1`, `analyze-imports.sh`, `run-analyze-imports.ps1`, `README-analyze-imports.md`
-- `start-env.ps1`, `start-env.sh`
-
-Se dejan por ahora para no romper nada que los referencie; si nadie los usa, el siguiente paso es borrarlos.

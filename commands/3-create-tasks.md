@@ -37,7 +37,7 @@ When invoked with TRD path:
 
 **Note**: VERIFY is included at the end of GREEN tasks, not a separate phase.
 
-**Path Format**: Always use root-relative paths: `/agents/coding/agent-name.md`
+**Path Format**: Always use repo-relative paths, e.g. `agents/coding/angular-developer.md`
 
 ## Task Naming Convention
 
