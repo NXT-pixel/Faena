@@ -1,11 +1,12 @@
 # 🛠️ Scripts del harness
 
-Tres utilidades de mantenimiento. **Ninguna hace falta para trabajar un ticket**: el flujo por chat no ejecuta scripts.
+Cuatro utilidades de mantenimiento. **Ninguna hace falta para trabajar un ticket**: el flujo por chat no ejecuta scripts.
 
 ```powershell
 .\scripts\doctor.cmd           # ¿está bien mi entorno? (con el arreglo de cada aviso)
 .\scripts\validate.cmd         # ¿está íntegro el harness?
 .\scripts\rebuild-skills.cmd   # regenera el catálogo de skills
+.\scripts\index-tasks.cmd      # estado de los tickets en tasks/INDEX.md (local)
 ```
 
 Los `.cmd` son wrappers de una línea sobre los `.ps1`: **no pasan por la política de ejecución de Windows**, así que son la forma recomendada en Windows. En macOS/Linux, `pwsh ./scripts/<script>.ps1`.
@@ -60,8 +61,17 @@ Regenera la tabla de `skills/README.md` a partir del front matter de cada `SKILL
 
 `-Check` es lo que usa la validación y el CI. Añadir o renombrar una skill sin regenerar rompe el chequeo a propósito.
 
-## `faena-known-refs.txt`
+## `build-tasks-index.ps1`
 
+Genera `tasks/INDEX.md` con una fila por `tasks/task-<nombre>/`: qué artefactos tiene (design, TRD, test-spec, tareas), checkboxes hechos/total y fecha de última modificación.
+
+```powershell
+.\scripts\index-tasks.cmd
+```
+
+El índice **no se versiona** (está en `.gitignore`): el estado difiere por rama y por máquina, y commitearlo solo produce conflictos. Por eso la validación no lo exige y el CI nunca lo ve.
+
+## `faena-known-refs.txt`
 Lista de referencias históricamente rotas que la validación tolera. No es un mecanismo para silenciar errores nuevos: cualquier ruta rota que no esté aquí hace fallar `path-references`. Cuando arregles una, borra su línea. Hoy está vacía a propósito.
 
 ## `common/SkillsCatalog.ps1`
