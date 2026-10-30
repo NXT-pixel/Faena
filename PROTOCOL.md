@@ -80,6 +80,7 @@ El flujo obligatorio usa tres comandos, pero el repo tiene más. No los ejecutes
 
 | Grupo | Comandos | Para qué |
 | :--- | :--- | :--- |
+| **Verificación** | `commands/0-verify-agent.md` | Smoke test: confirma que cargaste `PROTOCOL.md` y el contexto antes de empezar. |
 | **Núcleo** | `commands/1-ticket.md`, `commands/2-create-trd.md`, `commands/3-create-tasks.md` | El flujo de 5 pasos. |
 | **Opcionales del flujo** | `commands/1b-design.md` | Diseño colaborativo con `design-facilitator` antes del TRD. |
 | | `commands/1c-decompose.md` | Parte una spec grande en fases (`phase01-*.md`, `phase02-*.md`). |
