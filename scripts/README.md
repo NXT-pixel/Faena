@@ -1,71 +1,90 @@
-﻿# Scripts for new developers
+# 🛠️ Scripts del harness
 
-Run from **PrototypeZero repo root** (or invoke paths below from anywhere; they resolve the repo from `scripts`).
+Cuatro utilidades de mantenimiento. **Ninguna hace falta para trabajar un ticket**: el flujo por chat no ejecuta scripts.
+
+```powershell
+.\scripts\doctor.cmd           # ¿está bien mi entorno? (con el arreglo de cada aviso)
+.\scripts\validate.cmd         # ¿está íntegro el harness?
+.\scripts\rebuild-skills.cmd   # regenera el catálogo de skills
+.\scripts\index-tasks.cmd      # estado de los tickets en tasks/INDEX.md (local)
+```
+
+Los `.cmd` son wrappers de una línea sobre los `.ps1`: **no pasan por la política de ejecución de Windows**, así que son la forma recomendada en Windows. En macOS/Linux, `pwsh ./scripts/<script>.ps1`.
 
 ---
 
-## 1. Start the **full** environment (recommended for first-time setup)
+## `doctor.ps1`
 
-`start-env.ps1` and `start-env.sh` are thin wrappers. They run [`scripts/start-dev-environment.ps1`](../../scripts/start-dev-environment.ps1) (or the equivalent [`.sh`](../../scripts/start-dev-environment.sh)), which in one go:
+Diagnóstico del entorno. No modifica nada: mira y aconseja. Nueve comprobaciones:
 
-- Creates the `prototypezero` Docker network (if needed)
-- Starts **infrastructure** from `etc/docker/containers/*.yml` (SQL Server, Redis, RabbitMQ, monitoring, etc.)
-- Creates `openiddict.pfx` for the Auth host (in a .NET SDK container) if missing
-- **Publishes** all microservice/gateway projects (in a container; no local .NET required)
-- Runs **`docker/docker-compose.apps.yml`** (all app containers, including Angular on port 4200)
+| Comprobación | Qué mira |
+| :--- | :--- |
+| `repo-root` | Que estés ejecutando desde un clon de Faena (`PROTOCOL.md` presente) |
+| `powershell` | Versión (7 recomendado; 5.1 funciona) |
+| `git` | Instalado y versión ≥ 2.30 |
+| `exec-policy` | Política **efectiva** de ejecución; avisa si bloquea `.ps1` |
+| `hooks` | Si `core.hooksPath` apunta a `.githooks` |
+| `skills-catalog` | Si `skills/README.md` está al día |
+| `proyecto` | Repositorios clonados en `Proyecto/` |
+| `team-context` | Si `tasks/context/team-context.md` sigue con marcadores de plantilla |
+| `tls-backend` | Backend TLS de git (avisa si es `schannel`) |
 
-**Requires:** [Docker Desktop](https://www.docker.com/products/docker-desktop/) (or Docker Engine) with Compose. You do **not** need a local .NET SDK, Node, or ABP CLI for this path.
+Con `-Network` añade una prueba real de acceso al remoto (`git ls-remote --heads origin`).
 
-### PowerShell (Windows)
+Sale con código 1 solo si algo es `FAIL`; los avisos (`WARN`) no rompen nada.
+
+## `validate-faena.ps1`
+
+Siete chequeos, pensados para local y para CI:
+
+| Chequeo | Qué verifica |
+| :--- | :--- |
+| `skill-location` | Todo `SKILL.md` vive en `skills/<nombre>/` o `skills/project/<nombre>/`, con mayúsculas exactas |
+| `skill-metadata` | Cada skill tiene `name` y `description`, y `name` coincide con su carpeta |
+| `skills-catalog` | `skills/README.md` está al día respecto a los `SKILL.md` |
+| `rules-extension` | No queda ningún `.mdc` fuera de `.cursor/rules/` |
+| `protocol-adapters` | `PROTOCOL.md` existe y los cinco adaptadores lo referencian |
+| `proyecto-visibility` | Cada repositorio presente en `Proyecto/` aparece documentado en `tasks/context/project-structure.md` |
+| `path-references` | Toda ruta `skills/`, `rules/`, `agents/`, `commands/`, `scripts/` o `tasks/context/` citada en la documentación existe, con mayúsculas exactas |
+
+Sale con código 1 si algo falla, así que sirve tal cual en un pre-commit o en CI.
+
+**Qué no revisa**: referencias a carpetas (indistinguibles de prosa como "agents/commands"), rutas absolutas de la máquina, ni los documentos bajo `skills/` que hablan del repo del cliente.
+
+## `build-skills-index.ps1`
+
+Regenera la tabla de `skills/README.md` a partir del front matter de cada `SKILL.md`. El catálogo es derivado: no se edita a mano.
 
 ```powershell
-.\.cursor\scripts\start-env.ps1
+.\scripts\rebuild-skills.cmd -Check   # no escribe; falla si está desactualizado
 ```
 
-| Flag | Purpose |
-|------|--------|
-| `-NoCache` | `docker compose down` each infra stack, then `up` again (clean infra) |
-| `-LocalSetup` | Optional: `abp install-libs` (if on PATH), `npm install` in `apps/angular`, `dotnet restore` (for local IDE / `ng serve` work) |
-| `-SkipInfra` | Skip `etc/docker` (use if infra is already up) |
-| `-SkipPublish` | Skip `dotnet publish` in container (faster if only changing frontend image build) |
-| `-RegenerateAuthCert` | Regenerate `openiddict.pfx` |
+`-Check` es lo que usa la validación y el CI. Añadir o renombrar una skill sin regenerar rompe el chequeo a propósito.
 
-**Stop the app stack:** `.\scripts\stop-dev-environment.ps1` (add `-StopInfra` to also stop `etc/docker`).
+## `build-tasks-index.ps1`
 
-### Bash (WSL, macOS, Linux, Git Bash with Docker)
+Genera `tasks/INDEX.md` con una fila por `tasks/task-<nombre>/`: qué artefactos tiene (design, TRD, test-spec, tareas), checkboxes hechos/total y fecha de última modificación.
 
-```bash
-bash scripts/start-env.sh
-bash scripts/start-env.sh --no-cache --local-setup
+```powershell
+.\scripts\index-tasks.cmd
 ```
 
-Same flags as long names: `--skip-infra`, `--skip-publish`, `--regenerate-auth-cert`.
+El índice **no se versiona** (está en `.gitignore`): el estado difiere por rama y por máquina, y commitearlo solo produce conflictos. Por eso la validación no lo exige y el CI nunca lo ve.
 
-**When it finishes:** open [http://localhost:4200/](http://localhost:4200/) (Angular in Docker), [http://localhost:44368/](http://localhost:44368/) (gateway), [http://localhost:44333/](http://localhost:44333/) (Auth). More detail: [scripts/README.md](../../scripts/README.md), [docker/README.md](../../docker/README.md).
+## `faena-known-refs.txt`
+Lista de referencias históricamente rotas que la validación tolera. No es un mecanismo para silenciar errores nuevos: cualquier ruta rota que no esté aquí hace fallar `path-references`. Cuando arregles una, borra su línea. Hoy está vacía a propósito.
 
-**Infra only (no full stack):** you can still run `cd etc/docker` and `.\up.ps1` / `.\down.ps1` if you only need dependencies and run services on the host (ABP Studio, `dotnet run`, `ng serve`).
+## `common/SkillsCatalog.ps1`
+
+Lógica compartida entre los scripts (lectura de front matter, render del catálogo). No se ejecuta por sí sola.
 
 ---
 
-## 2. Analyze imports (onboarding / context)
+## El hook de pre-commit
 
-Run when you want to see **where apps live** and **import/dependency patterns** (Angular, C#, Python).
+`.githooks/pre-commit` hace dos cosas, en este orden:
 
-### PowerShell
+1. **Regenera** `skills/README.md` y, si cambió, lo añade al commit. Así un catálogo desactualizado no llega a CI: se repara en el camino.
+2. **Valida** el harness completo y bloquea el commit si algo está roto.
 
-```powershell
-.\.cursor\scripts\analyze-imports.ps1
-.\.cursor\scripts\analyze-imports.ps1 -Check   # project map only
-```
-
-If you see quote/terminator errors, use: `.\.cursor\scripts\run-analyze-imports.ps1` (this repo’s script targets a generic template; PrototypeZero layout may differ). 
-
-### Bash
-
-```bash
-bash scripts/analyze-imports.sh
-bash scripts/analyze-imports.sh --check
-```
-
-See [README-analyze-imports.md](README-analyze-imports.md) for details.
-
+Actívalo una vez por clon con `git config core.hooksPath .githooks`. En CI no hay hooks: allí un catálogo desactualizado sí falla, que es exactamente lo que se quiere.

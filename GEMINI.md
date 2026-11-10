@@ -1,17 +1,18 @@
-# GEMINI.md - Directivas de Contexto para Gemini en Faena
+# GEMINI.md — Adaptador para Gemini / Antigravity
 
-Eres el asistente de IA operando dentro de la factoría de desarrollo Faena. Tu misión es transformar tickets de requerimientos en código probado, seguro y listo para producción, operando directamente dentro de este chat.
+Fuente única de verdad: [`PROTOCOL.md`](PROTOCOL.md). **Léelo completo antes de actuar.**
 
-## Protocolo Obligatorio:
-1. **Revisa el contexto organizacional primero**: Lee `tasks/context/team-context.md` para entender quién es el Tech Lead, el Product Owner, el QA y el DevOps del equipo.
-2. **Localiza el código objetivo**: Todo el código de la empresa está en `Proyecto/`. `Proyecto/**` está en `.gitignore` para aislar repositorios; NUNCA uses `git status` para saber si `Proyecto/` está vacío, verifica carpetas en disco o en `project-structure.md`. Realiza todas las lecturas, escrituras y ejecuciones de terminal dentro del repositorio correspondiente en `Proyecto/`.
-3. **Consulta las habilidades y reglas del proyecto**:
-   - `rules/project/`: Reglas obligatorias de la empresa.
-   - `skills/`: Referencias técnicas (.NET, Angular, Azure, ABP Framework).
-   - `agents/`: Adopta las personas especializadas de `agents/coding/` y `agents/design/`.
-4. **Flujo de Comandos Arrastrables en el Chat**:
-   - **Paso 1**: El usuario arrastra `@commands/1-ticket.md` y pega el ticket -> Genera la carpeta dedicada con `tasks/task-<nombre>/design-<nombre>.md` con el alcance y contexto del equipo.
-   - **Paso 2**: El usuario arrastra `@commands/2-create-trd.md tasks/task-<nombre>/design-<nombre>.md` -> Genera `trd-<nombre>.md` y `test-spec-<nombre>.md` dentro de la misma carpeta `tasks/task-<nombre>/`.
-   - **Paso 3**: El usuario arrastra `@commands/3-create-tasks.md tasks/task-<nombre>/trd-<nombre>.md` -> Genera `task01-setup`, `task02-red`, `task03-green` y `README.md`.
-   - **Paso 4**: El usuario arrastra cada tarea `@tasks/task-<nombre>/taskNN-...` -> Ejecuta el cambio TDD en `Proyecto/` (RED falla -> GREEN pasa -> VERIFY aprueba) y actualiza el checkbox.
-   - **Paso 5**: Verifica que `git config --local user.email` en `Proyecto/<repo>` coincida con la identidad corporativa de `team-context.md` (NUNCA hagas commit con cuentas personales), audita el `git diff` con `security-reviewer.md`, registra lecciones en `tasks/context/learnings.md` y entrega el handoff para QA.
+## Notas de este host
+
+- Gemini CLI y Antigravity cargan `GEMINI.md`; el contenido normativo vive en `PROTOCOL.md`, no aquí.
+- Los comandos llegan por el chat (`@commands/...`, `@tasks/task-.../...`); no hay CLI propia que invocar.
+- Tu ventana de contexto es amplia: puedes leer `PROTOCOL.md` y el `SKILL.md` del dominio en la misma sesión sin problema.
+
+## Atajos
+
+| Necesitas | Lee |
+| :--- | :--- |
+| Flujo de 5 pasos | `PROTOCOL.md` §3 |
+| Disciplina TDD | `rules/process-task-list.md` |
+| Skills por dominio | `rules/skills-routing.md` + `skills/README.md` |
+| Estándares de la empresa | `rules/project/` |

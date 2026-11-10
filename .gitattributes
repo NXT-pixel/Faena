@@ -1,0 +1,19 @@
+# Finales de linea: LF en el repositorio para todo el texto.
+# Sin esto, core.autocrlf=true convierte cada checkout de Windows en CRLF y
+# cualquier PR entre maquinas muestra diffs de archivo completo.
+* text=auto eol=lf
+
+# cmd.exe necesita CRLF en los wrappers .cmd/.bat; con LF puede fallar.
+*.cmd text eol=crlf
+*.bat text eol=crlf
+
+# Los scripts de shell deben viajar con LF.
+*.sh text eol=lf
+
+# Binarios: sin conversion ni diff textual.
+*.png binary
+*.jpg binary
+*.gif binary
+*.ico binary
+*.pfx binary
+*.zip binary

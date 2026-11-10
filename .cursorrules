@@ -1,34 +1,12 @@
-# Cursor Rules for Faena AI Factory
+Cursor Rules — Faena AI Factory
 
-You are an expert AI software engineer operating inside the Faena AI Factory workspace.
-When the user pastes a ticket or asks for a feature/fix in this chat, strictly follow this protocol:
+Single source of truth: PROTOCOL.md at the repository root. Read it fully before acting; it holds the workspace invariants, the 5-step flow and the complete command surface.
 
-1. WORKSPACE ISOLATION & PROYECTO DETECTION:
-   - Target client repositories live exclusively inside `Proyecto/`.
-   - IMPORTANT: `Proyecto/**` is in `.gitignore` to prevent client code from polluting Faena's git. NEVER assume `Proyecto/` is empty based on `git status` or `git ls-files`. Always check physical directories with filesystem tools (`ls`, `dir`, `Get-ChildItem`) or read `tasks/context/project-structure.md`.
-   - All code edits, new source files, and terminal execution commands (e.g., `npm`, `dotnet`, `pytest`) must run inside the targeted repository within `Proyecto/`.
+Do not restate rules in this file. If the flow changes, edit PROTOCOL.md. scripts/validate-faena.ps1 fails if this file stops referencing it.
 
-2. MANDATORY CONTEXT READING:
-   - Always read `tasks/context/team-context.md` to understand who the Tech Lead, QA engineers, DevOps engineers, and colleagues are.
-   - Respect decisions made by Tech Leads; do not invent conflicting assumptions.
-   - Separate development responsibilities from QA verification and DevOps infrastructure handoffs.
-   - Read `tasks/context/tech-context.md` and active company rules in `rules/project/`.
+Host notes:
+- Cursor loads .cursorrules on every request, so it stays deliberately small.
+- For real Cursor project rules with globs, add thin shims in .cursor/rules/*.mdc that point at rules/*.md — never copies of the content.
+- Users drag commands into chat as @commands/... or @tasks/task-.../...
 
-3. TDD LIFECYCLE (RED -> GREEN -> VERIFY):
-   - Never write production code before writing failing tests (RED).
-   - Verify tests fail first, then implement code to make tests pass (GREEN).
-   - Run linter/compiler/quality gates (VERIFY).
-   - Document task progress in `tasks/task-<name>/README.md`.
-
-4. CODE REVIEW, SECURITY & GIT IDENTITY:
-   - Before ANY git commit or push in `Proyecto/<repo>`, verify that `git config --local user.email` matches the corporate identity in `tasks/context/team-context.md`. NEVER commit with a personal email/account.
-   - Review git diffs against OWASP Top 10 and secret leaks using `agents/coding/security-reviewer.md`.
-   - Record newly discovered project patterns in `tasks/context/learnings.md`.
-
-5. CHAT COMMAND DRAG & DROP FLOW:
-   - Step 1: User drags `@commands/1-ticket.md` + pastes ticket -> Generates dedicated folder `tasks/task-<name>/design-<name>.md`.
-   - Step 2: User drags `@commands/2-create-trd.md tasks/task-<name>/design-<name>.md` -> Generates `trd-<name>.md` and `test-spec-<name>.md` inside the same `tasks/task-<name>/` folder.
-   - Step 3: User drags `@commands/3-create-tasks.md tasks/task-<name>/trd-<name>.md` -> Generates atomic task files (`task01-setup`, `task02-red`, `task03-green`) and `README.md` inside that same folder.
-   - Step 4: User drags `@tasks/task-<name>/taskNN-...` -> Executes that specific task in `Proyecto/` and marks checkbox.
-   - Step 5: User can drag `@commands/4-update-context.md` at end of session to sync context.
-
+Quick map: PROTOCOL.md (flow + invariants) | rules/process-task-list.md (TDD) | rules/skills-routing.md + skills/README.md (skills) | rules/project/ (company standards).

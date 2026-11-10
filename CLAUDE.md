@@ -1,26 +1,19 @@
-# CLAUDE.md - Guía de Operación para Claude en Faena
+# CLAUDE.md — Adaptador para Claude Code
 
-Este repositorio es una factoría de desarrollo contextual. Cuando el usuario pegue un ticket o asigne una tarea en este chat, debes seguir estrictamente las directivas de este archivo y de `AGENTS.md`.
+Fuente única de verdad: [`PROTOCOL.md`](PROTOCOL.md). **Léelo completo antes de actuar**; este archivo no repite sus reglas.
 
-## 1. Dónde reside el código
-- El código fuente de la empresa/cliente se encuentra clonado dentro de `Proyecto/` (ej. `Proyecto/backend-api`, `Proyecto/frontend-web`, `Proyecto/growthhacking.PrototypeZero`).
-- `Proyecto/**` está en `.gitignore` para aislar el git del cliente del de Faena; **NUNCA** uses `git status` para asumir que está vacío. Siempre revisa directorios en disco (`ls`) o lee `tasks/context/project-structure.md`.
-- **NUNCA** coloques código de producción fuera de `Proyecto/`.
-- Todos los comandos de terminal (`dotnet`, `npm`, `ng`, `pytest`) deben ejecutarse en la subcarpeta del repositorio objetivo dentro de `Proyecto/`.
+## Notas de este host
 
-## 2. Dónde reside el contexto
-Antes de proponer una solución o escribir código, consulta obligatoriamente:
-- `tasks/context/team-context.md`: Organigrama de la empresa, jefes, compañeros, testers QA, DevOps y protocolo de delegación.
-- `tasks/context/tech-context.md`: Stack tecnológico y herramientas.
-- `rules/project/`: Estándares de arquitectura obligatorios de esta empresa.
-- `skills/`: Habilidades especializadas (Angular en `skills/angular-developer/`, .NET en `skills/dotnet-patterns/` y `skills/csharp-testing/`, ABP en `skills/abp-*/`, Azure en `skills/azure-function/`).
+- Claude Code carga `CLAUDE.md` automáticamente en cada sesión.
+- `CLAUDE.md` **no** se hereda a los subagentes: al delegar, pásales la ruta o el contenido de `PROTOCOL.md`.
+- Plan mode y `TodoWrite` son bienvenidos para organizar el trabajo, pero el plan debe respetar las invariantes de `PROTOCOL.md` §2.
+- Si el proyecto define `AGENTS.md`, ambos apuntan al mismo protocolo: no hay dos versiones que reconciliar.
 
-## 3. Protocolo de Comandos por Chat (Drag & Drop)
-1. **Paso 1 (`@commands/1-ticket.md`)**: El usuario arrastra el comando y pega el ticket. Lees `tasks/context/team-context.md`, identificas el repo en `Proyecto/` y creas la carpeta dedicada con su diseño: `tasks/task-<nombre>/design-<nombre>.md`.
-2. **Paso 2 (`@commands/2-create-trd.md tasks/task-<nombre>/design-<nombre>.md`)**: Diseñas la arquitectura y creas dentro de la misma carpeta `tasks/task-<nombre>/trd-<nombre>.md` y `test-spec-<nombre>.md` con las secciones de handoff para QA y DevOps.
-3. **Paso 3 (`@commands/3-create-tasks.md tasks/task-<nombre>/trd-<nombre>.md`)**: Desglosas en tareas atómicas `task01-setup`, `task02-red`, `task03-green` con `README.md` de seguimiento con checkboxes.
-4. **Paso 4 (`@tasks/task-<nombre>/taskNN-...`)**: Ejecutas cada tarea en `Proyecto/`. En RED escribes tests y confirmas que fallen en terminal. En GREEN implementas hasta que pasen todos y validas lint/build. Actualizas el checkbox en `README.md`.
-5. **Paso 5 (Auditoría ECC Gate, Seguridad & Identidad Git)**:
-   - **Identidad Git Corporativa**: Antes de cualquier commit o push en `Proyecto/`, verifica `git config --local user.email` contra el correo corporativo en `team-context.md`. NUNCA hagas commit con la cuenta personal global del desarrollador. Configúralo localmente si no está asignado.
-   - Revisa el `git diff` con el criterio de `security-reviewer.md`.
-   - Registra lecciones en `tasks/context/learnings.md` y entrega el resumen listo para el tester QA.
+## Atajos
+
+| Necesitas | Lee |
+| :--- | :--- |
+| Flujo de 5 pasos | `PROTOCOL.md` §3 |
+| Disciplina TDD | `rules/process-task-list.md` |
+| Skills por dominio | `rules/skills-routing.md` + `skills/README.md` |
+| Estándares de la empresa | `rules/project/` |

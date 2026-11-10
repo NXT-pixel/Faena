@@ -40,6 +40,11 @@ venv.bak/
 *.swp
 *.swo
 
+# Obsidian vault state (per-machine UI state, rewrites on every session)
+# Si abres Faena como vault de Obsidian, agrega Proyecto/ a userIgnoreFilters
+# en la configuracion del vault: es local, no se versiona.
+.obsidian/
+
 # Node / JS
 node_modules/
 npm-debug.log*
@@ -51,9 +56,10 @@ pnpm-debug.log*
 Proyecto/**
 !Proyecto/.gitkeep
 !Proyecto/README.md
-projects/**
-!projects/.gitkeep
-!projects/README.md
 
 # Faena transient runs & outputs (optional)
 # tasks/task-*/
+
+# Índice local de tickets: se regenera con .\scripts\index-tasks.cmd y difiere
+# por rama y por máquina, así que versionarlo solo produce conflictos.
+tasks/INDEX.md

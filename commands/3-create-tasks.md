@@ -37,7 +37,7 @@ When invoked with TRD path:
 
 **Note**: VERIFY is included at the end of GREEN tasks, not a separate phase.
 
-**Path Format**: Always use root-relative paths: `/agents/coding/agent-name.md`
+**Path Format**: Always use repo-relative paths, e.g. `agents/coding/angular-developer.md`
 
 ## Task Naming Convention
 
@@ -189,20 +189,13 @@ agent_path: /agents/coding/[agent-name].md
 
 ## Testing Conventions
 
-Project testing patterns (from [project-style-guide.md](/tasks/context/project-style-guide.md#L300-L350)):
+Testing conventions come from the client repo, not from this harness:
 
-```typescript
-// ✅ Use descriptive test names with Given-When-Then
-describe('ModuleName', () => {
-  describe('functionName', () => {
-    test('should return X when given Y', () => {
-      // Arrange, Act, Assert pattern
-    })
-  })
-})
-```
+1. Read one or two existing test files closest to the code you will touch.
+2. Copy their naming, arrangement (Given-When-Then or Arrange-Act-Assert) and fixture conventions.
+3. If `rules/project/` defines test rules, those win over the repo's incidental style.
 
-Full testing guide: [project-style-guide.md#L300-L400](/tasks/context/project-style-guide.md#L300-L400)
+Do not invent a testing style. If the repo has no tests at all, say so in the task file and follow the TRD.
 
 ---
 
@@ -310,14 +303,14 @@ Read the tests from Task [N] to understand required behavior. All tests must pas
 
 This module follows project patterns from [system-patterns.md](/tasks/context/system-patterns.md):
 
-**Schema-First Validation** (see [system-patterns.md#L20-L45](/tasks/context/system-patterns.md#L20-L45)):
+**Schema-First Validation** (see [system-patterns.md](/tasks/context/system-patterns.md)):
 ```typescript
 // Define Zod schema first
 export const moduleSchema = z.object({...}).strict()
 export type ModuleType = z.infer<typeof moduleSchema>
 ```
 
-**Service Layer Pattern** (see [system-patterns.md#L50-L80](/tasks/context/system-patterns.md#L50-L80)):
+**Service Layer Pattern** (see [system-patterns.md](/tasks/context/system-patterns.md)):
 ```typescript
 // Business logic in service classes
 export class ModuleService {
@@ -331,19 +324,12 @@ Full patterns reference: [system-patterns.md](/tasks/context/system-patterns.md)
 
 ## Coding Conventions
 
-Follow project style guide ([project-style-guide.md](/tasks/context/project-style-guide.md)):
+Follow the company standards in `rules/project/` and the domain skill in `skills/<domain>/SKILL.md`:
 
-**Key conventions**:
-```typescript
-// ✅ Explicit return types
-function process(data: Input): Output {...}
+- [Transcribe only conventions that exist in `rules/project/` for this repository]
+- [If none are defined, state it here instead of inventing standards]
 
-// ✅ Strict null checks
-const value: string | null = getValue()
-if (value !== null) { use(value) }
-```
-
-Full guide: [project-style-guide.md#L10-L150](/tasks/context/project-style-guide.md#L10-L150)
+There is no separate style-guide file: `rules/project/` plus the domain skill are the reference.
 
 ---
 

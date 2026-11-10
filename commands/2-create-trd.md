@@ -167,7 +167,7 @@ export const featureSchema = z.object({...}).strict()
 export type Feature = z.infer<typeof featureSchema>
 ```
 
-See full patterns: [system-patterns.md](/tasks/context/system-patterns.md#L8-L95)
+See full patterns: [system-patterns.md](/tasks/context/system-patterns.md)
 
 ---
 
@@ -185,14 +185,13 @@ See full patterns: [system-patterns.md](/tasks/context/system-patterns.md#L8-L95
 
 ## 4. Module Responsibilities
 
-**Coding Conventions**: Follow project standards documented in [project-style-guide.md](/tasks/context/project-style-guide.md).
+**Coding Conventions**: Follow the company standards in `rules/project/` and the technical rules in `rules/`. Read the domain skill in `skills/<domain>/SKILL.md` before writing code (see `rules/skills-routing.md`).
 
 Key conventions:
-- Explicit return types for functions
-- Zod schemas for all data models  
-- Service layer pattern for business logic
+- [List only conventions that actually exist in `rules/project/` or in the domain skill]
+- [If `rules/project/` is empty, state that in the TRD instead of inventing standards]
 
-See full guide: [project-style-guide.md#L10-L100](/tasks/context/project-style-guide.md#L10-L100)
+Conventions are project-defined, never assumed. There is no separate style-guide file: `rules/project/` is the source of truth.
 
 ---
 
