@@ -81,7 +81,7 @@ sequenceDiagram
 **Decisión de diseño (Tech Lead):** corrección durable = **MCP + prompts**, no solo prompt. `GetCustomerActiveCommerceOrder` debe, si no hay checkout/crédito abierto, devolver el último pedido `Paid`/`Shipped` del cliente con `ReminderHint` explícito y `NewPurchaseAllowed = true`, en lugar de `null`. El carrito sigue siendo solo `Draft`/`PendingPayment`; mutaciones (`UpdateOrder`/`AddItemToOrder`) ya fallan fuera de esos estados.
 
 Key patterns: MCP tools en Core, prompt composition en AiService (`CommercialRulesetProvider`), proyección `CatalogOrderStatusProjection.IsPaid`.  
-See: [system-patterns.md](/tasks/context/system-patterns.md), repo `tasks/context/saas-multi-tenancy-and-features.md`.
+See: [system-patterns.md](tasks/context/system-patterns.md). For SaaS and multitenancy details, see `saas-multi-tenancy-and-features.md` in the client repo's context folder (under `Proyecto/growthhacking.PrototypeZero/`).
 
 ---
 
