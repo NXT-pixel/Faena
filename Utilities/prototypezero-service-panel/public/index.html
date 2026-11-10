@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>P0 Service Panel</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="noise" aria-hidden="true"></div>
+    <header class="top">
+      <div class="brand-block">
+        <p class="brand">P0 Control</p>
+        <p class="tag">PrototypeZero · infra Docker · apps dotnet run</p>
+      </div>
+      <div class="meta">
+        <span id="repoPath" class="repo" title="Repo root">…</span>
+        <button type="button" id="refreshBtn" class="ghost">Refresh</button>
+      </div>
+    </header>
+
+    <main>
+      <section class="order-panel" aria-labelledby="order-title">
+        <div class="group-head">
+          <h2 id="order-title">Suggested start order</h2>
+        </div>
+        <p id="portNotes" class="port-notes"></p>
+        <div class="order-columns">
+          <div>
+            <h3 class="order-col-title">1 · Infrastructure</h3>
+            <ol id="infraOrder" class="order-list"></ol>
+          </div>
+          <div>
+            <h3 class="order-col-title">2 · Applications</h3>
+            <ol id="appsOrder" class="order-list"></ol>
+          </div>
+        </div>
+      </section>
+
+      <section class="group" aria-labelledby="infra-title">
+        <div class="group-head">
+          <h2 id="infra-title">Infrastructure</h2>
+          <div class="bulk">
+            <button type="button" data-bulk="infra:start">Start all (order)</button>
+            <button type="button" data-bulk="infra:stop" class="danger">Stop all</button>
+          </div>
+        </div>
+        <div id="infraGrid" class="grid"></div>
+      </section>
+
+      <section class="group" aria-labelledby="apps-title">
+        <div class="group-head">
+          <h2 id="apps-title">Application services</h2>
+          <div class="bulk">
+            <button type="button" data-bulk="apps:start">Start all (order)</button>
+            <button type="button" data-bulk="apps:stop" class="danger">Stop all</button>
+          </div>
+        </div>
+        <div id="appsGrid" class="grid"></div>
+      </section>
+
+      <section class="console-panel" aria-labelledby="console-title">
+        <div class="group-head">
+          <h2 id="console-title">App console</h2>
+          <div class="bulk">
+            <button type="button" id="consoleClearBtn" class="ghost">Clear view</button>
+            <button type="button" id="consoleClearAllBtn" class="danger">Clear all logs</button>
+            <button type="button" id="consoleFollowBtn" class="ghost">Follow ↓</button>
+          </div>
+        </div>
+        <div id="consoleTabs" class="console-tabs" role="tablist"></div>
+        <pre id="consoleOut" class="console-out" aria-live="polite"></pre>
+      </section>
+    </main>
+
+    <footer class="foot">
+      <p id="toast" role="status" aria-live="polite"></p>
+      <p class="hint">Infra = Docker. Apps = <code>dotnet run</code> (Angular = <code>npm start</code>). Logs under <code>.runtime/logs/</code>. Bulk start follows order; bulk stop reverses it. Use Stop on a service (e.g. Web Gateway) before restarting it.</p>
+    </footer>
+
+    <script src="/app.js" type="module"></script>
+  </body>
+</html>
