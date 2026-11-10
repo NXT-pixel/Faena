@@ -237,6 +237,17 @@ const INFRA_SERVICES = [
     required: false,
     why: "Optional / secondary DB",
   },
+  {
+    id: "openwa",
+    containerName: "openwa-api",
+    label: "OpenWA",
+    composeFile: "containers/openwa.yml",
+    port: 2785,
+    order: 9,
+    group: "infra",
+    required: false,
+    why: "WhatsApp OpenWA bridge (rmyndharis/openwa:latest)",
+  },
 ];
 
 const PORT_NOTES = {
@@ -432,6 +443,7 @@ async function statusInfra() {
   for (const line of all.stdout.split(/\r?\n/).filter(Boolean)) {
     const [name, status, state] = line.split("\t");
     const match =
+      INFRA_SERVICES.find((s) => name === (s.containerName || s.id)) ||
       INFRA_SERVICES.find((s) => name === s.id) ||
       INFRA_SERVICES.find((s) => name.startsWith(`${s.id}-`));
     if (match) {
@@ -738,17 +750,19 @@ async function startService(id) {
 
   await ensureNetwork();
 
-  // Reuse an existing container with this exact name (e.g. rabbitmq created outside
+  // Reuse an existing container with this exact name (e.g. rabbitmq or openwa-api created outside
   // the current Compose project). `compose up` would fail with a name conflict.
-  const existing = await dockerContainerState(svc.id);
+  const containerName = svc.containerName || svc.id;
+  const existing = (await dockerContainerState(containerName)) || (await dockerContainerState(svc.id));
+  const targetName = (await dockerContainerState(containerName)) ? containerName : svc.id;
   if (existing) {
     if (existing === "running") {
-      return { ok: true, stdout: `${svc.id} already running`, stderr: "" };
+      return { ok: true, stdout: `${targetName} already running`, stderr: "" };
     }
-    const started = await run("docker", ["start", svc.id]);
+    const started = await run("docker", ["start", targetName]);
     return {
       ok: started.code === 0,
-      stdout: started.stdout || `Started existing container ${svc.id}`,
+      stdout: started.stdout || `Started existing container ${targetName}`,
       stderr: started.stderr,
       error:
         started.code === 0
@@ -757,12 +771,22 @@ async function startService(id) {
     };
   }
 
-  const result = await infraCompose(svc.composeFile, ["up", "-d"]);
+  if (svc.composeFile) {
+    const composePath = path.join(etcDockerDir, svc.composeFile);
+    if (fs.existsSync(composePath)) {
+      const result = await infraCompose(svc.composeFile, ["up", "-d"]);
+      return {
+        ok: result.code === 0,
+        stdout: result.stdout,
+        stderr: result.stderr,
+        error: result.code === 0 ? undefined : result.stderr || result.stdout || `exit ${result.code}`,
+      };
+    }
+  }
+
   return {
-    ok: result.code === 0,
-    stdout: result.stdout,
-    stderr: result.stderr,
-    error: result.code === 0 ? undefined : result.stderr || result.stdout || `exit ${result.code}`,
+    ok: false,
+    error: `Container ${containerName} not found. Start it with docker run or create ${svc.composeFile || "compose file"}.`,
   };
 }
 
@@ -775,15 +799,17 @@ async function stopService(id) {
   }
 
   // Prefer docker stop by name so non-Compose / differently-projected containers stop too.
-  const existing = await dockerContainerState(svc.id);
+  const containerName = svc.containerName || svc.id;
+  const existing = (await dockerContainerState(containerName)) || (await dockerContainerState(svc.id));
+  const targetName = (await dockerContainerState(containerName)) ? containerName : svc.id;
   if (existing) {
     if (existing !== "running") {
-      return { ok: true, stdout: `${svc.id} already stopped`, stderr: "" };
+      return { ok: true, stdout: `${targetName} already stopped`, stderr: "" };
     }
-    const stopped = await run("docker", ["stop", svc.id]);
+    const stopped = await run("docker", ["stop", targetName]);
     return {
       ok: stopped.code === 0,
-      stdout: stopped.stdout || `Stopped ${svc.id}`,
+      stdout: stopped.stdout || `Stopped ${targetName}`,
       stderr: stopped.stderr,
       error:
         stopped.code === 0
