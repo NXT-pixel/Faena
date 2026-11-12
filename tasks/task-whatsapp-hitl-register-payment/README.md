@@ -86,9 +86,9 @@ npx ng test --watch=false --browsers=ChromeHeadless --include=**/conversation-de
 
 - [x] Task 01: Setup paths / baseline (setup)
 - [x] Task 02: Core FindByWhatsAppContactId tests (RED)
-- [ ] Task 03: Core FindByWhatsAppContactId impl (GREEN+VERIFY)
-- [ ] Task 04: Angular HITL resolution tests (RED)
-- [ ] Task 05: Angular HITL resolution + proxy (GREEN+VERIFY)
+- [x] Task 03: Core FindByWhatsAppContactId impl (GREEN+VERIFY)
+- [x] Task 04: Angular HITL resolution tests (RED)
+- [x] Task 05: Angular HITL resolution + proxy (GREEN+VERIFY)
 
 ---
 

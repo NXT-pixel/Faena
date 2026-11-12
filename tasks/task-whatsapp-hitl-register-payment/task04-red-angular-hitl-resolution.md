@@ -192,9 +192,25 @@ describe('hitl-register-payment.util', () => {
 
 ## Success Criteria
 
-- [ ] All util + registerPayment GWT covered
-- [ ] Specs run and FAIL (RED)
-- [ ] No production implementation (util/component/proxy/localization)
+- [x] All util + registerPayment GWT covered
+- [x] Specs run and FAIL (RED)
+- [x] No production implementation (util/component/proxy/localization)
+
+---
+
+## RED Evidence (2026-11-12)
+
+**Choice:** orchestration GWT via `lookupHitlRegisterPayment` in `hitl-register-payment.lookup.spec.ts` (pure helper; no heavy `ConversationDetailComponent` TestBed). GREEN implements the helper in `hitl-register-payment.util.ts` and wires `registerPayment()` to it.
+
+```text
+npx ng test --watch=false --browsers=ChromeHeadless --include=**/hitl-register-payment*.spec.ts
+EXIT=1
+TS2307: Cannot find module './hitl-register-payment.util' (util.spec.ts + lookup.spec.ts)
+```
+
+Log: `tasks/task-whatsapp-hitl-register-payment/red-task04-ng-test.log`
+
+Razón correcta: módulo/comportamiento ausente. Sin implementación de producción.
 
 ---
 
@@ -208,6 +224,5 @@ describe('hitl-register-payment.util', () => {
 
 ```bash
 cd apps/angular
-yarn test --watch=false
-# o filtro equivalente a hitl-register-payment / conversation-detail
+npx ng test --watch=false --browsers=ChromeHeadless --include=**/hitl-register-payment*.spec.ts
 ```

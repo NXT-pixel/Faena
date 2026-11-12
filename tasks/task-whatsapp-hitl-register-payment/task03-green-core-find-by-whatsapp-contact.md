@@ -95,11 +95,11 @@ If you encounter issues with the tests from Task 02, **pause and report** rather
 
 ## Implementation Checklist
 
-- [ ] Declarar método en `ICatalogCustomerAppService`
-- [ ] Implementar `FindByWhatsAppContactIdAsync` en `CatalogCustomerAppService`
-- [ ] All Task 02 tests pass (GREEN)
-- [ ] No test modifications without user approval
-- [ ] Route/HTTP surface usable por proxy Angular (Task 05)
+- [x] Declarar método en `ICatalogCustomerAppService`
+- [x] Implementar `FindByWhatsAppContactIdAsync` en `CatalogCustomerAppService`
+- [x] All Task 02 tests pass (GREEN)
+- [x] No test modifications without user approval
+- [x] Route/HTTP surface usable por proxy Angular (Task 05)
 
 ---
 
@@ -130,10 +130,18 @@ dotnet test services/core/PrototypeZero.CoreService.Tests --filter "FullyQualifi
 
 ### Verification Checklist
 
-- [ ] All Task 02 tests pass
-- [ ] `verify:quick` passes
-- [ ] `verify:full` passes
-- [ ] No production code outside listed files
+- [x] All Task 02 tests pass
+- [x] `verify:quick` passes
+- [x] `verify:full` passes
+- [x] No production code outside listed files
+
+### GREEN Evidence (2026-11-12)
+
+```text
+Correctas! - Con error: 0, Superado: 5, Omitido: 0, Total: 5
+dotnet build PrototypeZero.CoreService → 0 Errores (BUILD_EXIT=0)
+Route: GET api/core/store/catalog-customer/by-whats-app-contact-id/{whatsAppContactId}
+```
 
 ---
 

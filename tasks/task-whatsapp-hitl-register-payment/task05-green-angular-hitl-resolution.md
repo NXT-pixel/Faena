@@ -99,12 +99,12 @@ If you encounter issues with the tests from Task 04, **pause and report** rather
 
 ## Implementation Checklist
 
-- [ ] Create `hitl-register-payment.util.ts`
-- [ ] Refactor `registerPayment` to use util + contactId fallback
-- [ ] Add `findByWhatsAppContactId` to proxy (URL matches Core)
-- [ ] Update `HITL:NoMatchingCustomer` ES/EN (contacto, no solo número)
-- [ ] All Task 04 tests pass
-- [ ] No test modifications without approval
+- [x] Create `hitl-register-payment.util.ts`
+- [x] Refactor `registerPayment` to use util + contactId fallback
+- [x] Add `findByWhatsAppContactId` to proxy (URL matches Core)
+- [x] Update `HITL:NoMatchingCustomer` ES/EN (contacto, no solo número)
+- [x] All Task 04 tests pass
+- [x] No test modifications without approval
 
 ---
 
@@ -140,11 +140,21 @@ cd apps/angular && yarn test --watch=false
 
 ### Verification Checklist
 
-- [ ] Task 04 tests pass
-- [ ] `verify:quick` passes
-- [ ] `verify:full` passes
-- [ ] Proxy method present and aligned with Core
-- [ ] Localization updated ES + EN
+- [x] Task 04 tests pass
+- [x] `verify:quick` passes
+- [x] `verify:full` passes
+- [x] Proxy method present and aligned with Core
+- [x] Localization updated ES + EN
+
+### GREEN Evidence (2026-11-12)
+
+```text
+npx ng test --include=**/hitl-register-payment*.spec.ts → TOTAL: 19 SUCCESS
+dotnet build CoreService → 0 Errores
+dotnet test ~CatalogCustomerFindByWhatsAppContact → Superado: 5
+Proxy: GET /api/core/store/catalog-customer/by-whats-app-contact-id/{id}
+HITL:NoMatchingCustomer → contacto / contact (ES/EN)
+```
 
 ---
 
