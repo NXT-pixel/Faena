@@ -19,6 +19,19 @@ fs.mkdirSync(LOGS_DIR, { recursive: true });
 
 const isWin = process.platform === "win32";
 
+// Ensure Docker Desktop binary directory is on PATH on Windows even if launched from a stale shell
+if (isWin) {
+  const extraPaths = [
+    path.join(process.env.LOCALAPPDATA || "", "Programs", "DockerDesktop", "resources", "bin"),
+    "C:\\Program Files\\Docker\\Docker\\resources\\bin",
+  ];
+  for (const p of extraPaths) {
+    if (fs.existsSync(p) && !process.env.PATH?.includes(p)) {
+      process.env.PATH = `${p};${process.env.PATH || ""}`;
+    }
+  }
+}
+
 // Apps run on the host (dotnet run / npm start). Ports match WebGateway ReverseProxy Clusters.
 const APP_SERVICES = [
   {
