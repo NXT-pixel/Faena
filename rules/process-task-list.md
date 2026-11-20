@@ -25,7 +25,7 @@ A GREEN file never starts before its RED file has failed **for the expected reas
 3. Work the file's sub-tasks in order: X.1 test -> X.2 implementation -> X.3 quality gate.
 4. Run all tests and gates inside the client repo at `Proyecto/<repo>/`, never from the harness root.
 5. Mark `[x]` in the folder `README.md` **and** in the task file, then update `todo_write`.
-6. Report the result and stop: one task file per turn. The user drags the next task file.
+6. Report the result and stop: one task file per turn in manual step-by-step mode. In autonomous mode (`@commands/orchestrate.md`), mark the task complete and immediately proceed to the next unchecked task in `README.md` until all tasks are finished.
 
 ## TDD Sub-Task Pattern (X.1 -> X.2 -> X.3)
 

@@ -38,19 +38,23 @@ Principio rector: **nada se implementa sin contexto leído y sin un test que fal
 6. **Seguridad antes de entregar.** Audita el `git diff` con `rules/security/` y `agents/coding/security-reviewer.md`: secretos quemados, inyección SQL, OWASP Top 10.
 7. **Memoria.** Registra convenciones, trampas y decisiones en `tasks/context/learnings.md`. Es lo que hace que el siguiente ticket cueste menos.
 8. **Honestidad sobre el estado del repo.** Si un archivo, comando o convención no existe, dilo explícitamente en lugar de inventarlo o citar una ruta que no existe.
-9. **Un archivo de tarea por turno.** Ejecutas la tarea que el usuario arrastra, la cierras, actualizas checkboxes y te detienes.
+9. **Un archivo de tarea por turno (Modo manual).** En modo paso a paso ejecutas la tarea que el usuario arrastra, la cierras, actualizas checkboxes y te detienes. **Excepción (Modo Autónomo):** cuando el usuario invoca `@commands/orchestrate.md` o solicita ejecución autónoma E2E, el orquestador ejecuta el pipeline completo y el bucle de tareas TDD de principio a fin, pausando únicamente ante fallos no recuperables de Quality Gates o por la regla *When Tests Disagree*.
 
 ---
 
 ## 3. Flujo obligatorio de 5 pasos
 
-| Paso | Comando que arrastra el usuario | Entrada | Salida |
-| :--- | :--- | :--- | :--- |
-| 1 | `@commands/1-ticket.md` + texto del ticket | ticket pegado | `tasks/task-<nombre>/design-<nombre>.md` |
-| 2 | `@commands/2-create-trd.md tasks/task-<nombre>/design-<nombre>.md` | diseño | `trd-<nombre>.md` + `test-spec-<nombre>.md` |
-| 3 | `@commands/3-create-tasks.md tasks/task-<nombre>/trd-<nombre>.md` | TRD | `task01-setup`, `taskNN-red`, `taskNN-green`, `README.md` |
-| 4 | `@tasks/task-<nombre>/taskNN-....md` | un archivo de tarea | código + tests en `Proyecto/<repo>/`, checkbox marcado |
-| 5 | (cierre) | diff completo | review de seguridad + handoff QA + `learnings.md` |
+El flujo puede ejecutarse en dos modalidades:
+- **Modo interactivo (paso a paso)**: El usuario arrastra comando por comando (`@commands/1-ticket.md` → `@commands/2-create-trd.md` → `@commands/3-create-tasks.md` → tareas una a una).
+- **Modo autónomo (E2E)**: El usuario arrastra `@commands/orchestrate.md` con el ticket; el orquestador encadena las 5 fases en bucle continuo.
+
+| Paso | Modo interactivo | Modo autónomo | Entrada | Salida |
+| :--- | :--- | :--- | :--- | :--- |
+| 1 | `@commands/1-ticket.md` + ticket | `@commands/orchestrate.md` | ticket pegado | `tasks/task-<nombre>/design-<nombre>.md` |
+| 2 | `@commands/2-create-trd.md ...` | (automático) | diseño | `trd-<nombre>.md` + `test-spec-<nombre>.md` |
+| 3 | `@commands/3-create-tasks.md ...` | (automático) | TRD | `task01-setup`, `taskNN-red`, `taskNN-green`, `README.md` |
+| 4 | `@tasks/task-<nombre>/taskNN-....md` | (bucle continuo) | tareas en orden | código + tests en `Proyecto/<repo>/`, checkboxes marcados |
+| 5 | (cierre) | (automático) | diff completo | review de seguridad + handoff QA + `learnings.md` |
 
 ### Paso 1 — Intake del ticket
 1. Lee `tasks/context/team-context.md` e identifica Tech Lead, QA y DevOps.
@@ -81,7 +85,7 @@ El flujo obligatorio usa tres comandos, pero el repo tiene más. No los ejecutes
 | Grupo | Comandos | Para qué |
 | :--- | :--- | :--- |
 | **Verificación** | `commands/0-verify-agent.md` | Smoke test: confirma que cargaste `PROTOCOL.md` y el contexto antes de empezar. |
-| **Núcleo** | `commands/1-ticket.md`, `commands/2-create-trd.md`, `commands/3-create-tasks.md` | El flujo de 5 pasos. |
+| **Núcleo** | `commands/orchestrate.md`, `commands/1-ticket.md`, `commands/2-create-trd.md`, `commands/3-create-tasks.md` | Orquestación autónoma E2E o flujo paso a paso. |
 | **Opcionales del flujo** | `commands/1b-design.md` | Diseño colaborativo con `design-facilitator` antes del TRD. |
 | | `commands/1c-decompose.md` | Parte una spec grande en fases (`phase01-*.md`, `phase02-*.md`). |
 | | `commands/4-update-context.md` | Sincroniza `tasks/context/` al cerrar una sesión. |
