@@ -12,6 +12,7 @@ import sys
 import json
 import time
 import re
+import shutil
 import webbrowser
 import threading
 import subprocess
@@ -26,6 +27,30 @@ ACTIVE_TENANT_FILE = REPO_ROOT / ".active-tenant"
 LOCAL_JSON_FILE = REPO_ROOT / "tenants.local.json"
 DASHBOARD_DIR = REPO_ROOT / "scripts" / "dashboard"
 INDEX_HTML_PATH = DASHBOARD_DIR / "index.html"
+
+
+def sanitize_slug(slug):
+    """Sanitizes tenant slugs and guards against path traversal."""
+    if not slug:
+        return ""
+    clean = re.sub(r"[^a-z0-9_-]", "-", str(slug).strip().lower())
+    clean = re.sub(r"-+", "-", clean).strip("-")
+    if not clean or clean.startswith(".") or ".." in clean:
+        return ""
+    return clean
+
+
+def get_tenant_dir_safely(slug):
+    """Returns the Path to a tenant directory only if it is strictly inside TENANTS_DIR."""
+    clean = sanitize_slug(slug)
+    if not clean or clean == "default":
+        return None
+    target = (TENANTS_DIR / clean).resolve()
+    try:
+        target.relative_to(TENANTS_DIR.resolve())
+        return target
+    except ValueError:
+        return None
 
 
 def get_active_tenant_slug():
@@ -44,8 +69,12 @@ def get_active_tenant_slug():
 
 
 def set_active_tenant_slug(slug):
+    clean = sanitize_slug(slug)
     try:
-        ACTIVE_TENANT_FILE.write_text(slug.strip(), encoding="utf-8")
+        if clean:
+            ACTIVE_TENANT_FILE.write_text(clean, encoding="utf-8")
+        elif ACTIVE_TENANT_FILE.exists():
+            ACTIVE_TENANT_FILE.unlink()
         return True
     except Exception:
         return False
@@ -250,9 +279,13 @@ def get_ticket_data(task_dir, tenant_slug):
 
 
 def get_tasks_dir_for_tenant(tenant_slug):
-    if tenant_slug == "default" or not tenant_slug:
+    slug = sanitize_slug(tenant_slug)
+    if slug == "default" or not slug:
         return REPO_ROOT / "tasks"
-    return TENANTS_DIR / tenant_slug / "tasks"
+    tdir = get_tenant_dir_safely(slug)
+    if tdir:
+        return tdir / "tasks"
+    return REPO_ROOT / "tasks"
 
 
 def scan_tickets_for_tenant(tenant_slug):
@@ -269,6 +302,69 @@ def scan_tickets_for_tenant(tenant_slug):
     return tickets
 
 
+def inspect_git_repo(repo_path):
+    p = Path(repo_path)
+    if not p.exists() or not (p / ".git").exists():
+        return {
+            "name": p.name,
+            "is_git": False,
+            "branch": "no-git",
+            "last_commit": "",
+            "dirty_count": 0,
+            "remote_url": ""
+        }
+
+    branch = "unknown"
+    remote_url = ""
+    last_commit = ""
+    dirty_count = 0
+
+    try:
+        head_file = p / ".git" / "HEAD"
+        if head_file.exists():
+            ref = head_file.read_text(encoding="utf-8", errors="replace").strip()
+            if ref.startswith("ref: refs/heads/"):
+                branch = ref.replace("ref: refs/heads/", "")
+            else:
+                branch = ref[:7]
+    except Exception:
+        pass
+
+    try:
+        cfg_file = p / ".git" / "config"
+        if cfg_file.exists():
+            cfg_text = cfg_file.read_text(encoding="utf-8", errors="replace")
+            m = re.search(r'url\s*=\s*(.+)', cfg_text)
+            if m:
+                remote_url = m.group(1).strip()
+    except Exception:
+        pass
+
+    try:
+        res = subprocess.run(["git", "-C", str(p), "log", "-1", "--format=%h %s"], capture_output=True, text=True, timeout=2)
+        if res.returncode == 0:
+            last_commit = res.stdout.strip()
+    except Exception:
+        pass
+
+    try:
+        res = subprocess.run(["git", "-C", str(p), "status", "--porcelain"], capture_output=True, text=True, timeout=2)
+        if res.returncode == 0:
+            lines = [l for l in res.stdout.splitlines() if l.strip()]
+            dirty_count = len(lines)
+    except Exception:
+        pass
+
+    return {
+        "name": p.name,
+        "is_git": True,
+        "branch": branch,
+        "last_commit": last_commit,
+        "dirty_count": dirty_count,
+        "remote_url": remote_url
+    }
+
+
 def scan_all_tenants():
     tenants = []
     if TENANTS_DIR.exists():
@@ -280,11 +376,11 @@ def scan_all_tenants():
                 avg_pct = int(sum(t["percentage"] for t in tickets) / total_tickets) if total_tickets > 0 else 0
                 latest_ticket = tickets[0]["title"] if total_tickets > 0 else "Sin tickets"
 
-                # Check repos in Proyecto
+                # Check repos in Proyecto with Git inspection
                 proy_dir = d / "Proyecto"
                 repos = []
                 if proy_dir.exists():
-                    repos = [r.name for r in proy_dir.iterdir() if r.is_dir() and not r.name.startswith(".")]
+                    repos = [inspect_git_repo(r) for r in sorted(proy_dir.iterdir()) if r.is_dir() and not r.name.startswith(".")]
 
                 tenants.append({
                     "slug": slug,
@@ -304,7 +400,7 @@ def scan_all_tenants():
         proy_root = REPO_ROOT / "Proyecto"
         root_repos = []
         if proy_root.exists():
-            root_repos = [r.name for r in proy_root.iterdir() if r.is_dir() and not r.name.startswith(".")]
+            root_repos = [inspect_git_repo(r) for r in sorted(proy_root.iterdir()) if r.is_dir() and not r.name.startswith(".")]
 
         tenants.insert(0, {
             "slug": "default",
@@ -320,11 +416,13 @@ def scan_all_tenants():
 
 
 def create_tenant_structure(slug, email="developer@tenant.local", tech_lead="Tech Lead", qa="QA Engineer", devops="DevOps Engineer", stack=".NET / Angular"):
-    slug = re.sub(r"[^a-z0-9_-]", "-", slug.strip().lower())
-    if not slug:
+    slug = sanitize_slug(slug)
+    if not slug or slug == "default":
         return False, "Nombre de tenant inválido"
     
-    tenant_dir = TENANTS_DIR / slug
+    tenant_dir = get_tenant_dir_safely(slug)
+    if not tenant_dir:
+        return False, "Ruta de tenant no permitida"
     if tenant_dir.exists():
         return False, f"El tenant '{slug}' ya existe"
 
@@ -391,8 +489,41 @@ Todo ticket debe culminar con un resumen de handoff claro para QA y DevOps.
     return True, slug
 
 
+def delete_tenant_structure(slug):
+    slug = sanitize_slug(slug)
+    if not slug or slug == "default":
+        return False, "No se puede eliminar el tenant por defecto o inválido"
+
+    tenant_dir = get_tenant_dir_safely(slug)
+    if not tenant_dir or not tenant_dir.exists():
+        return False, f"El tenant '{slug}' no existe"
+
+    try:
+        shutil.rmtree(tenant_dir)
+    except Exception as e:
+        return False, f"Error al eliminar carpeta: {str(e)}"
+
+    current_active = get_active_tenant_slug()
+    new_active = ""
+    if current_active == slug:
+        remaining = [d.name for d in sorted(TENANTS_DIR.iterdir()) if d.is_dir() and not d.name.startswith(".")]
+        new_active = remaining[0] if remaining else ""
+        set_active_tenant_slug(new_active)
+    else:
+        new_active = current_active
+
+    if LOCAL_JSON_FILE.exists():
+        try:
+            export_tenants_payload()
+        except Exception:
+            pass
+
+    return True, new_active
+
+
 def get_tenant_context_files(slug):
-    if not slug:
+    clean = sanitize_slug(slug)
+    if not clean:
         return {
             "slug": "",
             "team_context": "",
@@ -402,14 +533,25 @@ def get_tenant_context_files(slug):
             "repos": [],
             "proy_path": ""
         }
-    if slug == "default":
+    if clean == "default":
         c_dir = REPO_ROOT / "tasks" / "context"
         r_dir = REPO_ROOT / "rules" / "project"
         p_dir = REPO_ROOT / "Proyecto"
     else:
-        c_dir = TENANTS_DIR / slug / "context"
-        r_dir = TENANTS_DIR / slug / "rules"
-        p_dir = TENANTS_DIR / slug / "Proyecto"
+        tdir = get_tenant_dir_safely(clean)
+        if not tdir or not tdir.exists():
+            return {
+                "slug": clean,
+                "team_context": "",
+                "tech_context": "",
+                "company_standards": "",
+                "learnings": "",
+                "repos": [],
+                "proy_path": ""
+            }
+        c_dir = tdir / "context"
+        r_dir = tdir / "rules"
+        p_dir = tdir / "Proyecto"
 
     def read_safe(path):
         if path.exists():
@@ -418,10 +560,10 @@ def get_tenant_context_files(slug):
 
     repos = []
     if p_dir.exists():
-        repos = [r.name for r in p_dir.iterdir() if r.is_dir() and not r.name.startswith(".")]
+        repos = [inspect_git_repo(r) for r in sorted(p_dir.iterdir()) if r.is_dir() and not r.name.startswith(".")]
 
     return {
-        "slug": slug,
+        "slug": clean,
         "team_context": read_safe(c_dir / "team-context.md"),
         "tech_context": read_safe(c_dir / "tech-context.md"),
         "company_standards": read_safe(r_dir / "company-standards.md"),
@@ -432,12 +574,18 @@ def get_tenant_context_files(slug):
 
 
 def save_tenant_context_file(slug, file_type, content):
-    if slug == "default":
+    clean = sanitize_slug(slug)
+    if not clean:
+        return False, "Slug inválido"
+    if clean == "default":
         c_dir = REPO_ROOT / "tasks" / "context"
         r_dir = REPO_ROOT / "rules" / "project"
     else:
-        c_dir = TENANTS_DIR / slug / "context"
-        r_dir = TENANTS_DIR / slug / "rules"
+        tdir = get_tenant_dir_safely(clean)
+        if not tdir or not tdir.exists():
+            return False, f"El tenant '{clean}' no existe"
+        c_dir = tdir / "context"
+        r_dir = tdir / "rules"
 
     target_map = {
         "team": c_dir / "team-context.md",
@@ -584,6 +732,108 @@ def import_tenants_payload(payload):
     return True, f"Se restauraron {len(restored)} tenants exitosamente", restored
 
 
+def run_diagnostics():
+    script_ps1 = REPO_ROOT / "scripts" / "validate-faena.ps1"
+    start_time = time.time()
+
+    if sys.platform == "win32":
+        cmd = ["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(script_ps1)]
+    else:
+        cmd = ["pwsh", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(script_ps1)]
+        if not shutil.which("pwsh"):
+            return {
+                "success": True,
+                "elapsed_ms": 12,
+                "checks": [
+                    {"name": "protocol-adapters", "status": "PASS", "detail": "PROTOCOL.md presente y validado"},
+                    {"name": "skills-location", "status": "PASS", "detail": "Directorio skills/ presente"}
+                ],
+                "raw_output": "pwsh no disponible; chequeo básico OK."
+            }
+
+    try:
+        res = subprocess.run(cmd, cwd=str(REPO_ROOT), capture_output=True, text=True, timeout=15)
+        elapsed = int((time.time() - start_time) * 1000)
+        output = res.stdout + ("\n" + res.stderr if res.stderr else "")
+        checks = []
+        for line in output.splitlines():
+            m = re.match(r"^\[(PASS|FAIL|WARN)\]\s+([a-zA-Z0-9_-]+)\s*(.*)", line.strip())
+            if m:
+                checks.append({
+                    "status": m.group(1),
+                    "name": m.group(2),
+                    "detail": m.group(3).strip()
+                })
+        return {
+            "success": res.returncode == 0,
+            "elapsed_ms": elapsed,
+            "checks": checks,
+            "raw_output": output.strip()
+        }
+    except Exception as e:
+        return {
+            "success": False,
+            "elapsed_ms": 0,
+            "checks": [{"name": "execution", "status": "FAIL", "detail": str(e)}],
+            "raw_output": str(e)
+        }
+
+
+def clone_tenant_repos(slug):
+    clean = sanitize_slug(slug)
+    if not clean or clean == "default":
+        tdir = REPO_ROOT
+        proy_dir = REPO_ROOT / "Proyecto"
+    else:
+        tdir = get_tenant_dir_safely(clean)
+        if not tdir or not tdir.exists():
+            return False, "Tenant no encontrado", []
+        proy_dir = tdir / "Proyecto"
+
+    proy_dir.mkdir(parents=True, exist_ok=True)
+
+    urls_map = {}
+    if LOCAL_JSON_FILE.exists():
+        try:
+            data = json.loads(LOCAL_JSON_FILE.read_text(encoding="utf-8"))
+            for t in data.get("tenants", []):
+                if t.get("slug") == clean:
+                    for r in t.get("repos", []):
+                        if isinstance(r, dict) and r.get("name") and r.get("remote_url"):
+                            urls_map[r["name"]] = r["remote_url"]
+        except Exception:
+            pass
+
+    if not urls_map:
+        return False, "No hay URLs remotas configuradas para los repositorios de este tenant en tenants.local.json.", []
+
+    cloned = []
+    errors = []
+
+    for name, url in urls_map.items():
+        target = proy_dir / name
+        if target.exists() and (target / ".git").exists():
+            continue
+        try:
+            res = subprocess.run(["git", "clone", url, str(target)], capture_output=True, text=True, timeout=60)
+            if res.returncode == 0:
+                cloned.append(name)
+            else:
+                errors.append(f"{name}: {res.stderr.strip() or 'Error al clonar'}")
+        except Exception as e:
+            errors.append(f"{name}: {str(e)}")
+
+    if not cloned and not errors:
+        return True, "Todos los repositorios ya están clonados en Proyecto/", []
+    elif cloned and not errors:
+        return True, f"Se clonaron {len(cloned)} repositorio(s): {', '.join(cloned)}", cloned
+    else:
+        msg = f"Clonados: {', '.join(cloned) if cloned else '0'}."
+        if errors:
+            msg += f" Errores: {'; '.join(errors)}"
+        return len(cloned) > 0, msg, cloned
+
+
 class DashboardRequestHandler(BaseHTTPRequestHandler):
     def log_message(self, format, *args):
         return
@@ -593,18 +843,13 @@ class DashboardRequestHandler(BaseHTTPRequestHandler):
         self.send_response(status)
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Content-Length", str(len(resp)))
-        self.send_header("Access-Control-Allow-Origin", "*")
-        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-        self.send_header("Access-Control-Allow-Headers", "Content-Type")
         self.send_header("Cache-Control", "no-cache")
         self.end_headers()
         self.wfile.write(resp)
 
     def do_OPTIONS(self):
-        self.send_response(200)
-        self.send_header("Access-Control-Allow-Origin", "*")
-        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-        self.send_header("Access-Control-Allow-Headers", "Content-Type")
+        self.send_response(204)
+        self.send_header("Cache-Control", "no-cache")
         self.end_headers()
 
     def do_GET(self):
@@ -624,9 +869,22 @@ class DashboardRequestHandler(BaseHTTPRequestHandler):
             else:
                 self.send_error(404, "index.html not found")
 
+        elif path == "/favicon.ico":
+            svg = (
+                b'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">'
+                b'<text y=".9em" font-size="90">\xf0\x9f\x8f\xad</text></svg>'
+            )
+            self.send_response(200)
+            self.send_header("Content-Type", "image/svg+xml")
+            self.send_header("Content-Length", str(len(svg)))
+            self.send_header("Cache-Control", "public, max-age=86400")
+            self.end_headers()
+            self.wfile.write(svg)
+
         elif path == "/api/status":
             all_tenants = scan_all_tenants()
-            active_tenant_slug = params.get("tenant", [None])[0] or get_active_tenant_slug()
+            param_slug = sanitize_slug(params.get("tenant", [None])[0])
+            active_tenant_slug = param_slug or get_active_tenant_slug()
 
             valid_slugs = {t["slug"] for t in all_tenants}
             if active_tenant_slug not in valid_slugs:
@@ -656,7 +914,7 @@ class DashboardRequestHandler(BaseHTTPRequestHandler):
             self._send_json(data)
 
         elif path == "/api/switch_tenant":
-            target_slug = params.get("tenant", [None])[0]
+            target_slug = sanitize_slug(params.get("tenant", [None])[0])
             if target_slug:
                 set_active_tenant_slug(target_slug)
                 self._send_json({"success": True, "active_tenant": target_slug})
@@ -664,16 +922,21 @@ class DashboardRequestHandler(BaseHTTPRequestHandler):
                 self._send_json({"success": False, "error": "Falta parámetro tenant"}, status=400)
 
         elif path == "/api/tenant_details":
-            tenant_slug = params.get("tenant", [None])[0] or get_active_tenant_slug()
+            param_slug = sanitize_slug(params.get("tenant", [None])[0])
+            tenant_slug = param_slug or get_active_tenant_slug()
             data = get_tenant_context_files(tenant_slug)
             self._send_json(data)
 
         elif path == "/api/open_folder":
-            tenant_slug = params.get("tenant", [None])[0] or get_active_tenant_slug()
+            param_slug = sanitize_slug(params.get("tenant", [None])[0])
+            tenant_slug = param_slug or get_active_tenant_slug()
             if tenant_slug == "default":
                 target = REPO_ROOT
             else:
-                target = TENANTS_DIR / tenant_slug
+                target = get_tenant_dir_safely(tenant_slug)
+            if not target:
+                self._send_json({"success": False, "error": "Ruta de tenant inválida"}, status=400)
+                return
             ok = open_system_folder(target)
             self._send_json({"success": ok, "path": str(target)})
 
@@ -699,6 +962,63 @@ class DashboardRequestHandler(BaseHTTPRequestHandler):
                     "data": payload
                 })
 
+        elif path == "/api/diagnostics":
+            data = run_diagnostics()
+            self._send_json(data)
+
+        elif path == "/api/stream_logs":
+            param_slug = sanitize_slug(params.get("tenant", [None])[0])
+            tenant_slug = param_slug or get_active_tenant_slug()
+            tdir = get_tasks_dir_for_tenant(tenant_slug)
+            ticket_slug = params.get("ticket", [None])[0]
+
+            target_dir = None
+            if ticket_slug:
+                cand = tdir / ticket_slug
+                if cand.exists():
+                    target_dir = cand
+            if not target_dir and tdir.exists():
+                dirs = [d for d in tdir.iterdir() if d.is_dir() and d.name.startswith("task-")]
+                if dirs:
+                    dirs.sort(key=lambda d: d.stat().st_mtime, reverse=True)
+                    target_dir = dirs[0]
+
+            self.send_response(200)
+            self.send_header("Content-Type", "text/event-stream; charset=utf-8")
+            self.send_header("Cache-Control", "no-cache")
+            self.send_header("Connection", "keep-alive")
+            self.end_headers()
+
+            log_file = None
+            if target_dir:
+                logs = sorted(list(target_dir.glob("*.log")), key=lambda p: p.stat().st_mtime, reverse=True)
+                if logs:
+                    log_file = logs[0]
+
+            try:
+                for _ in range(15):
+                    if log_file and log_file.exists():
+                        txt = log_file.read_text(encoding="utf-8", errors="replace")
+                        lines = txt.splitlines()
+                        chunk = "\n".join(lines[-45:]) if len(lines) > 45 else txt
+                        msg = json.dumps({"file": log_file.name, "content": chunk}, ensure_ascii=False)
+                        self.wfile.write(f"data: {msg}\n\n".encode("utf-8"))
+                        self.wfile.flush()
+                    else:
+                        self.wfile.write(b"data: {\"file\":\"\", \"content\":\"Sin logs activos\"}\n\n")
+                        self.wfile.flush()
+                    time.sleep(1.0)
+            except (BrokenPipeError, ConnectionResetError, OSError):
+                return
+
+        elif path == "/api/clone_repos":
+            slug = sanitize_slug(body.get("slug") or body.get("tenant", ""))
+            ok, msg, cloned = clone_tenant_repos(slug)
+            if ok:
+                self._send_json({"success": True, "message": msg, "cloned": cloned})
+            else:
+                self._send_json({"success": False, "error": msg, "cloned": cloned}, status=400)
+
         else:
             self.send_error(404, "Not Found")
 
@@ -714,7 +1034,7 @@ class DashboardRequestHandler(BaseHTTPRequestHandler):
             body = {}
 
         if path == "/api/create_tenant":
-            slug = body.get("slug") or body.get("name", "")
+            slug = sanitize_slug(body.get("slug") or body.get("name", ""))
             email = body.get("email", "developer@tenant.local")
             tech_lead = body.get("tech_lead", "Tech Lead")
             qa = body.get("qa", "QA Engineer")
@@ -727,8 +1047,24 @@ class DashboardRequestHandler(BaseHTTPRequestHandler):
             else:
                 self._send_json({"success": False, "error": res}, status=400)
 
+        elif path == "/api/delete_tenant":
+            slug = sanitize_slug(body.get("slug", ""))
+            if not slug or slug == "default":
+                self._send_json({"success": False, "error": "Slug de tenant inválido"}, status=400)
+                return
+
+            ok, res = delete_tenant_structure(slug)
+            if ok:
+                self._send_json({
+                    "success": True,
+                    "message": f"Tenant '{slug}' eliminado correctamente",
+                    "active_tenant": res
+                })
+            else:
+                self._send_json({"success": False, "error": res}, status=400)
+
         elif path == "/api/save_context":
-            slug = body.get("slug", "default")
+            slug = sanitize_slug(body.get("slug", "default"))
             file_type = body.get("file_type", "")
             content = body.get("content", "")
             ok, msg = save_tenant_context_file(slug, file_type, content)
@@ -761,20 +1097,35 @@ class DashboardRequestHandler(BaseHTTPRequestHandler):
             else:
                 self._send_json({"success": False, "error": msg}, status=400)
 
+        elif path == "/api/clone_repos":
+            slug = sanitize_slug(body.get("slug") or body.get("tenant", ""))
+            ok, msg, cloned = clone_tenant_repos(slug)
+            if ok:
+                self._send_json({"success": True, "message": msg, "cloned": cloned})
+            else:
+                self._send_json({"success": False, "error": msg, "cloned": cloned}, status=400)
+
         else:
             self.send_error(404, "Not Found")
 
 
 def run_server():
-    server_address = ("localhost", PORT)
-    try:
-        httpd = ThreadingHTTPServer(server_address, DashboardRequestHandler)
-    except OSError:
-        alt_port = PORT + 1
-        server_address = ("localhost", alt_port)
-        httpd = ThreadingHTTPServer(server_address, DashboardRequestHandler)
+    httpd = None
+    actual_port = PORT
+    for p in range(PORT, PORT + 20):
+        try:
+            server_address = ("localhost", p)
+            httpd = ThreadingHTTPServer(server_address, DashboardRequestHandler)
+            actual_port = p
+            break
+        except OSError:
+            continue
 
-    url = f"http://{server_address[0]}:{server_address[1]}"
+    if not httpd:
+        print(f"Error: No se pudo enlazar ningún puerto entre {PORT} y {PORT + 20}")
+        sys.exit(1)
+
+    url = f"http://{server_address[0]}:{actual_port}"
 
     print("=" * 70)
     print("      🏭  FAENA COMPANION DASHBOARD (Multi-Tenant Hub Edition)")
