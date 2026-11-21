@@ -57,6 +57,12 @@ Proyecto/**
 !Proyecto/.gitkeep
 !Proyecto/README.md
 
+# Multi-tenant: Repositories and local state per tenant
+tenants/*/Proyecto/**
+!tenants/**/.gitkeep
+!tenants/**/Proyecto/.gitkeep
+.active-tenant
+
 # Faena transient runs & outputs (optional)
 # tasks/task-*/
 
