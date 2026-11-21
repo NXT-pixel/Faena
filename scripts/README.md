@@ -10,6 +10,8 @@ Cuatro utilidades de mantenimiento y un dashboard visual en vivo. **Ninguna hace
 .\scripts\dashboard.cmd        # lanza el dashboard web acompañante en vivo
 .\scripts\create-tenant.cmd    # inicializa un nuevo tenant aislado en tenants/
 .\scripts\switch-tenant.cmd    # consulta o cambia el tenant activo (.active-tenant)
+.\scripts\export-tenants.cmd    # exporta contexto, reglas y preferencias a tenants.local.json
+.\scripts\import-tenants.cmd    # restaura todos los tenants desde tenants.local.json
 ```
 
 Los `.cmd` son wrappers de una línea sobre los `.ps1`: **no pasan por la política de ejecución de Windows**, así que son la forma recomendada en Windows. En macOS/Linux, `pwsh ./scripts/<script>.ps1`.

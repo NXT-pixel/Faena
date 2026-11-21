@@ -57,11 +57,13 @@ Proyecto/**
 !Proyecto/.gitkeep
 !Proyecto/README.md
 
-# Multi-tenant: Repositories and local state per tenant
-tenants/*/Proyecto/**
-!tenants/**/.gitkeep
-!tenants/**/Proyecto/.gitkeep
+# Multi-tenant: All customer tenants (code, context, rules, tickets) are strictly confidential and local
+tenants/*
+!tenants/README.md
+!tenants/.gitkeep
 .active-tenant
+tenants.local.json
+*.local.json
 
 # Faena transient runs & outputs (optional)
 # tasks/task-*/

@@ -49,6 +49,33 @@ tenants/<nombre-del-tenant>/
 
 ---
 
+## 📦 Portabilidad y Respaldos (Sin subir nada a Git)
+
+Toda la información de tus tenants está excluida de Git (`.gitignore`). Si necesitas transferir tus tenants a otra computadora tras clonar Faena:
+
+### 1. Exportar en la máquina actual:
+```powershell
+# Windows
+.\scripts\export-tenants.cmd
+
+# Linux / macOS
+./scripts/export-tenants.sh
+```
+*Genera `tenants.local.json` en la raíz (ignorado por Git) con todos los contextos, reglas y preferencias.*
+
+### 2. Importar en la nueva máquina:
+Copia `tenants.local.json` a la raíz del nuevo clon de Faena y ejecuta:
+```powershell
+# Windows
+.\scripts\import-tenants.cmd
+
+# Linux / macOS
+./scripts/import-tenants.sh
+```
+*O haz clic en **📤 Exportar** e **📥 Importar** directamente desde la UI del Companion Dashboard (`http://localhost:3333`).*
+
+---
+
 ## 📊 Monitoreo Multi-Tenant
 
 El Dashboard Companion (`Faena-Dashboard.cmd` o `./dashboard.sh`) detecta automáticamente todos los tenants creados en esta carpeta y te permite alternar entre ellos o monitorear el progreso simultáneo de varios desarrollos en tiempo real desde `http://localhost:3333`.

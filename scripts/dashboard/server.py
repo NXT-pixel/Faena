@@ -23,6 +23,7 @@ PORT = 3333
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 TENANTS_DIR = REPO_ROOT / "tenants"
 ACTIVE_TENANT_FILE = REPO_ROOT / ".active-tenant"
+LOCAL_JSON_FILE = REPO_ROOT / "tenants.local.json"
 DASHBOARD_DIR = REPO_ROOT / "scripts" / "dashboard"
 INDEX_HTML_PATH = DASHBOARD_DIR / "index.html"
 
@@ -454,6 +455,135 @@ def save_tenant_context_file(slug, file_type, content):
     return True, "Guardado exitosamente"
 
 
+def export_tenants_payload():
+    active_slug = get_active_tenant_slug()
+    tenants_list = []
+    if TENANTS_DIR.exists():
+        for d in sorted(TENANTS_DIR.iterdir()):
+            if d.is_dir() and not d.name.startswith("."):
+                slug = d.name
+                ctx_dir = d / "context"
+                rules_dir = d / "rules"
+                proy_dir = d / "Proyecto"
+
+                def read_safe(p):
+                    if p.exists() and p.is_file():
+                        return p.read_text(encoding="utf-8", errors="replace")
+                    return ""
+
+                repos = []
+                if proy_dir.exists():
+                    for r in sorted(proy_dir.iterdir()):
+                        if r.is_dir() and not r.name.startswith("."):
+                            remote_url = ""
+                            git_dir = r / ".git"
+                            if git_dir.exists():
+                                try:
+                                    res = subprocess.run(
+                                        ["git", "-C", str(r), "remote", "get-url", "origin"],
+                                        capture_output=True, text=True, timeout=3
+                                    )
+                                    if res.returncode == 0:
+                                        remote_url = res.stdout.strip()
+                                except Exception:
+                                    pass
+                            repos.append({
+                                "name": r.name,
+                                "remote_url": remote_url
+                            })
+
+                tenants_list.append({
+                    "slug": slug,
+                    "name": slug.replace("-", " ").title(),
+                    "team_context": read_safe(ctx_dir / "team-context.md"),
+                    "tech_context": read_safe(ctx_dir / "tech-context.md"),
+                    "company_standards": read_safe(rules_dir / "company-standards.md"),
+                    "learnings": read_safe(ctx_dir / "learnings.md"),
+                    "project_structure": read_safe(ctx_dir / "project-structure.md"),
+                    "progress": read_safe(ctx_dir / "progress.md"),
+                    "system_patterns": read_safe(ctx_dir / "system-patterns.md"),
+                    "repos": repos
+                })
+
+    payload = {
+        "version": "1.0",
+        "exported_at": time.strftime("%Y-%m-%dT%H:%M:%S"),
+        "active_tenant": active_slug,
+        "tenants": tenants_list
+    }
+
+    try:
+        LOCAL_JSON_FILE.write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8")
+    except Exception:
+        pass
+
+    return payload
+
+
+def import_tenants_payload(payload):
+    if not isinstance(payload, dict):
+        return False, "Payload JSON inválido", []
+
+    tenants = payload.get("tenants", [])
+    if not tenants:
+        return False, "El archivo no contiene ningún tenant en la clave 'tenants'", []
+
+    TENANTS_DIR.mkdir(parents=True, exist_ok=True)
+    restored = []
+
+    for t in tenants:
+        slug = t.get("slug")
+        if not slug:
+            continue
+        slug = re.sub(r"[^a-z0-9_-]", "-", slug.strip().lower())
+        tdir = TENANTS_DIR / slug
+        ctx = tdir / "context"
+        rules = tdir / "rules"
+        tasks = tdir / "tasks"
+        proy = tdir / "Proyecto"
+
+        ctx.mkdir(parents=True, exist_ok=True)
+        rules.mkdir(parents=True, exist_ok=True)
+        tasks.mkdir(parents=True, exist_ok=True)
+        proy.mkdir(parents=True, exist_ok=True)
+
+        (tasks / ".gitkeep").touch()
+        (proy / ".gitkeep").touch()
+
+        def write_if_present(p, content):
+            if content is not None and isinstance(content, str):
+                p.write_text(content, encoding="utf-8")
+
+        write_if_present(ctx / "team-context.md", t.get("team_context", ""))
+        write_if_present(ctx / "tech-context.md", t.get("tech_context", ""))
+        write_if_present(rules / "company-standards.md", t.get("company_standards", ""))
+        write_if_present(ctx / "learnings.md", t.get("learnings", ""))
+        write_if_present(ctx / "project-structure.md", t.get("project_structure", ""))
+        write_if_present(ctx / "progress.md", t.get("progress", ""))
+        write_if_present(ctx / "system-patterns.md", t.get("system_patterns", ""))
+
+        repos = t.get("repos", [])
+        for r in repos:
+            rname = r.get("name") if isinstance(r, dict) else str(r)
+            if rname:
+                (proy / rname).mkdir(parents=True, exist_ok=True)
+
+        restored.append(slug)
+
+    active_to_set = payload.get("active_tenant")
+    if not active_to_set and restored:
+        active_to_set = restored[0]
+    if active_to_set:
+        set_active_tenant_slug(active_to_set)
+
+    try:
+        LOCAL_JSON_FILE.write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8")
+    except Exception:
+        pass
+
+    return True, f"Se restauraron {len(restored)} tenants exitosamente", restored
+
+
 class DashboardRequestHandler(BaseHTTPRequestHandler):
     def log_message(self, format, *args):
         return
@@ -547,6 +677,28 @@ class DashboardRequestHandler(BaseHTTPRequestHandler):
             ok = open_system_folder(target)
             self._send_json({"success": ok, "path": str(target)})
 
+        elif path == "/api/tenants/export":
+            payload = export_tenants_payload()
+            download = params.get("download", ["0"])[0] == "1"
+            if download:
+                resp = json.dumps(payload, indent=2, ensure_ascii=False).encode("utf-8")
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json; charset=utf-8")
+                self.send_header("Content-Disposition", 'attachment; filename="tenants.local.json"')
+                self.send_header("Content-Length", str(len(resp)))
+                self.send_header("Cache-Control", "no-cache")
+                self.end_headers()
+                self.wfile.write(resp)
+            else:
+                self._send_json({
+                    "success": True,
+                    "count": len(payload.get("tenants", [])),
+                    "file_path": str(LOCAL_JSON_FILE),
+                    "active_tenant": payload.get("active_tenant", ""),
+                    "tenants": [t["slug"] for t in payload.get("tenants", [])],
+                    "data": payload
+                })
+
         else:
             self.send_error(404, "Not Found")
 
@@ -582,6 +734,30 @@ class DashboardRequestHandler(BaseHTTPRequestHandler):
             ok, msg = save_tenant_context_file(slug, file_type, content)
             if ok:
                 self._send_json({"success": True, "message": msg})
+            else:
+                self._send_json({"success": False, "error": msg}, status=400)
+
+        elif path == "/api/tenants/import":
+            # If JSON body was provided directly
+            if body and "tenants" in body:
+                ok, msg, restored = import_tenants_payload(body)
+            elif LOCAL_JSON_FILE.exists():
+                try:
+                    raw = LOCAL_JSON_FILE.read_text(encoding="utf-8")
+                    data = json.loads(raw)
+                    ok, msg, restored = import_tenants_payload(data)
+                except Exception as e:
+                    ok, msg, restored = False, f"Error leyendo tenants.local.json: {str(e)}", []
+            else:
+                ok, msg, restored = False, f"No se encontró tenants.local.json en el repositorio ni se subió ningún archivo.", []
+
+            if ok:
+                self._send_json({
+                    "success": True,
+                    "message": msg,
+                    "restored_tenants": restored,
+                    "active_tenant": get_active_tenant_slug()
+                })
             else:
                 self._send_json({"success": False, "error": msg}, status=400)
 

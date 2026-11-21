@@ -90,7 +90,7 @@ El flujo obligatorio usa tres comandos, pero el repo tiene más. No los ejecutes
 | **Opcionales del flujo** | `commands/1b-design.md` | Diseño colaborativo con `design-facilitator` antes del TRD. |
 | | `commands/1c-decompose.md` | Parte una spec grande en fases (`phase01-*.md`, `phase02-*.md`). |
 | | `commands/4-update-context.md` | Sincroniza `tasks/context/` al cerrar una sesión. |
-| **Contexto y Tenants** | `commands/create-context.md`, `commands/load-context.md`, `commands/create-tenant.md`, `commands/switch-tenant.md` | Bootstrap, carga de contexto y gestión multi-tenant. |
+| **Contexto y Tenants** | `commands/create-context.md`, `commands/load-context.md`, `commands/create-tenant.md`, `commands/switch-tenant.md`, `commands/export-tenants.md`, `commands/import-tenants.md` | Bootstrap, carga de contexto, gestión y portabilidad multi-tenant. |
 | **Documentos** | `commands/create-adr.md`, `commands/create-gherkins.md` | ADRs y escenarios Gherkin. |
 | **UI** | `commands/design-ux-ui.md`, `commands/design-to-blueprint-process/`, `commands/page-structure-process/` | Pipelines de diseño e implementación de pantallas. |
 | **Meta** | `commands/make-agent.md` | Crear agentes o comandos nuevos. |
