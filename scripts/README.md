@@ -1,12 +1,13 @@
 # 🛠️ Scripts del harness
 
-Cuatro utilidades de mantenimiento. **Ninguna hace falta para trabajar un ticket**: el flujo por chat no ejecuta scripts.
+Cuatro utilidades de mantenimiento y un dashboard visual en vivo. **Ninguna hace falta para trabajar un ticket**: el flujo por chat no ejecuta scripts.
 
 ```powershell
 .\scripts\doctor.cmd           # ¿está bien mi entorno? (con el arreglo de cada aviso)
 .\scripts\validate.cmd         # ¿está íntegro el harness?
 .\scripts\rebuild-skills.cmd   # regenera el catálogo de skills
 .\scripts\index-tasks.cmd      # estado de los tickets en tasks/INDEX.md (local)
+.\scripts\dashboard.cmd        # lanza el dashboard web acompañante en vivo
 ```
 
 Los `.cmd` son wrappers de una línea sobre los `.ps1`: **no pasan por la política de ejecución de Windows**, así que son la forma recomendada en Windows. En macOS/Linux, `pwsh ./scripts/<script>.ps1`.
@@ -70,6 +71,10 @@ Genera `tasks/INDEX.md` con una fila por `tasks/task-<nombre>/`: qué artefactos
 ```
 
 El índice **no se versiona** (está en `.gitignore`): el estado difiere por rama y por máquina, y commitearlo solo produce conflictos. Por eso la validación no lo exige y el CI nunca lo ve.
+
+## `dashboard.cmd` / `Faena-Dashboard.cmd`
+
+Lanza el dashboard web acompañante en vivo (`http://localhost:3333`) para monitorear el progreso de las tareas, los Quality Gates y los logs de ejecución en tiempo real mientras cualquier IA (Claude Code, Codex, Antigravity) trabaja en el repositorio. Ejecutable directamente con doble clic en Windows. Implementado en `scripts/dashboard/server.py`.
 
 ## `faena-known-refs.txt`
 Lista de referencias históricamente rotas que la validación tolera. No es un mecanismo para silenciar errores nuevos: cualquier ruta rota que no esté aquí hace fallar `path-references`. Cuando arregles una, borra su línea. Hoy está vacía a propósito.

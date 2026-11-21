@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Faena Companion Dashboard</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card: #1e293b;
+      --card-hover: #24344d;
+      --border: #334155;
+      --border-accent: #3b82f6;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      --primary: #3b82f6;
+      --primary-glow: rgba(59, 130, 246, 0.25);
+      --success: #10b981;
+      --success-glow: rgba(16, 185, 129, 0.2);
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --danger-glow: rgba(239, 68, 68, 0.2);
+      --code-bg: #090d16;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; }
+    body { background-color: var(--bg); color: var(--text); padding: 20px; line-height: 1.5; font-size: 14px; min-height: 100vh; }
+    
+    .container { max-width: 1100px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+
+    /* Top Bar */
+    .header {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 20px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .logo-icon {
+      font-size: 24px;
+      background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+      width: 42px;
+      height: 42px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 12px var(--primary-glow);
+    }
+    .brand-title { font-size: 17px; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 8px; }
+    .brand-subtitle { font-size: 12px; color: var(--text-muted); }
+    
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 20px;
+      background: rgba(16, 185, 129, 0.12);
+      color: var(--success);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+    .pulse-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--success);
+      animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.85); }
+    }
+
+    .ticket-selector {
+      background: var(--bg);
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      outline: none;
+      cursor: pointer;
+      max-width: 320px;
+    }
+    .ticket-selector:focus { border-color: var(--primary); }
+
+    /* Stepper Phases */
+    .stepper-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+    }
+    .section-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-dim);
+      margin-bottom: 12px;
+    }
+    .stepper {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 10px;
+    }
+    @media (max-width: 768px) {
+      .stepper { grid-template-columns: 1fr; }
+    }
+    .step-item {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+      text-align: center;
+      position: relative;
+      transition: all 0.2s ease;
+    }
+    .step-item.completed { border-color: rgba(16, 185, 129, 0.5); background: rgba(16, 185, 129, 0.05); }
+    .step-item.in_progress { border-color: rgba(245, 158, 11, 0.6); background: rgba(245, 158, 11, 0.05); }
+    .step-num { font-size: 10px; font-weight: 700; text-transform: uppercase; color: var(--text-dim); }
+    .step-name { font-size: 13px; font-weight: 600; margin: 4px 0 2px 0; }
+    .step-status { font-size: 11px; font-weight: 600; margin-top: 4px; }
+    .status-done { color: var(--success); }
+    .status-running { color: var(--warning); animation: pulse 1.2s infinite; }
+    .status-pending { color: var(--text-dim); }
+
+    /* KPI Grid */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+    @media (max-width: 768px) {
+      .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    .kpi-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .kpi-label { font-size: 11px; color: var(--text-muted); font-weight: 500; }
+    .kpi-val { font-size: 22px; font-weight: 800; color: var(--text); margin: 6px 0 2px 0; }
+    .kpi-desc { font-size: 11px; color: var(--text-dim); }
+
+    .progress-bar-container {
+      width: 100%;
+      height: 6px;
+      background: var(--bg);
+      border-radius: 4px;
+      overflow: hidden;
+      margin-top: 8px;
+    }
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #10b981, #059669);
+      transition: width 0.4s ease;
+    }
+
+    /* Tabs Card */
+    .content-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px;
+    }
+    .tabs-header {
+      display: flex;
+      gap: 8px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 12px;
+      margin-bottom: 16px;
+    }
+    .tab-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 13px;
+      font-weight: 600;
+      padding: 6px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .tab-btn:hover { color: var(--text); background: var(--card-hover); }
+    .tab-btn.active { color: var(--text); background: var(--bg); border: 1px solid var(--border); }
+
+    /* Task Items */
+    .task-item {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+    .task-left { display: flex; align-items: center; gap: 12px; min-width: 0; }
+    .task-checkbox {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--success);
+      cursor: pointer;
+    }
+    .task-id { font-family: monospace; font-size: 12px; color: var(--text-dim); font-weight: 700; }
+    .task-name { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    
+    .badge {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 3px 8px;
+      border-radius: 6px;
+      letter-spacing: 0.04em;
+    }
+    .badge-setup { background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); }
+    .badge-red { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
+    .badge-green { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+    .badge-agent { font-family: monospace; font-size: 11px; color: var(--text-muted); background: var(--card); padding: 3px 8px; border-radius: 6px; }
+
+    /* Console / Logs */
+    .log-viewer {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px;
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 12px;
+      line-height: 1.5;
+      color: #cbd5e1;
+      max-height: 380px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+    .log-line-pass { color: #4ade80; font-weight: 600; }
+    .log-line-fail { color: #f87171; font-weight: 600; }
+    .log-line-info { color: #60a5fa; }
+
+    /* Quality Gates */
+    .gate-box {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 10px;
+    }
+    .gate-title { font-weight: 700; font-size: 13px; color: var(--text); margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; }
+    .gate-code {
+      background: var(--code-bg);
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-family: monospace;
+      font-size: 12px;
+      color: #93c5fd;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .copy-btn {
+      background: var(--card);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      font-size: 11px;
+      padding: 4px 8px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .copy-btn:hover { color: var(--text); border-color: var(--primary); }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+    }
+    .empty-icon { font-size: 42px; margin-bottom: 12px; }
+    .empty-title { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
+    .empty-desc { color: var(--text-muted); max-width: 500px; margin: 0 auto 16px auto; font-size: 13px; }
+    .btn-action {
+      background: var(--primary);
+      color: #fff;
+      font-weight: 600;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-action:hover { opacity: 0.9; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    
+    <!-- Top Bar -->
+    <div class="header">
+      <div class="brand">
+        <div class="logo-icon">🏭</div>
+        <div>
+          <div class="brand-title">
+            Faena Companion Dashboard
+            <span class="status-badge"><span class="pulse-dot"></span> EN VIVO</span>
+          </div>
+          <div class="brand-subtitle" id="repo-subtitle">Monitoreando workspace local en tiempo real</div>
+        </div>
+      </div>
+      
+      <div style="display: flex; gap: 8px; align-items: center;">
+        <select id="ticketSelector" class="ticket-selector" onchange="onSelectTicket(this.value)">
+          <option value="">Cargando tickets...</option>
+        </select>
+        <button id="demoToggleBtn" class="copy-btn" onclick="toggleDemoMode()" title="Ver datos de demostración">
+          ⚡ Demo
+        </button>
+      </div>
+    </div>
+
+    <!-- Stepper 5 Phases -->
+    <div class="stepper-card">
+      <div class="section-title">Flujo del Protocolo Faena (5 Fases)</div>
+      <div class="stepper">
+        <div class="step-item" id="phase-1">
+          <div class="step-num">Fase 1</div>
+          <div class="step-name">🎫 Intake & Design</div>
+          <div class="step-status" id="phase-1-status">Pendiente</div>
+        </div>
+        <div class="step-item" id="phase-2">
+          <div class="step-num">Fase 2</div>
+          <div class="step-name">📐 TRD & Test Spec</div>
+          <div class="step-status" id="phase-2-status">Pendiente</div>
+        </div>
+        <div class="step-item" id="phase-3">
+          <div class="step-num">Fase 3</div>
+          <div class="step-name">📋 Breakdown</div>
+          <div class="step-status" id="phase-3-status">Pendiente</div>
+        </div>
+        <div class="step-item" id="phase-4">
+          <div class="step-num">Fase 4</div>
+          <div class="step-name">🔄 Bucle TDD</div>
+          <div class="step-status" id="phase-4-status">Pendiente</div>
+        </div>
+        <div class="step-item" id="phase-5">
+          <div class="step-num">Fase 5</div>
+          <div class="step-name">🔒 Cierre & QA</div>
+          <div class="step-status" id="phase-5-status">Pendiente</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- KPI Grid -->
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-label">Progreso de Tareas</div>
+        <div class="kpi-val" id="kpi-progress">0 / 0 (0%)</div>
+        <div class="progress-bar-container">
+          <div class="progress-bar" id="kpi-bar" style="width: 0%"></div>
+        </div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Quality Gate Activo</div>
+        <div class="kpi-val" style="font-size: 16px; color: var(--success);" id="kpi-gate">VERIFY OK</div>
+        <div class="kpi-desc" id="kpi-gate-desc">dotnet / ng tests verificados</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Repositorio Afectado</div>
+        <div class="kpi-val" style="font-size: 14px; font-family: monospace;" id="kpi-repo">Proyecto/</div>
+        <div class="kpi-desc">Aislamiento garantizado</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Última Actividad</div>
+        <div class="kpi-val" style="font-size: 15px;" id="kpi-time">--:--:--</div>
+        <div class="kpi-desc" id="kpi-status-text">Esperando eventos de IA</div>
+      </div>
+    </div>
+
+    <!-- Content Tabs -->
+    <div class="content-card">
+      <div class="tabs-header">
+        <button class="tab-btn active" id="tab-tasks-btn" onclick="switchTab('tasks')">📋 Tareas TDD (<span id="task-count">0</span>)</button>
+        <button class="tab-btn" id="tab-gates-btn" onclick="switchTab('gates')">🛡️ Quality Gates</button>
+        <button class="tab-btn" id="tab-logs-btn" onclick="switchTab('logs')">📜 Salida de Tests / Logs (<span id="logs-count">0</span>)</button>
+      </div>
+
+      <!-- Tab: Tasks -->
+      <div id="tab-tasks">
+        <div id="tasks-container">
+          <!-- Filled by JS -->
+        </div>
+      </div>
+
+      <!-- Tab: Gates -->
+      <div id="tab-gates" style="display: none;">
+        <div id="gates-container">
+          <!-- Filled by JS -->
+        </div>
+      </div>
+
+      <!-- Tab: Logs -->
+      <div id="tab-logs" style="display: none;">
+        <div style="margin-bottom: 8px; font-size: 12px; color: var(--text-muted); display: flex; justify-content: space-between;">
+          <span id="log-file-name">Visualizando archivo de log más reciente</span>
+          <span>Actualización automática</span>
+        </div>
+        <div class="log-viewer" id="log-content">No hay logs generados todavía.</div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    let selectedTicketSlug = null;
+    let isDemoMode = false;
+    let currentTab = 'tasks';
+
+    const DEMO_DATA = {
+      server_time: "12:30:45",
+      repo_path: "C:\\Users\\santi\\Documents\\GitHub\\Faena",
+      tickets: [
+        { slug: "task-whatsapp-hitl-register-payment", title: "WhatsApp HITL Register Payment", pct: 100 },
+        { slug: "task-cart-drawer-theme-fix", title: "Cart Drawer Theme Fix", pct: 60 }
+      ],
+      active_ticket: {
+        slug: "task-whatsapp-hitl-register-payment",
+        title: "WhatsApp HITL Register Payment",
+        repo: "Proyecto/growthhacking.PrototypeZero/",
+        done: 5,
+        pending: 0,
+        total: 5,
+        percentage: 100,
+        phases: {
+          p1_intake: "completed",
+          p2_trd: "completed",
+          p3_breakdown: "completed",
+          p4_tdd: "completed",
+          p5_closure: "completed"
+        },
+        tasks: [
+          { id: "01", name: "Setup paths / baseline environment", phase: "setup", size: "XS", agent: "xunit-tester", completed: true },
+          { id: "02", name: "Core FindByWhatsAppContactId tests", phase: "red", size: "S", agent: "xunit-tester", completed: true },
+          { id: "03", name: "Core FindByWhatsAppContactId implementation", phase: "green", size: "S", agent: "aspnet-webapi-backend", completed: true },
+          { id: "04", name: "Angular HITL resolution tests", phase: "red", size: "M", agent: "jest-tester", completed: true },
+          { id: "05", name: "Angular HITL resolution UI & proxy", phase: "green", size: "M", agent: "angular-developer", completed: true }
+        ],
+        gates: [
+          { name: "verify:quick (Backend .NET)", command: "dotnet test services/core/PrototypeZero.CoreService.Tests --filter \"FullyQualifiedName~CatalogCustomerFindByWhatsAppContact\"" },
+          { name: "verify:quick (Frontend Angular)", command: "cd apps/angular && npx ng test --watch=false --browsers=ChromeHeadless --include=**/hitl-register-payment*.spec.ts" },
+          { name: "verify:full (Suite Completa)", command: "dotnet build services/core/PrototypeZero.CoreService && dotnet test && cd apps/angular && npx ng test --watch=false --browsers=ChromeHeadless" }
+        ],
+        logs: [{ name: "green-task05-ng-test.log", size_kb: 9.2, modified: "12:30:20" }],
+        latest_log: "[PASS] hitl-register-payment.component.spec.ts\n  ✓ should render payment modal correctly (32ms)\n  ✓ should emit onConfirm with valid reference ID (18ms)\n\nTest Suites: 1 passed, 1 total\nTests:       6 passed, 6 total\nSnapshots:   0 total\nTime:        2.41s\nQuality Gate verify:full EXITED WITH CODE 0 (SUCCESS)",
+        last_modified: "Hoy 12:30"
+      }
+    };
+
+    function switchTab(tab) {
+      currentTab = tab;
+      document.getElementById('tab-tasks').style.display = tab === 'tasks' ? 'block' : 'none';
+      document.getElementById('tab-gates').style.display = tab === 'gates' ? 'block' : 'none';
+      document.getElementById('tab-logs').style.display = tab === 'logs' ? 'block' : 'none';
+
+      document.getElementById('tab-tasks-btn').classList.toggle('active', tab === 'tasks');
+      document.getElementById('tab-gates-btn').classList.toggle('active', tab === 'gates');
+      document.getElementById('tab-logs-btn').classList.toggle('active', tab === 'logs');
+    }
+
+    function toggleDemoMode() {
+      isDemoMode = !isDemoMode;
+      const btn = document.getElementById('demoToggleBtn');
+      if (isDemoMode) {
+        btn.innerText = "✓ Modo Demo";
+        btn.style.borderColor = "var(--primary)";
+        btn.style.color = "var(--primary)";
+        renderDashboard(DEMO_DATA);
+      } else {
+        btn.innerText = "⚡ Demo";
+        btn.style.borderColor = "var(--border)";
+        btn.style.color = "var(--text-muted)";
+        fetchStatus();
+      }
+    }
+
+    function onSelectTicket(val) {
+      selectedTicketSlug = val;
+      fetchStatus();
+    }
+
+    function copyToClipboard(text, btn) {
+      navigator.clipboard.writeText(text).then(() => {
+        const orig = btn.innerText;
+        btn.innerText = "✓ Copiado";
+        setTimeout(() => { btn.innerText = orig; }, 1500);
+      });
+    }
+
+    function renderDashboard(data) {
+      if (!data) return;
+
+      document.getElementById('kpi-time').innerText = data.server_time || '--:--:--';
+
+      // Update ticket selector
+      const selector = document.getElementById('ticketSelector');
+      const currentVal = selector.value;
+      if (data.tickets && data.tickets.length > 0) {
+        let opts = '';
+        data.tickets.forEach(t => {
+          opts += `<option value="${t.slug}">${t.title} (${t.pct}%)</option>`;
+        });
+        selector.innerHTML = opts;
+        if (selectedTicketSlug) {
+          selector.value = selectedTicketSlug;
+        } else if (data.active_ticket) {
+          selector.value = data.active_ticket.slug;
+        }
+      } else {
+        selector.innerHTML = '<option value="">Sin tickets activos en tasks/</option>';
+      }
+
+      const active = data.active_ticket;
+      if (!active) {
+        renderEmptyState();
+        return;
+      }
+
+      // Update Stepper
+      updateStep('phase-1', active.phases.p1_intake);
+      updateStep('phase-2', active.phases.p2_trd);
+      updateStep('phase-3', active.phases.p3_breakdown);
+      updateStep('phase-4', active.phases.p4_tdd);
+      updateStep('phase-5', active.phases.p5_closure);
+
+      // KPI Progress
+      document.getElementById('kpi-progress').innerText = `${active.done} / ${active.total} (${active.percentage}%)`;
+      document.getElementById('kpi-bar').style.width = `${active.percentage}%`;
+      document.getElementById('kpi-repo').innerText = active.repo || 'Proyecto/';
+
+      // Tasks
+      document.getElementById('task-count').innerText = active.tasks ? active.tasks.length : 0;
+      const tasksContainer = document.getElementById('tasks-container');
+      if (active.tasks && active.tasks.length > 0) {
+        let tasksHtml = '';
+        active.tasks.forEach(t => {
+          let badgeClass = 'badge-setup';
+          let phaseLabel = t.phase.toUpperCase();
+          if (t.phase.includes('red')) { badgeClass = 'badge-red'; phaseLabel = 'RED'; }
+          else if (t.phase.includes('green')) { badgeClass = 'badge-green'; phaseLabel = 'GREEN'; }
+
+          tasksHtml += `
+            <div class="task-item">
+              <div class="task-left">
+                <input type="checkbox" ${t.completed ? 'checked' : ''} class="task-checkbox" disabled>
+                <span class="task-id">task${t.id}</span>
+                <span class="task-name">${t.name}</span>
+              </div>
+              <div style="display: flex; gap: 8px; align-items: center; shrink-0;">
+                <span class="badge ${badgeClass}">${phaseLabel}</span>
+                <span class="badge-agent">${t.agent}</span>
+                <span style="font-size: 11px; font-weight: 700; color: ${t.completed ? 'var(--success)' : 'var(--text-dim)'}">
+                  ${t.completed ? '✓ DONE' : 'PENDIENTE'}
+                </span>
+              </div>
+            </div>
+          `;
+        });
+        tasksContainer.innerHTML = tasksHtml;
+      } else {
+        tasksContainer.innerHTML = '<div style="color: var(--text-muted); padding: 12px; text-align: center;">No hay tareas generadas aún en este ticket.</div>';
+      }
+
+      // Gates
+      const gatesContainer = document.getElementById('gates-container');
+      if (active.gates && active.gates.length > 0) {
+        let gatesHtml = '';
+        active.gates.forEach(g => {
+          gatesHtml += `
+            <div class="gate-box">
+              <div class="gate-title">
+                <span>🛡️ ${g.name}</span>
+                <span style="font-size: 11px; color: var(--success); font-weight: 600;">Verificado</span>
+              </div>
+              <div class="gate-code">
+                <span>${g.command}</span>
+                <button class="copy-btn" onclick="copyToClipboard('${g.command.replace(/'/g, "\\'")}', this)">Copiar</button>
+              </div>
+            </div>
+          `;
+        });
+        gatesContainer.innerHTML = gatesHtml;
+      } else {
+        gatesContainer.innerHTML = '<div style="color: var(--text-muted); padding: 12px; text-align: center;">No hay Quality Gates definidos en el README.md de este ticket.</div>';
+      }
+
+      // Logs
+      document.getElementById('logs-count').innerText = active.logs ? active.logs.length : 0;
+      const logContentEl = document.getElementById('log-content');
+      if (active.latest_log) {
+        logContentEl.innerText = active.latest_log;
+      } else {
+        logContentEl.innerText = "No se encontraron archivos de log (*.log) en la carpeta del ticket.";
+      }
+    }
+
+    function updateStep(elemId, status) {
+      const el = document.getElementById(elemId);
+      const statusEl = document.getElementById(`${elemId}-status`);
+      el.classList.remove('completed', 'in_progress');
+
+      if (status === 'completed') {
+        el.classList.add('completed');
+        statusEl.className = 'step-status status-done';
+        statusEl.innerText = '✓ Completado';
+      } else if (status === 'in_progress') {
+        el.classList.add('in_progress');
+        statusEl.className = 'step-status status-running';
+        statusEl.innerText = '⚡ En Curso';
+      } else {
+        statusEl.className = 'step-status status-pending';
+        statusEl.innerText = 'Pendiente';
+      }
+    }
+
+    function renderEmptyState() {
+      const tasksContainer = document.getElementById('tasks-container');
+      tasksContainer.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-icon">🚀</div>
+          <div class="empty-title">Esperando Tickets en tasks/</div>
+          <div class="empty-desc">
+            No hay carpetas de tickets activas en este momento. Cuando le pases un ticket a <strong>Claude Code</strong>, <strong>Codex</strong> o <strong>Antigravity</strong> con <code>@commands/orchestrate.md</code>, aparecerá aquí en tiempo real.
+          </div>
+          <button class="btn-action" onclick="toggleDemoMode()">⚡ Ver Datos de Demostración</button>
+        </div>
+      `;
+    }
+
+    function fetchStatus() {
+      if (isDemoMode) return;
+      let url = '/api/status';
+      if (selectedTicketSlug) {
+        url += `?ticket=${encodeURIComponent(selectedTicketSlug)}`;
+      }
+
+      fetch(url)
+        .then(res => res.json())
+        .then(data => {
+          renderDashboard(data);
+        })
+        .catch(err => {
+          console.warn("Polling error:", err);
+        });
+    }
+
+    // Start polling every 1.2s
+    fetchStatus();
+    setInterval(fetchStatus, 1200);
+  </script>
+</body>
+</html>
