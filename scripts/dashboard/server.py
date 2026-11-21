@@ -16,6 +16,8 @@ import shutil
 import webbrowser
 import threading
 import subprocess
+import io
+import zipfile
 from pathlib import Path
 from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 from urllib.parse import urlparse, parse_qs
@@ -834,6 +836,360 @@ def clone_tenant_repos(slug):
         return len(cloned) > 0, msg, cloned
 
 
+def get_tenant_proyecto_dir(slug):
+    clean = sanitize_slug(slug)
+    if not clean or clean == "default":
+        return REPO_ROOT / "Proyecto"
+    tdir = get_tenant_dir_safely(clean)
+    if tdir:
+        return tdir / "Proyecto"
+    return None
+
+
+def run_quality_gate_cmd(slug, cmd, repo_name=""):
+    cmd = (cmd or "").strip()
+    if not cmd:
+        return False, "Comando de Quality Gate vacío", 0, ""
+
+    proy_dir = get_tenant_proyecto_dir(slug)
+    if not proy_dir or not proy_dir.exists():
+        return False, f"Directorio Proyecto/ no existe para el tenant '{slug}'", 0, ""
+
+    work_dir = proy_dir
+    if repo_name:
+        clean_repo = re.sub(r"[^a-zA-Z0-9_.-]", "", repo_name.strip())
+        cand = proy_dir / clean_repo
+        if cand.exists() and cand.is_dir():
+            work_dir = cand
+    else:
+        subdirs = [d for d in proy_dir.iterdir() if d.is_dir() and not d.name.startswith(".")]
+        if len(subdirs) == 1:
+            work_dir = subdirs[0]
+
+    start_t = time.time()
+    try:
+        res = subprocess.run(
+            cmd,
+            cwd=str(work_dir),
+            shell=True,
+            capture_output=True,
+            text=True,
+            timeout=90
+        )
+        elapsed_ms = int((time.time() - start_t) * 1000)
+        output = (res.stdout + ("\n" + res.stderr if res.stderr else "")).strip()
+        success = (res.returncode == 0)
+        return success, output, elapsed_ms, str(work_dir)
+    except subprocess.TimeoutExpired:
+        elapsed_ms = int((time.time() - start_t) * 1000)
+        return False, f"Tiempo de espera agotado (Timeout > 90s) ejecutando: {cmd}", elapsed_ms, str(work_dir)
+    except Exception as e:
+        elapsed_ms = int((time.time() - start_t) * 1000)
+        return False, f"Error al ejecutar: {str(e)}", elapsed_ms, str(work_dir)
+
+
+def detect_quality_gates(slug, repo_name=""):
+    proy_dir = get_tenant_proyecto_dir(slug)
+    if not proy_dir or not proy_dir.exists():
+        return []
+
+    repos_to_scan = []
+    if repo_name:
+        clean_repo = re.sub(r"[^a-zA-Z0-9_.-]", "", repo_name.strip())
+        cand = proy_dir / clean_repo
+        if cand.exists() and cand.is_dir():
+            repos_to_scan.append(cand)
+    else:
+        subdirs = [d for d in proy_dir.iterdir() if d.is_dir() and not d.name.startswith(".")]
+        repos_to_scan = subdirs if subdirs else [proy_dir]
+
+    detected = []
+    seen_cmds = set()
+
+    for r in repos_to_scan:
+        r_name = r.name if r != proy_dir else ""
+        if list(r.glob("*.sln")) or list(r.glob("*.csproj")):
+            cmd = "dotnet test"
+            if cmd not in seen_cmds:
+                detected.append({
+                    "repo": r_name,
+                    "framework": ".NET (C#)",
+                    "type": "Tests de Unidad & Integración",
+                    "command": cmd
+                })
+                seen_cmds.add(cmd)
+
+        pkg_json = r / "package.json"
+        if pkg_json.exists():
+            try:
+                data = json.loads(pkg_json.read_text(encoding="utf-8"))
+                scripts = data.get("scripts", {})
+                if "test" in scripts:
+                    cmd = "npm test"
+                    if cmd not in seen_cmds:
+                        detected.append({
+                            "repo": r_name,
+                            "framework": "Node.js (npm)",
+                            "type": "Unit Tests",
+                            "command": cmd
+                        })
+                        seen_cmds.add(cmd)
+                if "lint" in scripts:
+                    cmd = "npm run lint"
+                    if cmd not in seen_cmds:
+                        detected.append({
+                            "repo": r_name,
+                            "framework": "ESLint / Linter",
+                            "type": "Static Analysis",
+                            "command": cmd
+                        })
+                        seen_cmds.add(cmd)
+            except Exception:
+                pass
+
+        if (r / "pytest.ini").exists() or (r / "pyproject.toml").exists() or (r / "requirements.txt").exists():
+            cmd = "pytest"
+            if cmd not in seen_cmds:
+                detected.append({
+                    "repo": r_name,
+                    "framework": "Python (pytest)",
+                    "type": "Test Suite",
+                    "command": cmd
+                })
+                seen_cmds.add(cmd)
+
+        if (r / "Cargo.toml").exists():
+            cmd = "cargo test"
+            if cmd not in seen_cmds:
+                detected.append({
+                    "repo": r_name,
+                    "framework": "Rust (Cargo)",
+                    "type": "Cargo Test Suite",
+                    "command": cmd
+                })
+                seen_cmds.add(cmd)
+
+        if (r / "go.mod").exists():
+            cmd = "go test ./..."
+            if cmd not in seen_cmds:
+                detected.append({
+                    "repo": r_name,
+                    "framework": "Go",
+                    "type": "Go Tests",
+                    "command": cmd
+                })
+                seen_cmds.add(cmd)
+
+    return detected
+
+
+def git_create_branch(slug, repo_name, branch_name):
+    proy_dir = get_tenant_proyecto_dir(slug)
+    if not proy_dir or not proy_dir.exists():
+        return False, "Directorio Proyecto/ no encontrado"
+
+    clean_repo = re.sub(r"[^a-zA-Z0-9_.-]", "", (repo_name or "").strip())
+    repo_path = proy_dir / clean_repo if clean_repo else proy_dir
+    if not (repo_path / ".git").exists():
+        subdirs = [d for d in proy_dir.iterdir() if d.is_dir() and (d / ".git").exists()]
+        if subdirs:
+            repo_path = subdirs[0]
+        else:
+            return False, "No se encontró ningún repositorio Git en Proyecto/"
+
+    clean_branch = re.sub(r"[^a-zA-Z0-9_./-]", "-", (branch_name or "").strip()).strip("-")
+    if not clean_branch:
+        return False, "Nombre de rama inválido"
+
+    try:
+        res = subprocess.run(["git", "checkout", "-b", clean_branch], cwd=str(repo_path), capture_output=True, text=True, timeout=10)
+        if res.returncode == 0:
+            return True, f"Rama '{clean_branch}' creada y activada en {repo_path.name}"
+        else:
+            err = res.stderr.strip() or res.stdout.strip()
+            if "already exists" in err.lower():
+                res2 = subprocess.run(["git", "checkout", clean_branch], cwd=str(repo_path), capture_output=True, text=True, timeout=10)
+                if res2.returncode == 0:
+                    return True, f"Cambiado a rama existente '{clean_branch}' en {repo_path.name}"
+            return False, f"Git error: {err}"
+    except Exception as e:
+        return False, str(e)
+
+
+def git_get_diff(slug, repo_name):
+    proy_dir = get_tenant_proyecto_dir(slug)
+    if not proy_dir or not proy_dir.exists():
+        return {"success": False, "error": "Directorio Proyecto/ no encontrado"}
+
+    clean_repo = re.sub(r"[^a-zA-Z0-9_.-]", "", (repo_name or "").strip())
+    repo_path = proy_dir / clean_repo if clean_repo else proy_dir
+    if not (repo_path / ".git").exists():
+        subdirs = [d for d in proy_dir.iterdir() if d.is_dir() and (d / ".git").exists()]
+        if subdirs:
+            repo_path = subdirs[0]
+        else:
+            return {"success": False, "error": "No es un repositorio Git"}
+
+    branch = "unknown"
+    try:
+        res = subprocess.run(["git", "branch", "--show-current"], cwd=str(repo_path), capture_output=True, text=True, timeout=3)
+        if res.returncode == 0 and res.stdout.strip():
+            branch = res.stdout.strip()
+    except Exception:
+        pass
+
+    dirty_files = []
+    try:
+        res = subprocess.run(["git", "status", "--porcelain"], cwd=str(repo_path), capture_output=True, text=True, timeout=4)
+        if res.returncode == 0:
+            dirty_files = [l.strip() for l in res.stdout.splitlines() if l.strip()]
+    except Exception:
+        pass
+
+    diff_stat = ""
+    try:
+        res = subprocess.run(["git", "diff", "--stat"], cwd=str(repo_path), capture_output=True, text=True, timeout=4)
+        if res.returncode == 0:
+            diff_stat = res.stdout.strip()
+    except Exception:
+        pass
+
+    diff_patch = ""
+    try:
+        res = subprocess.run(["git", "diff", "-U3"], cwd=str(repo_path), capture_output=True, text=True, timeout=5)
+        if res.returncode == 0:
+            lines = res.stdout.splitlines()
+            diff_patch = "\n".join(lines[:400])
+            if len(lines) > 400:
+                diff_patch += f"\n\n... ({len(lines) - 400} líneas adicionales truncadas)"
+    except Exception:
+        pass
+
+    return {
+        "success": True,
+        "repo": repo_path.name,
+        "branch": branch,
+        "dirty_files": dirty_files,
+        "dirty_count": len(dirty_files),
+        "diff_stat": diff_stat,
+        "diff_patch": diff_patch
+    }
+
+
+def get_adrs_dir(slug):
+    clean = sanitize_slug(slug)
+    if not clean or clean == "default":
+        d = REPO_ROOT / "tasks" / "context" / "adrs"
+    else:
+        tdir = get_tenant_dir_safely(clean)
+        if not tdir:
+            return None
+        d = tdir / "context" / "adrs"
+    d.mkdir(parents=True, exist_ok=True)
+    return d
+
+
+def list_tenant_adrs(slug):
+    adrs_dir = get_adrs_dir(slug)
+    if not adrs_dir or not adrs_dir.exists():
+        return []
+
+    adrs = []
+    for f in sorted(adrs_dir.glob("*.md")):
+        try:
+            content = f.read_text(encoding="utf-8", errors="replace")
+            title = f.stem.replace("-", " ").title()
+            status = "Propuesto"
+            date = ""
+            h1_found = False
+            for line in content.splitlines()[:20]:
+                if not h1_found and re.match(r"^#\s+(.*)", line):
+                    title = re.match(r"^#\s+(.*)", line).group(1).strip()
+                    h1_found = True
+                elif re.search(r"estado|status", line, re.IGNORECASE):
+                    m = re.search(r"(?:estado|status)\s*[:*]\s*([a-zA-ZáéíóúÁÉÍÓÚ]+)", line, re.IGNORECASE)
+                    if m:
+                        status = m.group(1).capitalize()
+                elif re.search(r"fecha|date", line, re.IGNORECASE):
+                    m = re.search(r"\d{4}-\d{2}-\d{2}", line)
+                    if m:
+                        date = m.group(0)
+
+            adrs.append({
+                "filename": f.name,
+                "title": title,
+                "status": status,
+                "date": date or time.strftime("%Y-%m-%d", time.localtime(f.stat().st_mtime)),
+                "content": content
+            })
+        except Exception:
+            pass
+
+    return adrs
+
+
+def save_tenant_adr(slug, filename, content):
+    adrs_dir = get_adrs_dir(slug)
+    if not adrs_dir:
+        return False, "Directorio de ADRs inválido"
+
+    clean_name = re.sub(r"[^a-zA-Z0-9_.-]", "-", filename.strip().lower())
+    clean_name = re.sub(r"-+", "-", clean_name).strip("-")
+    if not clean_name.endswith(".md"):
+        clean_name += ".md"
+
+    target = adrs_dir / clean_name
+    try:
+        target.write_text(content, encoding="utf-8")
+        return True, f"ADR '{clean_name}' guardado correctamente"
+    except Exception as e:
+        return False, str(e)
+
+
+def create_tenant_backup_zip(slug):
+    clean = sanitize_slug(slug)
+    if not clean or clean == "default":
+        return None, "No se puede descargar ZIP del root"
+
+    tdir = get_tenant_dir_safely(clean)
+    if not tdir or not tdir.exists():
+        return None, "Tenant no encontrado"
+
+    mem = io.BytesIO()
+    with zipfile.ZipFile(mem, "w", zipfile.ZIP_DEFLATED) as zf:
+        for root, dirs, files in os.walk(tdir):
+            rel_root = Path(root).relative_to(tdir)
+            parts = rel_root.parts
+            if parts and parts[0] in ("Proyecto", ".git", "__pycache__"):
+                continue
+            for file in files:
+                if file.endswith((".pyc", ".tmp")):
+                    continue
+                file_path = Path(root) / file
+                archive_name = f"{clean}/{rel_root / file}"
+                try:
+                    zf.write(file_path, archive_name)
+                except Exception:
+                    pass
+
+    mem.seek(0)
+    return mem.getvalue(), f"{clean}-faena-backup.zip"
+
+
+def extract_gotchas_from_text(text):
+    gotchas = []
+    if not text:
+        return gotchas
+    for line in text.splitlines():
+        line_s = line.strip()
+        if re.match(r"^[-*]\s*(?:\*\*)?(?:Gotcha|Trampa|Ojo|Warning|Cuidado|Alerta|Importante|Tip):?", line_s, re.IGNORECASE):
+            gotchas.append(line_s.lstrip("-* ").strip())
+        elif line_s.startswith("- ") and len(line_s) > 20:
+            if any(k in line_s.lower() for k in ["cuidado", "ojo", "trampa", "gotcha", "atención", "rompe", "error"]):
+                gotchas.append(line_s.lstrip("-* ").strip())
+    return gotchas[:5]
+
+
 class DashboardRequestHandler(BaseHTTPRequestHandler):
     def log_message(self, format, *args):
         return
@@ -903,13 +1259,20 @@ class DashboardRequestHandler(BaseHTTPRequestHandler):
             if not active_ticket and tickets:
                 active_ticket = tickets[0]
 
+            # Extract gotchas from learnings.md for continuous memory widget
+            gotchas = []
+            if active_tenant_slug:
+                td_ctx = get_tenant_context_files(active_tenant_slug)
+                gotchas = extract_gotchas_from_text(td_ctx.get("learnings", ""))
+
             data = {
                 "server_time": time.strftime("%H:%M:%S"),
                 "repo_path": str(REPO_ROOT),
                 "active_tenant": active_tenant_slug,
                 "tenants": all_tenants,
                 "tickets": [{"slug": t["slug"], "title": t["title"], "pct": t["percentage"]} for t in tickets],
-                "active_ticket": active_ticket
+                "active_ticket": active_ticket,
+                "gotchas": gotchas
             }
             self._send_json(data)
 
@@ -1011,13 +1374,40 @@ class DashboardRequestHandler(BaseHTTPRequestHandler):
             except (BrokenPipeError, ConnectionResetError, OSError):
                 return
 
-        elif path == "/api/clone_repos":
-            slug = sanitize_slug(body.get("slug") or body.get("tenant", ""))
-            ok, msg, cloned = clone_tenant_repos(slug)
-            if ok:
-                self._send_json({"success": True, "message": msg, "cloned": cloned})
+        elif path == "/api/detect_gates":
+            param_slug = sanitize_slug(params.get("tenant", [None])[0])
+            tenant_slug = param_slug or get_active_tenant_slug()
+            repo_param = params.get("repo", [""])[0]
+            detected = detect_quality_gates(tenant_slug, repo_param)
+            self._send_json({"success": True, "tenant": tenant_slug, "gates": detected})
+
+        elif path == "/api/git/diff":
+            param_slug = sanitize_slug(params.get("tenant", [None])[0])
+            tenant_slug = param_slug or get_active_tenant_slug()
+            repo_param = params.get("repo", [""])[0]
+            diff_data = git_get_diff(tenant_slug, repo_param)
+            self._send_json(diff_data)
+
+        elif path == "/api/adrs":
+            param_slug = sanitize_slug(params.get("tenant", [None])[0])
+            tenant_slug = param_slug or get_active_tenant_slug()
+            adrs = list_tenant_adrs(tenant_slug)
+            self._send_json({"success": True, "tenant": tenant_slug, "adrs": adrs})
+
+        elif path == "/api/tenants/backup_zip":
+            param_slug = sanitize_slug(params.get("tenant", [None])[0])
+            tenant_slug = param_slug or get_active_tenant_slug()
+            zip_bytes, zip_filename = create_tenant_backup_zip(tenant_slug)
+            if zip_bytes:
+                self.send_response(200)
+                self.send_header("Content-Type", "application/zip")
+                self.send_header("Content-Disposition", f'attachment; filename="{zip_filename}"')
+                self.send_header("Content-Length", str(len(zip_bytes)))
+                self.send_header("Cache-Control", "no-cache")
+                self.end_headers()
+                self.wfile.write(zip_bytes)
             else:
-                self._send_json({"success": False, "error": msg, "cloned": cloned}, status=400)
+                self._send_json({"success": False, "error": zip_filename or "No se pudo generar ZIP"}, status=400)
 
         else:
             self.send_error(404, "Not Found")
@@ -1094,6 +1484,39 @@ class DashboardRequestHandler(BaseHTTPRequestHandler):
                     "restored_tenants": restored,
                     "active_tenant": get_active_tenant_slug()
                 })
+            else:
+                self._send_json({"success": False, "error": msg}, status=400)
+
+        elif path == "/api/run_quality_gate":
+            slug = sanitize_slug(body.get("slug") or body.get("tenant") or get_active_tenant_slug())
+            command = body.get("command", "")
+            repo = body.get("repo", "")
+            ok, output, elapsed_ms, cwd = run_quality_gate_cmd(slug, command, repo)
+            self._send_json({
+                "success": ok,
+                "command": command,
+                "output": output,
+                "elapsed_ms": elapsed_ms,
+                "cwd": cwd
+            })
+
+        elif path == "/api/git/create_branch":
+            slug = sanitize_slug(body.get("slug") or body.get("tenant") or get_active_tenant_slug())
+            repo = body.get("repo", "")
+            branch = body.get("branch", "")
+            ok, msg = git_create_branch(slug, repo, branch)
+            if ok:
+                self._send_json({"success": True, "message": msg, "branch": branch})
+            else:
+                self._send_json({"success": False, "error": msg}, status=400)
+
+        elif path == "/api/save_adr":
+            slug = sanitize_slug(body.get("slug") or body.get("tenant") or get_active_tenant_slug())
+            filename = body.get("filename", "")
+            content = body.get("content", "")
+            ok, msg = save_tenant_adr(slug, filename, content)
+            if ok:
+                self._send_json({"success": True, "message": msg})
             else:
                 self._send_json({"success": False, "error": msg}, status=400)
 

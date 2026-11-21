@@ -26,6 +26,39 @@
       --code-bg: #050811;
     }
 
+    [data-theme="light"] {
+      --bg: #f8fafc;
+      --surface: #ffffff;
+      --card: #ffffff;
+      --card-hover: #f1f5f9;
+      --border: #cbd5e1;
+      --border-accent: #0284c7;
+      --text: #0f172a;
+      --text-muted: #475569;
+      --text-dim: #64748b;
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --primary-glow: rgba(37, 99, 235, 0.2);
+      --success: #059669;
+      --success-glow: rgba(5, 150, 105, 0.15);
+      --warning: #d97706;
+      --danger: #dc2626;
+      --code-bg: #f1f5f9;
+    }
+
+    [data-theme="oled"] {
+      --bg: #000000;
+      --surface: #050505;
+      --card: #0a0a0a;
+      --card-hover: #141414;
+      --border: #262626;
+      --border-accent: #38bdf8;
+      --text: #ffffff;
+      --text-muted: #a3a3a3;
+      --text-dim: #737373;
+      --code-bg: #000000;
+    }
+
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; }
     body { background-color: var(--bg); color: var(--text); padding: 20px; line-height: 1.5; font-size: 14px; min-height: 100vh; }
     
@@ -619,6 +652,170 @@
       cursor: pointer;
     }
     .copy-btn:hover { color: #fff; border-color: var(--border-accent); }
+
+    /* Deep Link Buttons (Cursor / VS Code) */
+    .deep-link-group { display: inline-flex; gap: 4px; align-items: center; }
+    .deep-link-btn {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 4px;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      transition: all 0.15s ease;
+    }
+    .deep-link-btn:hover {
+      border-color: var(--border-accent);
+      color: #fff;
+      background: var(--card-hover);
+    }
+
+    /* Quality Gate Runner Styles */
+    .gate-run-btn {
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: #fff;
+      border: none;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 5px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.15s ease;
+    }
+    .gate-run-btn:hover { background: linear-gradient(135deg, #059669, #047857); transform: translateY(-1px); }
+    .gate-run-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .gate-result-box {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      margin-top: 10px;
+      font-family: Consolas, monospace;
+      font-size: 11px;
+      line-height: 1.45;
+      max-height: 220px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+    }
+
+    /* Continuous Memory Gotchas Card */
+    .gotchas-box {
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.08) 0%, rgba(217, 119, 6, 0.03) 100%);
+      border: 1px solid rgba(245, 158, 11, 0.35);
+      border-radius: 12px;
+      padding: 14px 18px;
+      margin-bottom: 14px;
+    }
+    .gotchas-title {
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--warning);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 6px;
+    }
+    .gotchas-list {
+      list-style-type: none;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      font-size: 12px;
+      color: #cbd5e1;
+    }
+    .gotchas-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 6px;
+    }
+
+    /* Git Operations Bar */
+    .git-ops-bar {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    /* ADR Grid & Cards */
+    .adr-container {
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      gap: 14px;
+      margin-top: 10px;
+    }
+    @media (max-width: 840px) {
+      .adr-container { grid-template-columns: 1fr; }
+    }
+    .adr-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 480px;
+      overflow-y: auto;
+    }
+    .adr-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 12px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .adr-card:hover, .adr-card.active {
+      border-color: var(--border-accent);
+      background: var(--card-hover);
+    }
+    .adr-status-badge {
+      font-size: 9px;
+      font-weight: 800;
+      padding: 2px 6px;
+      border-radius: 4px;
+      text-transform: uppercase;
+    }
+    .adr-status-propuesto { background: rgba(59, 130, 246, 0.2); color: #93c5fd; }
+    .adr-status-aceptado { background: rgba(16, 185, 129, 0.2); color: #6ee7b7; }
+    .adr-status-rechazado { background: rgba(239, 68, 68, 0.2); color: #fca5a5; }
+    .adr-status-deprecado { background: rgba(148, 163, 184, 0.2); color: #cbd5e1; }
+
+    /* Footer Hotkey Bar */
+    .footer-bar {
+      margin-top: 12px;
+      padding: 8px 12px;
+      font-size: 11px;
+      color: var(--text-dim);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .hotkey-pill {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 1px 5px;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 10px;
+      color: var(--text-muted);
+    }
   </style>
 </head>
 <body>
@@ -665,11 +862,17 @@
           <button class="btn-secondary" onclick="downloadTenantsExport()" title="Exportar configuración de todos los tenants a tenants.local.json">
             📤 Exportar
           </button>
+          <button class="btn-secondary" onclick="downloadTenantZip()" title="Descargar backup de contexto y tareas en archivo .ZIP">
+            📦 Backup ZIP
+          </button>
           <button class="btn-secondary" onclick="openImportTenantModal()" title="Importar configuración desde tenants.local.json">
             📥 Importar
           </button>
           <button class="btn-secondary" id="btnNotificationToggle" onclick="toggleNotifications()" title="Activar/desactivar notificaciones y sonido">
             🔔 Alertas: ON
+          </button>
+          <button class="btn-secondary" id="btnThemeToggle" onclick="cycleTheme()" title="Alternar tema: Dark, Light, OLED">
+            🌙 Dark
           </button>
         </div>
       </div>
@@ -678,6 +881,22 @@
     <!-- Main Dynamic Area: Changes between (A) Zero Tenants, (B) Tenant Ready, (C) Active Ticket -->
     <div id="main-view-container">
       <!-- Injected by JavaScript -->
+    </div>
+
+    <!-- Hotkeys and System Footer -->
+    <div class="footer-bar">
+      <div>
+        <span>⌨️ Atajos: </span>
+        <span class="hotkey-pill">/</span> buscar &bull;
+        <span class="hotkey-pill">N</span> nuevo tenant &bull;
+        <span class="hotkey-pill">O</span> orquestar &bull;
+        <span class="hotkey-pill">D</span> diagnóstico &bull;
+        <span class="hotkey-pill">1-5</span> pestañas &bull;
+        <span class="hotkey-pill">Esc</span> cerrar
+      </div>
+      <div>
+        <span>🏭 Faena Hub &bull; Protocolo TDD 5 Fases</span>
+      </div>
     </div>
 
   </div>
@@ -857,6 +1076,73 @@
     </div>
   </dialog>
 
+  <!-- Git Diff Inspector Modal (Native Accessible HTML Dialog per MWG) -->
+  <dialog id="gitDiffModal" closedby="any" aria-labelledby="diff-modal-title" style="max-width: 780px;">
+    <div class="modal-title" id="diff-modal-title">
+      <span>📊</span> Inspección de Git Diff & Cambios Pendientes
+    </div>
+    <div class="modal-desc">
+      Revisa los archivos modificados y el diff unificado en el repositorio aislado del cliente antes de cerrar el ticket.
+    </div>
+
+    <div id="gitDiffLoading" style="text-align: center; padding: 20px; color: var(--text-muted);">
+      <div style="font-size: 24px; animation: pulse 1s infinite;">⏳</div>
+      <div>Obteniendo diff desde Git...</div>
+    </div>
+
+    <div id="gitDiffContent" style="display: none;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 8px;">
+        <div style="display: flex; gap: 8px; align-items: center;">
+          <span style="font-size: 11px; font-weight: 700; color: var(--text-muted);">REPOSITORIO:</span>
+          <span id="diffRepoName" style="color: #fff; font-weight: 700; font-size: 12px;"></span>
+          <span id="diffBranchBadge" style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px;"></span>
+        </div>
+        <span id="diffDirtyCount" style="font-size: 11px; font-weight: 700; color: var(--warning);"></span>
+      </div>
+
+      <div style="font-size: 11px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; margin-bottom: 6px;">Archivos con Cambios:</div>
+      <div id="diffFilesList" style="display: flex; flex-direction: column; gap: 4px; max-height: 120px; overflow-y: auto; margin-bottom: 12px;"></div>
+
+      <div style="font-size: 11px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; margin-bottom: 6px;">Resumen Estadístico:</div>
+      <pre id="diffStatSummary" style="background: var(--code-bg); padding: 8px 12px; border-radius: 6px; font-family: monospace; font-size: 11px; color: #93c5fd; margin-bottom: 12px;"></pre>
+
+      <div style="font-size: 11px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; margin-bottom: 6px;">Diff Unificado:</div>
+      <pre id="diffPatchViewer" style="background: var(--code-bg); padding: 12px; border-radius: 8px; font-family: Consolas, monospace; font-size: 11px; color: #cbd5e1; max-height: 240px; overflow-y: auto; white-space: pre-wrap; line-height: 1.45;"></pre>
+    </div>
+
+    <div class="modal-actions" style="margin-top: 18px;">
+      <button type="button" class="btn-secondary" onclick="closeGitDiffModal()">Cerrar</button>
+      <button type="button" class="btn-primary" onclick="refreshGitDiff()">Actualizar Diff</button>
+    </div>
+  </dialog>
+
+  <!-- New ADR Modal Dialog (Native Accessible HTML Dialog per MWG) -->
+  <dialog id="newAdrModal" closedby="any" aria-labelledby="adr-modal-title" style="max-width: 720px;">
+    <div class="modal-title" id="adr-modal-title">
+      <span>📐</span> Registrar Decisión de Arquitectura (ADR)
+    </div>
+    <div class="modal-desc">
+      Crea un registro formal de arquitectura (ADR) para documentar decisiones técnicas clave en este tenant.
+    </div>
+
+    <form onsubmit="submitCreateAdr(event)" method="dialog">
+      <div class="form-group">
+        <label class="form-label" for="adrFilename">Nombre del Archivo (slug): *</label>
+        <input type="text" id="adrFilename" class="form-input" placeholder="ej. ADR-001-postgresql-auth.md" required>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="adrContent">Contenido del ADR (Markdown): *</label>
+        <textarea id="adrContent" class="editor-textarea" style="height: 240px; font-size: 12px;" required></textarea>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn-secondary" onclick="closeNewAdrModal()">Cancelar</button>
+        <button type="submit" class="btn-primary" id="btnSubmitAdr">Guardar ADR en Contexto</button>
+      </div>
+    </form>
+  </dialog>
+
   <!-- Toast Notification -->
   <div class="toast" id="toastNotification" style="display: none;">
     <span id="toastIcon">✓</span>
@@ -877,6 +1163,8 @@
     const deleteDialog = document.getElementById('deleteTenantModal');
     const diagnosticsDialog = document.getElementById('diagnosticsModal');
     const promptGeneratorDialog = document.getElementById('promptGeneratorModal');
+    const gitDiffDialog = document.getElementById('gitDiffModal');
+    const newAdrDialog = document.getElementById('newAdrModal');
 
     let stagedImportJson = null;
     let stagedDeleteSlug = null;
@@ -887,7 +1175,395 @@
 
     let taskFilterStatus = 'all';
     let taskSearchQuery = '';
-    
+
+    /* Theme Management (Dark / Light / OLED) */
+    let currentTheme = localStorage.getItem('faena_theme') || 'dark';
+    function applyTheme(theme) {
+      currentTheme = theme;
+      localStorage.setItem('faena_theme', theme);
+      document.documentElement.setAttribute('data-theme', theme);
+      const btn = document.getElementById('btnThemeToggle');
+      if (btn) {
+        if (theme === 'light') btn.innerText = '☀️ Light';
+        else if (theme === 'oled') btn.innerText = '⚡ OLED';
+        else btn.innerText = '🌙 Dark';
+      }
+    }
+    function cycleTheme() {
+      if (currentTheme === 'dark') applyTheme('light');
+      else if (currentTheme === 'light') applyTheme('oled');
+      else applyTheme('dark');
+      showToast(`Tema visual: ${currentTheme.toUpperCase()}`, '🌓');
+    }
+    applyTheme(currentTheme);
+
+    /* Deep Link Generator for Cursor / VS Code */
+    function getDeepLinks(relPath) {
+      if (!relPath || !latestServerData || !latestServerData.repo_path) return '';
+      const fullPath = (latestServerData.repo_path + '/' + relPath).replace(/\\/g, '/');
+      return `
+        <span class="deep-link-group">
+          <a href="cursor://file/${fullPath}" class="deep-link-btn" title="Abrir en Cursor">⚡ Cursor</a>
+          <a href="vscode://file/${fullPath}" class="deep-link-btn" title="Abrir en VS Code">💻 VS Code</a>
+        </span>
+      `;
+    }
+
+    /* 1-Click Full Backup ZIP */
+    function downloadTenantZip() {
+      if (!currentActiveTenant || currentActiveTenant === 'default') {
+        showToast('Selecciona un tenant para descargar su backup .ZIP', '⚠️');
+        return;
+      }
+      showToast(`Empaquetando backup de "${currentActiveTenant}"...`, '📦');
+      const a = document.createElement('a');
+      a.href = `/api/tenants/backup_zip?tenant=${encodeURIComponent(currentActiveTenant)}`;
+      a.download = `${currentActiveTenant}-faena-backup.zip`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+
+    /* Quality Gate Execution & Auto-Detection */
+    let detectedGates = [];
+    let latestGateRunResult = null;
+
+    function fetchDetectedGates() {
+      if (!currentActiveTenant) return;
+      fetch(`/api/detect_gates?tenant=${encodeURIComponent(currentActiveTenant)}`)
+        .then(res => res.json())
+        .then(data => {
+          detectedGates = data.gates || [];
+          if (currentTab === 'gates' && latestServerData) {
+            renderDashboard(latestServerData);
+          }
+        })
+        .catch(err => console.warn('Detect gates err:', err));
+    }
+
+    function runQualityGateFromUI(command, repo = '') {
+      if (!command) return;
+      showToast(`Ejecutando Quality Gate: ${command}...`, '⏳');
+      const runBox = document.getElementById('gateRunResultContainer');
+      if (runBox) {
+        runBox.style.display = 'block';
+        runBox.innerHTML = `<div style="color: var(--warning); animation: pulse 1s infinite;">⚡ Ejecutando: <code>${command}</code> en Proyecto/${repo}...</div>`;
+      }
+
+      fetch('/api/run_quality_gate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tenant: currentActiveTenant,
+          command: command,
+          repo: repo
+        })
+      })
+      .then(res => res.json())
+      .then(data => {
+        latestGateRunResult = data;
+        if (runBox) {
+          const isPass = data.success;
+          runBox.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <span class="badge ${isPass ? 'badge-green' : 'badge-red'}" style="font-size: 12px; padding: 4px 10px;">
+                ${isPass ? '✓ PASS (VERIFY OK)' : '✗ FAIL (RED)'}
+              </span>
+              <span style="font-size: 11px; color: var(--text-muted); font-family: monospace;">
+                ⚡ ${data.elapsed_ms || 0}ms &bull; cwd: ${data.cwd}
+              </span>
+            </div>
+            <div class="gate-result-box">${data.output || '(Comando ejecutado sin salida en terminal)'}</div>
+          `;
+        }
+        if (data.success) {
+          playSuccessChime();
+          showToast(`Quality Gate VERIFY OK (${data.elapsed_ms}ms)`, '✓');
+        } else {
+          showToast(`Quality Gate falló con código de error`, '⚠️');
+        }
+      })
+      .catch(err => {
+        alert('Error al ejecutar Quality Gate: ' + err);
+      });
+    }
+
+    /* Git Operations & Diff Modal */
+    let currentDiffRepo = '';
+
+    function openGitDiffModal(repo = '') {
+      currentDiffRepo = repo;
+      gitDiffDialog.showModal();
+      refreshGitDiff();
+    }
+
+    function closeGitDiffModal() {
+      gitDiffDialog.close();
+    }
+
+    function refreshGitDiff() {
+      document.getElementById('gitDiffLoading').style.display = 'block';
+      document.getElementById('gitDiffContent').style.display = 'none';
+
+      let url = `/api/git/diff?tenant=${encodeURIComponent(currentActiveTenant)}`;
+      if (currentDiffRepo) url += `&repo=${encodeURIComponent(currentDiffRepo)}`;
+
+      fetch(url)
+        .then(res => res.json())
+        .then(data => {
+          document.getElementById('gitDiffLoading').style.display = 'none';
+          document.getElementById('gitDiffContent').style.display = 'block';
+
+          document.getElementById('diffRepoName').innerText = data.repo || 'Proyecto';
+          document.getElementById('diffBranchBadge').innerText = `🌿 ${data.branch || 'main'}`;
+          document.getElementById('diffDirtyCount').innerText = data.dirty_count > 0 ? `● ${data.dirty_count} archivos modificados` : '✓ Working tree limpio';
+
+          let filesHtml = '';
+          if (data.dirty_files && data.dirty_files.length > 0) {
+            data.dirty_files.forEach(f => {
+              const isMod = f.startsWith('M');
+              const isAdd = f.startsWith('A') || f.startsWith('?');
+              let color = isMod ? '#f59e0b' : (isAdd ? '#10b981' : '#ef4444');
+              filesHtml += `<div style="font-family: monospace; font-size: 11px; color: ${color};">${f}</div>`;
+            });
+          } else {
+            filesHtml = '<div style="font-size: 11px; color: var(--text-dim);">No hay cambios sin commit en este repositorio.</div>';
+          }
+          document.getElementById('diffFilesList').innerHTML = filesHtml;
+          document.getElementById('diffStatSummary').innerText = data.diff_stat || 'Sin cambios registrados.';
+          document.getElementById('diffPatchViewer').innerText = data.diff_patch || '(Sin diferencias contra HEAD)';
+        })
+        .catch(err => {
+          document.getElementById('gitDiffLoading').style.display = 'none';
+          alert('Error al obtener Git diff: ' + err);
+        });
+    }
+
+    function createTicketBranch(branchName, repo = '') {
+      if (!branchName) return;
+      showToast(`Creando rama ${branchName}...`, '🌿');
+      fetch('/api/git/create_branch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tenant: currentActiveTenant,
+          branch: branchName,
+          repo: repo
+        })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          showToast(data.message, '🌿');
+          fetchStatus();
+        } else {
+          alert('Aviso Git: ' + (data.error || 'No se pudo crear rama'));
+        }
+      })
+      .catch(err => alert('Error de red: ' + err));
+    }
+
+    /* ADR Management */
+    let cachedAdrs = [];
+    let selectedAdrIndex = 0;
+
+    function loadTenantAdrs() {
+      if (!currentActiveTenant) return;
+      fetch(`/api/adrs?tenant=${encodeURIComponent(currentActiveTenant)}`)
+        .then(res => res.json())
+        .then(data => {
+          cachedAdrs = data.adrs || [];
+          if (currentContextTab === 'adrs') {
+            renderAdrsView();
+          }
+        })
+        .catch(err => console.warn('ADR fetch err:', err));
+    }
+
+    function openNewAdrModal() {
+      const nextNum = String(cachedAdrs.length + 1).padStart(3, '0');
+      document.getElementById('adrFilename').value = `ADR-${nextNum}-decision.md`;
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('adrContent').value = `# ADR-${nextNum}: [Título de la Decisión Arquitectónica]
+
+- **Estado:** Propuesto <!-- Propuesto | Aceptado | Rechazado | Deprecado -->
+- **Fecha:** ${today}
+- **Decisores:** Tech Lead, Equipo Faena
+
+---
+
+## 1. Contexto y Planteamiento del Problema
+[Describe el contexto técnico y el requerimiento que motiva esta decisión.]
+
+## 2. Decisión Adoptada
+[Explicación clara de la solución adoptada y su justificación técnica.]
+
+## 3. Consecuencias
+- **Positivas:** [Beneficios técnicos e impacto]
+- **Negativas / Mitigaciones:** [Deuda o restricciones asumidas]`;
+      newAdrDialog.showModal();
+    }
+
+    function closeNewAdrModal() {
+      newAdrDialog.close();
+    }
+
+    function submitCreateAdr(e) {
+      e.preventDefault();
+      const filename = document.getElementById('adrFilename').value.trim();
+      const content = document.getElementById('adrContent').value;
+      if (!filename || !content) return;
+
+      fetch('/api/save_adr', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tenant: currentActiveTenant,
+          filename: filename,
+          content: content
+        })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          closeNewAdrModal();
+          showToast(`ADR "${filename}" guardado correctamente`, '📐');
+          loadTenantAdrs();
+        } else {
+          alert('Error al guardar ADR: ' + (data.error || 'Desconocido'));
+        }
+      })
+      .catch(err => alert('Error de conexión: ' + err));
+    }
+
+    function renderAdrsView() {
+      const container = document.getElementById('adrContainerView');
+      if (!container) return;
+
+      if (cachedAdrs.length === 0) {
+        container.innerHTML = `
+          <div style="background: var(--surface); border: 1px dashed var(--border); border-radius: 12px; padding: 32px; text-align: center;">
+            <div style="font-size: 28px;">📐</div>
+            <div style="font-weight: 700; color: #fff; margin-top: 6px;">No hay ADRs registrados para este tenant</div>
+            <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px; max-width: 480px; margin-left: auto; margin-right: auto;">
+              Documenta decisiones arquitectónicas clave (ej. elección de bases de datos, patrones de autenticación, diseño de APIs).
+            </div>
+            <button class="btn-primary" onclick="openNewAdrModal()" style="margin-top: 14px;">➕ Registrar Primer ADR</button>
+          </div>
+        `;
+        return;
+      }
+
+      let listHtml = '';
+      cachedAdrs.forEach((a, idx) => {
+        const isSel = idx === selectedAdrIndex;
+        const stClass = `adr-status-${a.status.toLowerCase()}`;
+        listHtml += `
+          <div class="adr-card ${isSel ? 'active' : ''}" onclick="selectAdr(${idx})">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <strong style="font-size: 12px; color: #fff;">${a.title}</strong>
+              <span class="adr-status-badge ${stClass}">${a.status}</span>
+            </div>
+            <div style="font-size: 10px; color: var(--text-dim); margin-top: 4px; display: flex; justify-content: space-between;">
+              <span>${a.filename}</span>
+              <span>${a.date}</span>
+            </div>
+          </div>
+        `;
+      });
+
+      const activeAdr = cachedAdrs[selectedAdrIndex] || cachedAdrs[0];
+
+      container.innerHTML = `
+        <div class="adr-container">
+          <div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-dim);">Decisiones (${cachedAdrs.length})</span>
+              <button class="btn-primary" onclick="openNewAdrModal()" style="font-size: 11px; padding: 4px 8px;">➕ Nuevo ADR</button>
+            </div>
+            <div class="adr-list">${listHtml}</div>
+          </div>
+          <div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-dim);">Vista y Edición: ${activeAdr.filename}</span>
+              <button class="btn-secondary" onclick="saveActiveAdr()" style="font-size: 11px; padding: 4px 10px;">💾 Guardar ADR</button>
+            </div>
+            <textarea id="adrEditorText" class="editor-textarea" style="height: 420px;">${activeAdr.content || ''}</textarea>
+          </div>
+        </div>
+      `;
+    }
+
+    function selectAdr(idx) {
+      selectedAdrIndex = idx;
+      renderAdrsView();
+    }
+
+    function saveActiveAdr() {
+      const activeAdr = cachedAdrs[selectedAdrIndex];
+      if (!activeAdr) return;
+      const editor = document.getElementById('adrEditorText');
+      if (!editor) return;
+
+      fetch('/api/save_adr', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tenant: currentActiveTenant,
+          filename: activeAdr.filename,
+          content: editor.value
+        })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          showToast(`ADR "${activeAdr.filename}" actualizado`, '✓');
+          loadTenantAdrs();
+        } else {
+          alert('Error al guardar: ' + (data.error || 'Desconocido'));
+        }
+      })
+      .catch(err => alert('Error de conexión: ' + err));
+    }
+
+    /* Global Keyboard Hotkeys */
+    document.addEventListener('keydown', (e) => {
+      const activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
+      if (activeTag === 'input' || activeTag === 'textarea' || activeTag === 'select') {
+        if (e.key === 'Escape') {
+          document.querySelectorAll('dialog').forEach(d => { if (d.open) d.close(); });
+        }
+        return;
+      }
+
+      if (e.key === 'Escape') {
+        document.querySelectorAll('dialog').forEach(d => { if (d.open) d.close(); });
+      } else if (e.key === '/' || (e.ctrlKey && e.key.toLowerCase() === 'k')) {
+        e.preventDefault();
+        const searchInput = document.getElementById('taskSearchInput');
+        if (searchInput) searchInput.focus();
+      } else if (e.key === 'n' || e.key === 'N') {
+        e.preventDefault();
+        openCreateTenantModal();
+      } else if (e.key === 'o' || e.key === 'O') {
+        e.preventDefault();
+        openPromptGeneratorModal();
+      } else if (e.key === 'd' || e.key === 'D') {
+        e.preventDefault();
+        runDiagnosticsFromUI();
+      } else if (e.key === '1') {
+        switchTab('tasks');
+      } else if (e.key === '2') {
+        switchTab('overview');
+      } else if (e.key === '3') {
+        switchTab('context');
+      } else if (e.key === '4') {
+        switchTab('gates');
+      } else if (e.key === '5') {
+        switchTab('logs');
+      }
+    });
+
     // Light-dismiss fallback for browsers without native closedby support (per MWG)
     document.querySelectorAll('dialog').forEach(dlg => {
       if (!('closedBy' in HTMLDialogElement.prototype)) {
@@ -1324,11 +2000,31 @@ ${reqs}`;
 
     function switchContextTab(cTab) {
       currentContextTab = cTab;
-      ['team', 'tech', 'standards', 'learnings'].forEach(t => {
+      ['team', 'tech', 'standards', 'learnings', 'adrs'].forEach(t => {
         const btn = document.getElementById(`c-tab-${t}`);
         if (btn) btn.classList.toggle('active', t === cTab);
       });
       const editor = document.getElementById('contextEditor');
+      const standardActions = document.getElementById('contextStandardActions');
+      const adrContainer = document.getElementById('adrContainerView');
+      const cloneBox = document.getElementById('cloneHelpBox');
+
+      if (cTab === 'adrs') {
+        if (editor) editor.style.display = 'none';
+        if (standardActions) standardActions.style.display = 'none';
+        if (cloneBox) cloneBox.style.display = 'none';
+        if (adrContainer) {
+          adrContainer.style.display = 'block';
+          loadTenantAdrs();
+        }
+        return;
+      }
+
+      if (editor) editor.style.display = 'block';
+      if (standardActions) standardActions.style.display = 'flex';
+      if (cloneBox) cloneBox.style.display = 'block';
+      if (adrContainer) adrContainer.style.display = 'none';
+
       if (!editor) return;
       if (cTab === 'team') editor.value = cachedContextFiles.team_context || '';
       else if (cTab === 'tech') editor.value = cachedContextFiles.tech_context || '';
@@ -1524,10 +2220,53 @@ ${reqs}`;
       // 4. Construct Content based on whether an Active Ticket exists
       let contentHtml = '';
 
-      // --- Stepper Section ---
+      // --- Stepper & Ticket Details Section ---
       if (data.active_ticket) {
         const at = data.active_ticket;
+
+        // Resolve active repo information
+        const curRepoObj = (curTenantObj.repos && curTenantObj.repos.length > 0) ? curTenantObj.repos[0] : null;
+        const curRepoName = curRepoObj ? (typeof curRepoObj === 'string' ? curRepoObj : curRepoObj.name) : '';
+        const curRepoBranch = (curRepoObj && typeof curRepoObj === 'object') ? curRepoObj.branch : 'main';
+        const curRepoDirty = (curRepoObj && typeof curRepoObj === 'object') ? curRepoObj.dirty_count : 0;
+
+        let gotchasHtml = '';
+        if (data.gotchas && data.gotchas.length > 0) {
+          gotchasHtml = `
+            <div class="gotchas-box">
+              <div class="gotchas-title">
+                <span>🧠 Memoria Continua &bull; Gotchas y Trampas Conocidas</span>
+              </div>
+              <ul class="gotchas-list">
+                ${data.gotchas.map(g => `<li><span>💡</span><span>${g}</span></li>`).join('')}
+              </ul>
+            </div>
+          `;
+        }
+
+        let gitOpsBarHtml = `
+          <div class="git-ops-bar">
+            <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+              <span style="font-size: 11px; font-weight: 700; color: var(--text-muted);">GIT REPO:</span>
+              <span style="font-size: 11px; font-weight: 700; color: #fff;">${curRepoName || 'Proyecto'}</span>
+              <span style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px;">🌿 ${curRepoBranch}</span>
+              ${curRepoDirty > 0 ? `<span style="color: var(--warning); font-size: 11px; font-weight: 600;">● ${curRepoDirty} cambios sin commit</span>` : `<span style="color: var(--success); font-size: 11px; font-weight: 600;">✓ Working tree limpio</span>`}
+            </div>
+            <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+              <button class="btn-secondary" onclick="createTicketBranch('feature/${at.slug}', '${curRepoName}')" style="font-size: 11px;" title="Crear rama feature/${at.slug}">
+                🌿 Crear Rama feature/${at.slug}
+              </button>
+              <button class="btn-secondary" onclick="openGitDiffModal('${curRepoName}')" style="font-size: 11px;" title="Ver cambios pendientes y diff unificado">
+                📊 Ver Git Diff
+              </button>
+            </div>
+          </div>
+        `;
+
         contentHtml += `
+          ${gotchasHtml}
+          ${gitOpsBarHtml}
+
           <div class="stepper-card">
             <div class="section-title">
               <span>Flujo del Protocolo Faena (5 Fases)</span>
@@ -1586,17 +2325,20 @@ ${reqs}`;
             </div>
             <div class="kpi-card">
               <div class="kpi-label">Quality Gate</div>
-              <div class="kpi-val" style="font-size: 15px; color: ${at.percentage === 100 ? 'var(--success)' : (at.percentage > 0 ? 'var(--warning)' : 'var(--text-muted)')};">
-                ${at.percentage === 100 ? '✓ VERIFY:FULL OK' : (at.percentage > 0 ? '⚡ EN PROGRESO' : 'SIN EJECUTAR')}
+              <div class="kpi-val" style="font-size: 15px; color: ${latestGateRunResult ? (latestGateRunResult.success ? 'var(--success)' : 'var(--danger)') : (at.percentage === 100 ? 'var(--success)' : (at.percentage > 0 ? 'var(--warning)' : 'var(--text-muted)'))};">
+                ${latestGateRunResult ? (latestGateRunResult.success ? '✓ VERIFY OK' : '✗ RED (FAIL)') : (at.percentage === 100 ? '✓ VERIFY:FULL OK' : (at.percentage > 0 ? '⚡ EN PROGRESO' : 'SIN EJECUTAR'))}
               </div>
-              <div class="kpi-desc">${at.gates && at.gates.length > 0 ? at.gates[0].name : 'Quality gates definidos'}</div>
+              <div class="kpi-desc">${latestGateRunResult ? (latestGateRunResult.command + ' (' + latestGateRunResult.elapsed_ms + 'ms)') : (at.gates && at.gates.length > 0 ? at.gates[0].name : 'Quality gates definidos')}</div>
             </div>
             <div class="kpi-card">
               <div class="kpi-label">Repositorio Afectado</div>
               <div class="kpi-val" style="font-size: 12px; font-family: monospace; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                 ${at.repo}
               </div>
-              <div class="kpi-desc">Aislamiento por tenant garantizado</div>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px;">
+                <span class="kpi-desc">Aislamiento por tenant</span>
+                ${getDeepLinks(at.repo)}
+              </div>
             </div>
             <div class="kpi-card">
               <div class="kpi-label">Última Actividad</div>
@@ -1716,7 +2458,7 @@ ${reqs}`;
               <button class="filter-pill ${taskFilterStatus === 'done' ? 'active' : ''}" onclick="setTaskFilter('done')">✓ Hechas</button>
             </div>
             <div>
-              <input type="search" class="search-input" placeholder="🔍 Filtrar tareas..." value="${taskSearchQuery}" oninput="onTaskSearchInput(this.value)">
+              <input type="search" id="taskSearchInput" class="search-input" placeholder="🔍 Filtrar tareas... [/ o Ctrl+K]" value="${taskSearchQuery}" oninput="onTaskSearchInput(this.value)">
             </div>
           </div>
         `;
@@ -1732,6 +2474,8 @@ ${reqs}`;
           if (t.phase.includes('red')) { badgeClass = 'badge-red'; phaseLabel = 'RED'; }
           else if (t.phase.includes('green')) { badgeClass = 'badge-green'; phaseLabel = 'GREEN'; }
 
+          const taskRelPath = data.active_ticket ? `tenants/${currentActiveTenant}/tasks/${data.active_ticket.slug}/${t.file || 'README.md'}` : '';
+
           html += `
             <div class="task-item">
               <div class="task-left">
@@ -1739,7 +2483,8 @@ ${reqs}`;
                 <span class="task-id">task${t.id}</span>
                 <span class="task-name">${t.name}</span>
               </div>
-              <div style="display: flex; gap: 8px; align-items: center; shrink-0;">
+              <div style="display: flex; gap: 8px; align-items: center; shrink-0; flex-wrap: wrap;">
+                ${getDeepLinks(taskRelPath)}
                 <span class="badge ${badgeClass}">${phaseLabel}</span>
                 <span class="badge-agent">${t.agent}</span>
                 <span style="font-size: 11px; font-weight: 700; color: ${t.completed ? 'var(--success)' : 'var(--text-dim)'}">
@@ -1871,21 +2616,24 @@ ${reqs}`;
         <div class="editor-container">
           <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
             <div class="editor-tabs">
-              <button class="editor-tab-btn active" id="c-tab-team" onclick="switchContextTab('team')">👥 team-context (Email & Roles)</button>
-              <button class="editor-tab-btn" id="c-tab-tech" onclick="switchContextTab('tech')">🛠️ tech-context (Stack & Gates)</button>
-              <button class="editor-tab-btn" id="c-tab-standards" onclick="switchContextTab('standards')">📜 company-standards</button>
-              <button class="editor-tab-btn" id="c-tab-learnings" onclick="switchContextTab('learnings')">🧠 learnings (Memoria)</button>
+              <button class="editor-tab-btn ${currentContextTab === 'team' ? 'active' : ''}" id="c-tab-team" onclick="switchContextTab('team')">👥 team-context</button>
+              <button class="editor-tab-btn ${currentContextTab === 'tech' ? 'active' : ''}" id="c-tab-tech" onclick="switchContextTab('tech')">🛠️ tech-context</button>
+              <button class="editor-tab-btn ${currentContextTab === 'standards' ? 'active' : ''}" id="c-tab-standards" onclick="switchContextTab('standards')">📜 company-standards</button>
+              <button class="editor-tab-btn ${currentContextTab === 'learnings' ? 'active' : ''}" id="c-tab-learnings" onclick="switchContextTab('learnings')">🧠 learnings</button>
+              <button class="editor-tab-btn ${currentContextTab === 'adrs' ? 'active' : ''}" id="c-tab-adrs" onclick="switchContextTab('adrs')">📐 ADRs y Decisiones</button>
             </div>
-            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <div id="contextStandardActions" style="display: ${currentContextTab === 'adrs' ? 'none' : 'flex'}; gap: 8px; flex-wrap: wrap;">
               <button class="btn-secondary" onclick="cloneTenantRepos(currentActiveTenant)">⬇️ Clonar Repos</button>
               <button class="btn-secondary" onclick="openTenantFolder()">📁 Abrir Carpeta</button>
               <button class="btn-primary" onclick="saveContextFile()">💾 Guardar Cambios</button>
             </div>
           </div>
 
-          <textarea id="contextEditor" class="editor-textarea" spellcheck="false" placeholder="Cargando archivo de contexto..."></textarea>
+          <textarea id="contextEditor" class="editor-textarea" style="display: ${currentContextTab === 'adrs' ? 'none' : 'block'};" spellcheck="false" placeholder="Cargando archivo de contexto..."></textarea>
 
-          <div class="gate-box" style="margin-top: 6px;">
+          <div id="adrContainerView" style="display: ${currentContextTab === 'adrs' ? 'block' : 'none'};"></div>
+
+          <div class="gate-box" id="cloneHelpBox" style="margin-top: 6px; display: ${currentContextTab === 'adrs' ? 'none' : 'block'};">
             <div class="gate-title">
               <span>🚀 Cómo clonar repositorios para este tenant:</span>
             </div>
@@ -1899,14 +2647,31 @@ ${reqs}`;
     }
 
     function renderGatesTab(activeTicket) {
-      if (activeTicket && activeTicket.gates && activeTicket.gates.length > 0) {
-        let html = '';
-        activeTicket.gates.forEach(g => {
+      if (detectedGates.length === 0) {
+        fetchDetectedGates();
+      }
+
+      let html = '';
+
+      // Auto-detected Quality Gates from client code
+      if (detectedGates && detectedGates.length > 0) {
+        html += `
+          <div style="margin-bottom: 14px;">
+            <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--border-accent); margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+              <span>🔍 Quality Gates Detectados Automáticamente en Proyecto/</span>
+            </div>
+        `;
+        detectedGates.forEach(g => {
           html += `
             <div class="gate-box">
               <div class="gate-title">
-                <span>🛡️ ${g.name}</span>
-                <span style="font-size: 11px; color: var(--success); font-weight: 600;">Definido</span>
+                <div>
+                  <strong>${g.framework}</strong> &bull; <span style="font-size: 11px; color: var(--text-muted);">${g.type}</span>
+                  ${g.repo ? `<span style="font-size: 10px; color: var(--border-accent); margin-left: 6px;">(Proyecto/${g.repo})</span>` : ''}
+                </div>
+                <div style="display: flex; gap: 6px;">
+                  <button class="gate-run-btn" onclick="runQualityGateFromUI('${g.command.replace(/'/g, "\\'")}', '${g.repo || ''}')">▶️ Ejecutar Gate</button>
+                </div>
               </div>
               <div class="gate-code">
                 <span>${g.command}</span>
@@ -1915,9 +2680,52 @@ ${reqs}`;
             </div>
           `;
         });
-        return html;
+        html += '</div>';
       }
-      return '<div style="color: var(--text-muted); padding: 18px; text-align: center;">No hay Quality Gates definidos en este ticket.</div>';
+
+      // Quality Gates defined in Ticket
+      if (activeTicket && activeTicket.gates && activeTicket.gates.length > 0) {
+        html += `
+          <div style="margin-bottom: 14px;">
+            <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-dim); margin-bottom: 8px;">
+              🛡️ Quality Gates Definidos en este Ticket
+            </div>
+        `;
+        activeTicket.gates.forEach(g => {
+          html += `
+            <div class="gate-box">
+              <div class="gate-title">
+                <span>🛡️ ${g.name}</span>
+                <div style="display: flex; gap: 6px;">
+                  <button class="gate-run-btn" onclick="runQualityGateFromUI('${g.command.replace(/'/g, "\\'")}')">▶️ Ejecutar Gate</button>
+                </div>
+              </div>
+              <div class="gate-code">
+                <span>${g.command}</span>
+                <button class="copy-btn" onclick="copyToClipboard('${g.command.replace(/'/g, "\\'")}', this)">Copiar</button>
+              </div>
+            </div>
+          `;
+        });
+        html += '</div>';
+      }
+
+      // Custom Command Execution Terminal
+      html += `
+        <div class="gate-box" style="margin-top: 14px; border-color: var(--border-accent);">
+          <div class="gate-title">
+            <span>⚡ Ejecutar Comando Interactivo en Proyecto/ (Terminal del Repo)</span>
+          </div>
+          <div style="display: flex; gap: 8px; margin-top: 6px;">
+            <input type="text" id="customGateCommandInput" class="form-input" placeholder="ej. dotnet test, npm test, pytest..." style="flex: 1;" onkeydown="if(event.key==='Enter') runQualityGateFromUI(this.value)">
+            <button class="gate-run-btn" onclick="runQualityGateFromUI(document.getElementById('customGateCommandInput').value)">▶️ Ejecutar</button>
+          </div>
+        </div>
+
+        <div id="gateRunResultContainer" style="display: none; margin-top: 14px;"></div>
+      `;
+
+      return html;
     }
 
     function renderLogsTab(activeTicket) {
