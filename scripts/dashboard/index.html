@@ -477,6 +477,7 @@
     dialog#promptGeneratorModal { max-width: 720px; }
     dialog#gitDiffModal { max-width: 780px; }
     dialog#newAdrModal { max-width: 720px; }
+    dialog#learningsModal { max-width: 680px; }
 
     dialog::backdrop {
       background: rgba(0, 0, 0, 0.75);
@@ -1163,6 +1164,25 @@
     </form>
   </dialog>
 
+  <!-- Continuous Memory & Learnings Modal (Native Accessible HTML Dialog per MWG) -->
+  <dialog id="learningsModal" closedby="any" aria-labelledby="learnings-modal-title">
+    <div class="modal-title" id="learnings-modal-title">
+      <span>🧠</span> Memoria Continua & Aprendizajes
+    </div>
+    <div class="modal-desc">
+      Convenciones, gotchas y trampas técnicas aprendidas por el agente en este tenant (registradas en <code>tasks/context/learnings.md</code>).
+    </div>
+
+    <div id="learningsModalBody" style="margin-bottom: 18px; max-height: 340px; overflow-y: auto;">
+      <!-- Injected by JS -->
+    </div>
+
+    <div class="modal-actions" style="margin-top: 18px;">
+      <button type="button" class="btn-secondary" onclick="closeLearningsModal()">Cerrar</button>
+      <button type="button" class="btn-primary" onclick="goToLearningsEditor()">⚙️ Abrir Editor de Contexto</button>
+    </div>
+  </dialog>
+
   <!-- Toast Notification -->
   <div class="toast" id="toastNotification" style="display: none;">
     <span id="toastIcon">✓</span>
@@ -1172,6 +1192,7 @@
   <script>
     let currentActiveTenant = '';
     let selectedTicketSlug = null;
+    let currentRepoBranch = null;
     let currentTab = 'tasks';
     let currentContextTab = 'team';
     let cachedContextFiles = {};
@@ -1185,6 +1206,7 @@
     const promptGeneratorDialog = document.getElementById('promptGeneratorModal');
     const gitDiffDialog = document.getElementById('gitDiffModal');
     const newAdrDialog = document.getElementById('newAdrModal');
+    const learningsDialog = document.getElementById('learningsModal');
 
     let stagedImportJson = null;
     let stagedDeleteSlug = null;
@@ -2134,8 +2156,43 @@ ${reqs}`;
     }
 
     function onSelectTicket(val) {
-      selectedTicketSlug = val;
+      selectedTicketSlug = val ? val : 'none';
       fetchStatus();
+    }
+
+    function openLearningsModal() {
+      const modal = document.getElementById('learningsModal');
+      const body = document.getElementById('learningsModalBody');
+      if (latestServerData && latestServerData.gotchas && latestServerData.gotchas.length > 0) {
+        body.innerHTML = `
+          <ul class="gotchas-list" style="margin: 0; gap: 8px;">
+            ${latestServerData.gotchas.map(g => `
+              <li style="background: var(--surface); padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border); display: flex; align-items: flex-start; gap: 8px;">
+                <span style="font-size: 14px;">💡</span>
+                <span style="line-height: 1.45; color: var(--text);">${g}</span>
+              </li>
+            `).join('')}
+          </ul>
+        `;
+      } else {
+        body.innerHTML = `
+          <div style="color: var(--text-muted); font-size: 13px; text-align: center; padding: 24px; background: var(--surface); border-radius: 8px; border: 1px solid var(--border);">
+            No hay gotchas o trampas registradas aún en <code>tasks/context/learnings.md</code> para este tenant.<br>
+            <span style="font-size: 11px; color: var(--text-dim); margin-top: 6px; display: inline-block;">Las convenciones técnicas que agregues allí aparecerán aquí automáticamente.</span>
+          </div>
+        `;
+      }
+      modal.showModal();
+    }
+
+    function closeLearningsModal() {
+      document.getElementById('learningsModal').close();
+    }
+
+    function goToLearningsEditor() {
+      closeLearningsModal();
+      switchTab('context');
+      switchContextTab('learnings');
     }
 
     function openTenantFolder() {
@@ -2250,76 +2307,102 @@ ${reqs}`;
         return;
       }
 
+      // Find selected tenant info
+      const curTenantObj = data.tenants.find(t => t.slug === currentActiveTenant) || data.tenants[0];
+      const curRepoObj = (curTenantObj && curTenantObj.repos && curTenantObj.repos.length > 0) ? curTenantObj.repos[0] : null;
+      const curRepoName = curRepoObj ? (typeof curRepoObj === 'string' ? curRepoObj : curRepoObj.name) : '';
+      const curRepoBranch = (curRepoObj && typeof curRepoObj === 'object') ? curRepoObj.branch : 'main';
+      const curRepoDirty = (curRepoObj && typeof curRepoObj === 'object') ? curRepoObj.dirty_count : 0;
+
+      // Auto-detect git branch change in repository
+      if (currentRepoBranch !== null && curRepoBranch && currentRepoBranch !== curRepoBranch) {
+        selectedTicketSlug = null;
+        showToast(`Detectada rama Git: ${curRepoBranch}`, '🌿');
+      }
+      currentRepoBranch = curRepoBranch;
+
       // 3. Update Ticket Dropdown for selected tenant
       const hasTickets = data.tickets && data.tickets.length > 0;
       if (hasTickets) {
         ticketSelectContainer.style.display = 'flex';
-        let opts = '';
+        let opts = `<option value="">🌿 Rama: ${curRepoBranch || 'actual'} ${data.active_ticket ? '' : '(Sin ticket activo)'}</option>`;
         data.tickets.forEach(t => {
-          opts += `<option value="${t.slug}">${t.title} (${t.pct}%)</option>`;
+          const isCurrentActive = data.active_ticket && data.active_ticket.slug === t.slug;
+          opts += `<option value="${t.slug}">${t.title} (${t.pct}%) ${isCurrentActive ? '●' : ''}</option>`;
         });
         ticketSelector.innerHTML = opts;
-        if (selectedTicketSlug) {
+        if (selectedTicketSlug && selectedTicketSlug !== 'none') {
           ticketSelector.value = selectedTicketSlug;
         } else if (data.active_ticket) {
           ticketSelector.value = data.active_ticket.slug;
+        } else {
+          ticketSelector.value = '';
         }
       } else {
         ticketSelectContainer.style.display = 'none';
       }
 
-      // Find selected tenant info
-      const curTenantObj = data.tenants.find(t => t.slug === currentActiveTenant) || data.tenants[0];
-
       // 4. Construct Content based on whether an Active Ticket exists
       let contentHtml = '';
+
+      // Continuous memory / gotchas (closed by default)
+      let gotchasHtml = '';
+      if (data.gotchas && data.gotchas.length > 0) {
+        gotchasHtml = `
+          <details style="margin-bottom: 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 8px 14px; font-size: 12px;">
+            <summary style="cursor: pointer; font-weight: 700; color: var(--warning); display: flex; align-items: center; justify-content: space-between; user-select: none;">
+              <span style="display: flex; align-items: center; gap: 6px;">
+                <span>🧠</span> Memoria Continua (${data.gotchas.length} notas aprendidas)
+              </span>
+              <span style="font-size: 11px; color: var(--text-dim); font-weight: 500;">Clic para ver notas ▾</span>
+            </summary>
+            <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border);">
+              <ul class="gotchas-list" style="margin: 0; padding-left: 0; gap: 6px;">
+                ${data.gotchas.map(g => `<li style="display: flex; align-items: flex-start; gap: 6px;"><span>💡</span><span>${g}</span></li>`).join('')}
+              </ul>
+              <div style="margin-top: 10px; text-align: right;">
+                <button class="btn-secondary" onclick="openLearningsModal()" style="font-size: 10px; padding: 4px 8px;">Ampliar en Modal</button>
+              </div>
+            </div>
+          </details>
+        `;
+      }
+
+      let gitOpsBarHtml = `
+        <div class="git-ops-bar">
+          <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+            <span style="font-size: 11px; font-weight: 700; color: var(--text-muted);">GIT REPO:</span>
+            <span style="font-size: 11px; font-weight: 700; color: #fff;">${curRepoName || 'Proyecto'}</span>
+            <span style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px;">🌿 ${curRepoBranch}</span>
+            ${curRepoDirty > 0 ? `<span style="color: var(--warning); font-size: 11px; font-weight: 600;">● ${curRepoDirty} cambios sin commit</span>` : `<span style="color: var(--success); font-size: 11px; font-weight: 600;">✓ Working tree limpio</span>`}
+          </div>
+          <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+            ${data.active_ticket ? `
+              <button class="btn-secondary" onclick="createTicketBranch('feature/${data.active_ticket.slug}', '${curRepoName}')" style="font-size: 11px;" title="Crear rama feature/${data.active_ticket.slug}">
+                🌿 Rama feature/${data.active_ticket.slug}
+              </button>
+            ` : `
+              <button class="btn-primary" onclick="openPromptGeneratorModal()" style="font-size: 11px;" title="Generar prompt de orquestación">
+                ✨ Orquestar Ticket
+              </button>
+            `}
+            <button class="btn-secondary" onclick="openGitDiffModal('${curRepoName}')" style="font-size: 11px;" title="Ver cambios pendientes y diff unificado">
+              📊 Ver Git Diff
+            </button>
+            <button class="btn-secondary" onclick="openLearningsModal()" style="font-size: 11px;" title="Abrir memoria y aprendizajes técnicos de este tenant">
+              🧠 Memoria (${data.gotchas ? data.gotchas.length : 0})
+            </button>
+          </div>
+        </div>
+      `;
 
       // --- Stepper & Ticket Details Section ---
       if (data.active_ticket) {
         const at = data.active_ticket;
 
-        // Resolve active repo information
-        const curRepoObj = (curTenantObj.repos && curTenantObj.repos.length > 0) ? curTenantObj.repos[0] : null;
-        const curRepoName = curRepoObj ? (typeof curRepoObj === 'string' ? curRepoObj : curRepoObj.name) : '';
-        const curRepoBranch = (curRepoObj && typeof curRepoObj === 'object') ? curRepoObj.branch : 'main';
-        const curRepoDirty = (curRepoObj && typeof curRepoObj === 'object') ? curRepoObj.dirty_count : 0;
-
-        let gotchasHtml = '';
-        if (data.gotchas && data.gotchas.length > 0) {
-          gotchasHtml = `
-            <div class="gotchas-box">
-              <div class="gotchas-title">
-                <span>🧠 Memoria Continua &bull; Gotchas y Trampas Conocidas</span>
-              </div>
-              <ul class="gotchas-list">
-                ${data.gotchas.map(g => `<li><span>💡</span><span>${g}</span></li>`).join('')}
-              </ul>
-            </div>
-          `;
-        }
-
-        let gitOpsBarHtml = `
-          <div class="git-ops-bar">
-            <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-              <span style="font-size: 11px; font-weight: 700; color: var(--text-muted);">GIT REPO:</span>
-              <span style="font-size: 11px; font-weight: 700; color: #fff;">${curRepoName || 'Proyecto'}</span>
-              <span style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px;">🌿 ${curRepoBranch}</span>
-              ${curRepoDirty > 0 ? `<span style="color: var(--warning); font-size: 11px; font-weight: 600;">● ${curRepoDirty} cambios sin commit</span>` : `<span style="color: var(--success); font-size: 11px; font-weight: 600;">✓ Working tree limpio</span>`}
-            </div>
-            <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-              <button class="btn-secondary" onclick="createTicketBranch('feature/${at.slug}', '${curRepoName}')" style="font-size: 11px;" title="Crear rama feature/${at.slug}">
-                🌿 Crear Rama feature/${at.slug}
-              </button>
-              <button class="btn-secondary" onclick="openGitDiffModal('${curRepoName}')" style="font-size: 11px;" title="Ver cambios pendientes y diff unificado">
-                📊 Ver Git Diff
-              </button>
-            </div>
-          </div>
-        `;
-
         contentHtml += `
-          ${gotchasHtml}
           ${gitOpsBarHtml}
+          ${gotchasHtml}
 
           <div class="stepper-card">
             <div class="section-title">
@@ -2402,12 +2485,15 @@ ${reqs}`;
           </div>
         `;
       } else {
-        // Tenant without active tickets: Sleek metadata summary
+        // Tenant without active tickets on current branch: Sleek metadata summary
         contentHtml += `
+          ${gitOpsBarHtml}
+          ${gotchasHtml}
           <div class="stepper-card">
             <div class="section-title">
-              <span>Espacio de Trabajo Activo: <strong>${curTenantObj.name}</strong></span>
+              <span>Espacio de Trabajo: <strong>${curTenantObj.name}</strong> &bull; Rama Git: <code>${curRepoBranch}</code></span>
               <div style="display: flex; gap: 8px; align-items: center;">
+                <button class="btn-primary" onclick="openPromptGeneratorModal()" style="font-size: 11px;">✨ Orquestar Ticket</button>
                 <button class="btn-secondary" onclick="openTenantFolder()" style="font-size: 11px;">📁 Abrir Carpeta</button>
                 <button class="btn-secondary" onclick="switchTab('context')" style="font-size: 11px;">⚙️ Configurar Contexto</button>
               </div>
@@ -2420,12 +2506,12 @@ ${reqs}`;
               <div style="background: var(--surface); padding: 12px; border-radius: 8px; border: 1px solid var(--border);">
                 <div style="font-size: 11px; color: var(--text-muted); font-weight: 600;">REPOSITORIOS CLONADOS</div>
                 <div style="font-size: 13px; font-weight: 700; color: #fff; margin-top: 4px;">
-                  ${curTenantObj.repos && curTenantObj.repos.length > 0 ? curTenantObj.repos.join(', ') : '0 repos (clonar en Proyecto/)'}
+                  ${curTenantObj.repos && curTenantObj.repos.length > 0 ? (typeof curTenantObj.repos[0] === 'object' ? curTenantObj.repos.map(r => r.name).join(', ') : curTenantObj.repos.join(', ')) : '0 repos (clonar en Proyecto/)'}
                 </div>
               </div>
               <div style="background: var(--surface); padding: 12px; border-radius: 8px; border: 1px solid var(--border);">
-                <div style="font-size: 11px; color: var(--text-muted); font-weight: 600;">TICKETS DE DESARROLLO</div>
-                <div style="font-size: 13px; font-weight: 700; color: #fff; margin-top: 4px;">0 tickets activos</div>
+                <div style="font-size: 11px; color: var(--text-muted); font-weight: 600;">ESTADO DE LA RAMA</div>
+                <div style="font-size: 13px; font-weight: 700; color: #38bdf8; margin-top: 4px;">🌿 ${curRepoBranch} (Listo para nuevo ticket)</div>
               </div>
             </div>
           </div>

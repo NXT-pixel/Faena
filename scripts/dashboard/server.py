@@ -304,6 +304,46 @@ def scan_tickets_for_tenant(tenant_slug):
     return tickets
 
 
+def is_base_branch(branch_name):
+    if not branch_name:
+        return True
+    clean = branch_name.lower().strip()
+    return clean in {"main", "master", "develop", "dev", "trunk", "release", "unknown", "no-git"}
+
+
+def find_matching_ticket_for_branch(branch_name, tickets):
+    if not branch_name or is_base_branch(branch_name) or not tickets:
+        return None
+    clean_branch = re.sub(r"^(feature|fix|bugfix|chore|refactor|task|ticket)/", "", branch_name.lower().strip())
+
+    # 1. Exact match with ticket slug or stripped slug
+    for t in tickets:
+        t_slug = t["slug"].lower()
+        clean_slug = re.sub(r"^(task|ticket)-", "", t_slug)
+        if clean_branch == t_slug or clean_branch == clean_slug:
+            return t
+
+    # 2. Substring match
+    for t in tickets:
+        t_slug = t["slug"].lower()
+        clean_slug = re.sub(r"^(task|ticket)-", "", t_slug)
+        if clean_slug in clean_branch or clean_branch in clean_slug:
+            return t
+        if t_slug in clean_branch or clean_branch in t_slug:
+            return t
+
+    # 3. Numeric ID match (e.g. task-001 vs branch 001)
+    m_branch = re.search(r"(\d{2,})", clean_branch)
+    if m_branch:
+        num = m_branch.group(1)
+        for t in tickets:
+            m_t = re.search(r"(\d{2,})", t["slug"])
+            if m_t and m_t.group(1) == num:
+                return t
+
+    return None
+
+
 def inspect_git_repo(repo_path):
     p = Path(repo_path)
     if not p.exists() or not (p / ".git").exists():
@@ -1250,14 +1290,43 @@ class DashboardRequestHandler(BaseHTTPRequestHandler):
             tickets = scan_tickets_for_tenant(active_tenant_slug) if active_tenant_slug else []
             active_ticket = None
 
-            if selected_ticket_slug:
+            # Resolve active git branch for active tenant
+            active_tenant_obj = next((t for t in all_tenants if t["slug"] == active_tenant_slug), None)
+            active_branch = ""
+            if active_tenant_obj and active_tenant_obj.get("repos"):
+                first_repo = active_tenant_obj["repos"][0]
+                if isinstance(first_repo, dict):
+                    active_branch = first_repo.get("branch", "")
+
+            # 1. Manual selection: if user explicitly requested a specific ticket slug
+            if selected_ticket_slug and selected_ticket_slug != "none":
                 for t in tickets:
                     if t["slug"] == selected_ticket_slug:
                         active_ticket = t
                         break
-            
-            if not active_ticket and tickets:
-                active_ticket = tickets[0]
+
+            # 2. Manual selection: if user explicitly requested "none" (clean tenant view)
+            elif selected_ticket_slug == "none":
+                active_ticket = None
+
+            # 3. Automatic branch-aware resolution when no manual ticket is forced:
+            else:
+                if active_branch and not is_base_branch(active_branch):
+                    # Check if the active branch corresponds to an existing ticket
+                    matched = find_matching_ticket_for_branch(active_branch, tickets)
+                    if matched:
+                        active_ticket = matched
+                    else:
+                        # User switched to a new branch for another ticket where task-* doesn't exist yet!
+                        # Do NOT show the past ticket from an old branch.
+                        active_ticket = None
+                elif is_base_branch(active_branch):
+                    # User is on main/master: only show an in-progress ticket (< 100%), never an old 100% finished one
+                    in_progress = [t for t in tickets if t.get("percentage", 0) < 100]
+                    active_ticket = in_progress[0] if in_progress else None
+                else:
+                    in_progress = [t for t in tickets if t.get("percentage", 0) < 100]
+                    active_ticket = in_progress[0] if in_progress else None
 
             # Extract gotchas from learnings.md for continuous memory widget
             gotchas = []
