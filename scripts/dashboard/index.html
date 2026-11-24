@@ -7,6 +7,7 @@
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏭</text></svg>">
   <style>
     :root {
+      color-scheme: dark;
       --bg: #090d16;
       --surface: #0f172a;
       --card: #131d31;
@@ -27,6 +28,7 @@
     }
 
     [data-theme="light"] {
+      color-scheme: light;
       --bg: #f8fafc;
       --surface: #ffffff;
       --card: #ffffff;
@@ -47,6 +49,7 @@
     }
 
     [data-theme="oled"] {
+      color-scheme: dark;
       --bg: #000000;
       --surface: #050505;
       --card: #0a0a0a;
@@ -438,7 +441,7 @@
       background: var(--code-bg);
       border: 1px solid var(--border);
       border-radius: 8px;
-      color: #cbd5e1;
+      color: var(--text);
       font-family: Consolas, monospace;
       font-size: 13px;
       padding: 14px;
@@ -449,27 +452,41 @@
     .editor-textarea:focus { border-color: var(--border-accent); }
 
     /* Modern Native Dialog Styling (per Modern Web Guidance) */
-    dialog#createTenantModal {
+    dialog {
+      position: fixed;
+      inset: 0;
       margin: auto;
       border: 1px solid var(--border);
       border-radius: 16px;
       background: var(--card);
       color: var(--text);
-      max-width: 520px;
+      max-width: 600px;
       width: calc(100% - 40px);
+      max-height: calc(100vh - 60px);
+      overflow-y: auto;
       padding: 24px;
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.75);
       overscroll-behavior: contain;
+      z-index: 1000;
     }
+    dialog:focus-visible { outline: none; }
+    dialog#createTenantModal { max-width: 520px; }
+    dialog#importTenantModal { max-width: 540px; }
+    dialog#deleteTenantModal { max-width: 480px; }
+    dialog#diagnosticsModal { max-width: 680px; }
+    dialog#promptGeneratorModal { max-width: 720px; }
+    dialog#gitDiffModal { max-width: 780px; }
+    dialog#newAdrModal { max-width: 720px; }
+
     dialog::backdrop {
       background: rgba(0, 0, 0, 0.75);
       backdrop-filter: blur(6px);
       overscroll-behavior: contain;
     }
-    .modal-title { font-size: 18px; font-weight: 700; color: #fff; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
-    .modal-desc { font-size: 12px; color: var(--text-muted); margin-bottom: 18px; }
+    .modal-title { font-size: 18px; font-weight: 700; color: var(--text); margin-bottom: 6px; display: flex; align-items: center; gap: 8px; }
+    .modal-desc { font-size: 13px; color: var(--text-muted); margin-bottom: 18px; line-height: 1.5; }
     .form-group { margin-bottom: 14px; }
-    .form-label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 5px; color: #e2e8f0; }
+    .form-label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 6px; color: var(--text); }
     .form-input {
       width: 100%;
       background: var(--surface);
@@ -477,7 +494,7 @@
       border-radius: 8px;
       padding: 9px 12px;
       font-size: 13px;
-      color: #fff;
+      color: var(--text);
       outline: none;
       transition: border-color 0.15s ease;
     }
@@ -1001,7 +1018,7 @@
   </dialog>
 
   <!-- Diagnostics Modal Dialog (Native Accessible HTML Dialog per MWG) -->
-  <dialog id="diagnosticsModal" closedby="any" aria-labelledby="diag-title" style="max-width: 680px;">
+  <dialog id="diagnosticsModal" closedby="any" aria-labelledby="diag-title">
     <div class="modal-title" id="diag-title">
       <span>🩺</span> Diagnóstico de Integridad del Arnés Faena
     </div>
@@ -1026,7 +1043,7 @@
 
       <details style="margin-top: 14px; font-size: 12px; color: var(--text-muted);">
         <summary style="cursor: pointer; font-weight: 600;">Ver salida cruda de terminal</summary>
-        <pre id="diagRawOutput" style="background: var(--code-bg); padding: 10px; border-radius: 6px; font-family: monospace; font-size: 11px; margin-top: 6px; max-height: 140px; overflow-y: auto; white-space: pre-wrap; color: #cbd5e1;"></pre>
+        <pre id="diagRawOutput" style="background: var(--code-bg); padding: 10px; border-radius: 6px; font-family: monospace; font-size: 11px; margin-top: 6px; max-height: 140px; overflow-y: auto; white-space: pre-wrap; color: var(--text-muted);"></pre>
       </details>
     </div>
 
@@ -1037,7 +1054,7 @@
   </dialog>
 
   <!-- Smart Ticket Prompt Generator Modal (Native Accessible HTML Dialog per MWG) -->
-  <dialog id="promptGeneratorModal" closedby="any" aria-labelledby="prompt-gen-title" style="max-width: 680px;">
+  <dialog id="promptGeneratorModal" closedby="any" aria-labelledby="prompt-gen-title">
     <div class="modal-title" id="prompt-gen-title">
       <span>✨</span> Generador de Prompt para Orquestación
     </div>
@@ -1058,8 +1075,11 @@
     </div>
 
     <div class="form-group">
-      <label class="form-label" for="promptRequirements">Requerimientos / Criterios de Aceptación (Jira/GitHub/User Story): *</label>
-      <textarea id="promptRequirements" class="editor-textarea" style="height: 110px; font-size: 12px;" placeholder="Pega aquí el ticket o historia de usuario..." oninput="updateGeneratedPrompt()"></textarea>
+      <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px;">
+        <label class="form-label" for="promptRequirements" style="margin-bottom: 0;">Requerimientos / Criterios de Aceptación (Jira/GitHub/User Story): *</label>
+        <span style="font-size: 11px; color: var(--text-dim); font-family: monospace;">Shift+Enter o Enter: nueva línea &bull; Ctrl+Enter: copiar</span>
+      </div>
+      <textarea id="promptRequirements" class="editor-textarea" style="height: 120px; font-size: 12px; line-height: 1.5;" placeholder="Pega aquí el ticket o historia de usuario..." oninput="updateGeneratedPrompt()"></textarea>
     </div>
 
     <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-dim); margin-top: 10px; margin-bottom: 6px;">
@@ -1067,7 +1087,7 @@
     </div>
 
     <div class="gate-code" style="padding: 12px; max-height: 140px; overflow-y: auto;">
-      <pre id="generatedPromptText" style="white-space: pre-wrap; font-size: 12px; color: #93c5fd; margin: 0;"></pre>
+      <pre id="generatedPromptText" style="white-space: pre-wrap; font-size: 12px; color: var(--primary); margin: 0;"></pre>
     </div>
 
     <div class="modal-actions" style="margin-top: 18px;">
@@ -1077,7 +1097,7 @@
   </dialog>
 
   <!-- Git Diff Inspector Modal (Native Accessible HTML Dialog per MWG) -->
-  <dialog id="gitDiffModal" closedby="any" aria-labelledby="diff-modal-title" style="max-width: 780px;">
+  <dialog id="gitDiffModal" closedby="any" aria-labelledby="diff-modal-title">
     <div class="modal-title" id="diff-modal-title">
       <span>📊</span> Inspección de Git Diff & Cambios Pendientes
     </div>
@@ -1107,7 +1127,7 @@
       <pre id="diffStatSummary" style="background: var(--code-bg); padding: 8px 12px; border-radius: 6px; font-family: monospace; font-size: 11px; color: #93c5fd; margin-bottom: 12px;"></pre>
 
       <div style="font-size: 11px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; margin-bottom: 6px;">Diff Unificado:</div>
-      <pre id="diffPatchViewer" style="background: var(--code-bg); padding: 12px; border-radius: 8px; font-family: Consolas, monospace; font-size: 11px; color: #cbd5e1; max-height: 240px; overflow-y: auto; white-space: pre-wrap; line-height: 1.45;"></pre>
+      <pre id="diffPatchViewer" style="background: var(--code-bg); padding: 12px; border-radius: 8px; font-family: Consolas, monospace; font-size: 11px; color: var(--text); max-height: 240px; overflow-y: auto; white-space: pre-wrap; line-height: 1.45;"></pre>
     </div>
 
     <div class="modal-actions" style="margin-top: 18px;">
@@ -1117,7 +1137,7 @@
   </dialog>
 
   <!-- New ADR Modal Dialog (Native Accessible HTML Dialog per MWG) -->
-  <dialog id="newAdrModal" closedby="any" aria-labelledby="adr-modal-title" style="max-width: 720px;">
+  <dialog id="newAdrModal" closedby="any" aria-labelledby="adr-modal-title">
     <div class="modal-title" id="adr-modal-title">
       <span>📐</span> Registrar Decisión de Arquitectura (ADR)
     </div>
@@ -1528,10 +1548,43 @@
 
     /* Global Keyboard Hotkeys */
     document.addEventListener('keydown', (e) => {
-      const activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
+      const activeEl = document.activeElement;
+      const activeTag = activeEl ? activeEl.tagName.toLowerCase() : '';
       if (activeTag === 'input' || activeTag === 'textarea' || activeTag === 'select') {
         if (e.key === 'Escape') {
           document.querySelectorAll('dialog').forEach(d => { if (d.open) d.close(); });
+          return;
+        }
+        if (activeTag === 'textarea') {
+          // Explicit Shift+Enter: Ensure newline is always inserted at cursor in any textarea
+          if (e.key === 'Enter' && e.shiftKey) {
+            e.preventDefault();
+            const start = activeEl.selectionStart;
+            const end = activeEl.selectionEnd;
+            activeEl.value = activeEl.value.substring(0, start) + "\n" + activeEl.value.substring(end);
+            activeEl.selectionStart = activeEl.selectionEnd = start + 1;
+            activeEl.dispatchEvent(new Event('input', { bubbles: true }));
+            return;
+          }
+          // Ctrl+Enter or Cmd+Enter inside promptGeneratorModal requirements copies prompt
+          if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+            if (activeEl.id === 'promptRequirements') {
+              e.preventDefault();
+              const btn = document.querySelector('#promptGeneratorModal .btn-primary');
+              if (btn) copyGeneratedPrompt(btn);
+              return;
+            }
+          }
+          // Tab in editor textareas inserts 2 spaces instead of losing focus
+          if (e.key === 'Tab' && activeEl.classList.contains('editor-textarea')) {
+            e.preventDefault();
+            const start = activeEl.selectionStart;
+            const end = activeEl.selectionEnd;
+            activeEl.value = activeEl.value.substring(0, start) + "  " + activeEl.value.substring(end);
+            activeEl.selectionStart = activeEl.selectionEnd = start + 2;
+            activeEl.dispatchEvent(new Event('input', { bubbles: true }));
+            return;
+          }
         }
         return;
       }
@@ -1730,7 +1783,8 @@
     function updateGeneratedPrompt() {
       const title = document.getElementById('promptTicketTitle').value.trim() || 'TITULO-O-ID-DEL-TICKET';
       const repo = document.getElementById('promptTargetRepo').value || 'Proyecto/<repositorio>';
-      const reqs = document.getElementById('promptRequirements').value.trim() || 'Describe aquí los requerimientos del ticket...';
+      const rawReqs = document.getElementById('promptRequirements').value;
+      const reqs = (rawReqs && rawReqs.trim().length > 0) ? rawReqs.replace(/^\s*\n/, '') : 'Describe aquí los requerimientos del ticket...';
       const tenant = currentActiveTenant || 'default';
 
       const prompt = `@commands/orchestrate.md
