@@ -1,6 +1,6 @@
 ---
 description: Usar al ejecutar un archivo de tarea TDD generado por commands/3-create-tasks.md (tasks/task-<ticket>/taskNN-*.md). Aplica la disciplina RED -> GREEN -> VERIFY y los quality gates reales del repo del cliente en Proyecto/.
-globs: tasks/task-*/task*.md
+globs: tasks/task-*/task*.md, tenants/*/tasks/task-*/task*.md
 alwaysApply: false
 ---
 

@@ -72,7 +72,7 @@ if (-not (Test-Path -LiteralPath $targetTenantDir -PathType Container)) {
 }
 
 # Guardar en .active-tenant
-[System.IO.File]::WriteAllText($activeTenantFile, $slug, [System.Text.Encoding]::UTF8)
+[System.IO.File]::WriteAllText($activeTenantFile, $slug, (New-Object System.Text.UTF8Encoding($false)))
 
 Write-Host "============================================================" -ForegroundColor Green
 Write-Host "        [OK] Tenant Activo Cambiado Exitosamente             " -ForegroundColor Green

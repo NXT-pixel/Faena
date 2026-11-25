@@ -75,7 +75,7 @@ $teamContext = @"
 ## 3. Protocolo de Handoff
 Todo ticket debe culminar con un resumen de handoff claro para QA y DevOps.
 "@
-[System.IO.File]::WriteAllText((Join-Path $contextDir 'team-context.md'), $teamContext, [System.Text.Encoding]::UTF8)
+[System.IO.File]::WriteAllText((Join-Path $contextDir 'team-context.md'), $teamContext, (New-Object System.Text.UTF8Encoding($false)))
 
 # 3. tech-context.md
 $techContext = @"
@@ -95,7 +95,7 @@ $techContext = @"
 - **Build:** [Ej. dotnet build / npm run build]
 - **Tests unitarios:** [Ej. dotnet test / npm test]
 "@
-[System.IO.File]::WriteAllText((Join-Path $contextDir 'tech-context.md'), $techContext, [System.Text.Encoding]::UTF8)
+[System.IO.File]::WriteAllText((Join-Path $contextDir 'tech-context.md'), $techContext, (New-Object System.Text.UTF8Encoding($false)))
 
 # 4. project-structure.md
 $projStructure = @"
@@ -110,7 +110,7 @@ Los repositorios del cliente viven dentro de \`tenants/$slug/Proyecto/<repo>/\`.
 
 - *(Aun no hay repositorios clonados. Clona los repositorios del cliente aqui).*
 "@
-[System.IO.File]::WriteAllText((Join-Path $contextDir 'project-structure.md'), $projStructure, [System.Text.Encoding]::UTF8)
+[System.IO.File]::WriteAllText((Join-Path $contextDir 'project-structure.md'), $projStructure, (New-Object System.Text.UTF8Encoding($false)))
 
 # 5. learnings.md
 $learnings = @"
@@ -124,7 +124,7 @@ Registra aqui convenciones, trampas y decisiones de diseno especificas de este t
 ## Convenciones y Decisiones
 - *(Pendiente de primeros tickets)*
 "@
-[System.IO.File]::WriteAllText((Join-Path $contextDir 'learnings.md'), $learnings, [System.Text.Encoding]::UTF8)
+[System.IO.File]::WriteAllText((Join-Path $contextDir 'learnings.md'), $learnings, (New-Object System.Text.UTF8Encoding($false)))
 
 # 6. progress.md
 $progress = @"
@@ -133,7 +133,7 @@ $progress = @"
 **Tenant:** \`$slug\`  
 **Estado:** Inicializado y listo para recibir tickets.
 "@
-[System.IO.File]::WriteAllText((Join-Path $contextDir 'progress.md'), $progress, [System.Text.Encoding]::UTF8)
+[System.IO.File]::WriteAllText((Join-Path $contextDir 'progress.md'), $progress, (New-Object System.Text.UTF8Encoding($false)))
 
 # 7. system-patterns.md
 $patterns = @"
@@ -142,7 +142,7 @@ $patterns = @"
 **Tenant:** \`$slug\`  
 Patrones arquitectonicos y de diseno aprobados para este tenant.
 "@
-[System.IO.File]::WriteAllText((Join-Path $contextDir 'system-patterns.md'), $patterns, [System.Text.Encoding]::UTF8)
+[System.IO.File]::WriteAllText((Join-Path $contextDir 'system-patterns.md'), $patterns, (New-Object System.Text.UTF8Encoding($false)))
 
 # 8. company-standards.md
 $standards = @"
@@ -153,7 +153,7 @@ Estandares de ingenieria obligatorios para el cliente \`$slug\`.
 - Cobertura de pruebas minima: Requerida en cada PR (disciplina TDD)
 - Prohibido quemar secretos o cadenas de conexion
 "@
-[System.IO.File]::WriteAllText((Join-Path $rulesDir 'company-standards.md'), $standards, [System.Text.Encoding]::UTF8)
+[System.IO.File]::WriteAllText((Join-Path $rulesDir 'company-standards.md'), $standards, (New-Object System.Text.UTF8Encoding($false)))
 
 Write-Host "[OK] Tenant '$slug' creado exitosamente en: $tenantDir" -ForegroundColor Green
 Write-Host "     Contexto:  tenants/$slug/context/" -ForegroundColor Gray

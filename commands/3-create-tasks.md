@@ -31,9 +31,10 @@ When invoked with TRD path:
 - Falls back to manual execution if no agents found
 
 **Agent Matching Rules**:
-- **RED phase**: Testing agents (jest-tester, test-creator)
-- **GREEN phase**: Implementation agents (typescript-specialist, expressjs-backend)
-- **Setup tasks**: Bootstrapper agents (npm-workspace-specialist)
+- **RED phase**: Testing agents (`jest-tester`, `xunit-tester`, `pytest-tester`, `integration-tester`)
+- **GREEN phase**: Implementation agents (`typescript-pro`, `aspnet-webapi-backend`, `abp-fullstack-developer`, `angular-developer`, `fastapi-backend`)
+- **Setup tasks**: Bootstrapper agents (`npm-workspace-specialist`, `library-packager`)
+- Only assign agents whose file exists in `agents/coding/`. If the TRD recommends one that does not exist, use the closest existing agent and say so in the summary.
 
 **Note**: VERIFY is included at the end of GREEN tasks, not a separate phase.
 
@@ -69,7 +70,7 @@ When invoked with TRD path:
 - Code implementations (not even snippets)
 - Instructions to "implement later"
 
-**Agent**: Testing specialist (jest-tester, etc.)
+**Agent**: Testing specialist (`jest-tester`, `xunit-tester`, `pytest-tester`)
 
 ### GREEN Phase Task Files
 
@@ -93,7 +94,7 @@ When invoked with TRD path:
 - Expected test outcomes
 - Verification checklist
 
-**Agent**: Implementation specialist (typescript-specialist, expressjs-backend, etc.)
+**Agent**: Implementation specialist (`typescript-pro`, `aspnet-webapi-backend`, `angular-developer`, `fastapi-backend`, etc.)
 
 ### Test Issue Handling in GREEN Phase
 
@@ -303,20 +304,8 @@ Read the tests from Task [N] to understand required behavior. All tests must pas
 
 This module follows project patterns from `<context_dir>/system-patterns.md` (`tasks/context/system-patterns.md` or `tenants/<tenant>/context/system-patterns.md`):
 
-**Schema-First Validation** (see `<context_dir>/system-patterns.md`):
-```typescript
-// Define Zod schema first
-export const moduleSchema = z.object({...}).strict()
-export type ModuleType = z.infer<typeof moduleSchema>
-```
-
-**Service Layer Pattern** (see `<context_dir>/system-patterns.md`):
-```typescript
-// Business logic in service classes
-export class ModuleService {
-  async operation(): Promise<Result> {...}
-}
-```
+- [Transcribe only the patterns that `system-patterns.md` and the TRD actually define for this module, in the repo's language]
+- [If `system-patterns.md` defines none for this area, state it here instead of inventing one]
 
 Full patterns reference: `<context_dir>/system-patterns.md`
 
@@ -398,7 +387,7 @@ Once implementation is complete and all tests pass, run quality gates:
 [commands from TRD]
 ```
 
-**Expected**: No lint errors, no type errors
+**Expected**: The feature's targeted tests pass
 
 ### verify (< 30 seconds)
 
@@ -429,8 +418,7 @@ Once implementation is complete and all tests pass, run quality gates:
 - [ ] `verify` passes
 - [ ] `verify:full` passes
 - [ ] Coverage requirements met
-- [ ] No TypeScript errors
-- [ ] No ESLint warnings
+- [ ] No compiler/type errors and no lint warnings in the build/lint the README specifies
 
 ---
 
@@ -519,8 +507,9 @@ agent_path: agents/coding/[agent-name].md
 ```markdown
 # [Feature Name] - Task Index
 
-**Location**: `[implementation-path]/`  
-**Total Tasks**: [N] ([X] RED + [Y] GREEN + [Z] VERIFY + [W] setup)  
+**Location**: `<proyecto_dir>/[repo]/`  
+**Branch**: `[git branch of the ticket, from the design document]`  
+**Total Tasks**: [N] ([X] RED + [Y] GREEN (includes VERIFY) + [W] setup)  
 **Estimated Effort**: [X-Y hours]
 
 ---
@@ -681,7 +670,7 @@ Generate README from TRD task breakdown:
 - Copy task overview table from TRD Section 6
 - Add phase groupings
 - Create progress checklist (all tasks from TRD)
-- Include quality gates from TRD Section 5
+- Include quality gates from TRD Section 5, after confirming each command exists in `<proyecto_dir>/<repo>/` (script, target or test project). If one does not exist, STOP and report it instead of writing it into the README (see `rules/process-task-list.md`)
 - Link back to TRD and Test Spec
 
 ### 6. Output Summary
@@ -726,12 +715,12 @@ Look for agents with:
 - Jest expertise
 - TDD capabilities
 
-Common: `jest-tester`, `xunit-tester`, `pytest-tester`, `test-creator`, `tdd-specialist`
+Common: `jest-tester`, `xunit-tester`, `pytest-tester`, `integration-tester`
 
 ### GREEN Phase Agents
 
 Match by technology:
-- TypeScript → `typescript-specialist`
+- TypeScript → `typescript-pro`
 - ASP.NET Web API → `aspnet-webapi-backend`
 - Python FastAPI → `fastapi-backend`
 - Angular → `angular-developer`
@@ -745,7 +734,7 @@ Look for:
 - Package management expertise
 - Dependency configuration
 
-Common: `npm-workspace-specialist`, `project-bootstrapper`
+Common: `npm-workspace-specialist`, `library-packager`
 
 ## Quality Checklist
 

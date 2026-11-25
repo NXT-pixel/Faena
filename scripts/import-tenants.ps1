@@ -37,7 +37,7 @@ if (-not (Test-Path -LiteralPath $InputFile -PathType Leaf)) {
     exit 1
 }
 
-$rawJson = [System.IO.File]::ReadAllText($InputFile, [System.Text.Encoding]::UTF8)
+$rawJson = [System.IO.File]::ReadAllText($InputFile, (New-Object System.Text.UTF8Encoding($false)))
 $data = $rawJson | ConvertFrom-Json
 
 if (-not $data.tenants -or $data.tenants.Count -eq 0) {
@@ -70,7 +70,7 @@ foreach ($t in $data.tenants) {
 
     function Write-FileSafe([string]$path, [string]$content) {
         if ($content) {
-            [System.IO.File]::WriteAllText($path, $content, [System.Text.Encoding]::UTF8)
+            [System.IO.File]::WriteAllText($path, $content, (New-Object System.Text.UTF8Encoding($false)))
         }
     }
 
@@ -135,7 +135,7 @@ if (-not $activeToSet -and $restoredSlugs.Count -gt 0) {
 }
 
 if ($activeToSet) {
-    [System.IO.File]::WriteAllText($activeTenantFile, $activeToSet, [System.Text.Encoding]::UTF8)
+    [System.IO.File]::WriteAllText($activeTenantFile, $activeToSet, (New-Object System.Text.UTF8Encoding($false)))
 }
 
 Write-Host "============================================================" -ForegroundColor Green

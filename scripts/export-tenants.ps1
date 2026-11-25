@@ -42,7 +42,7 @@ if (Test-Path -LiteralPath $tenantsDir -PathType Container) {
 
         function Read-Safe([string]$path) {
             if (Test-Path -LiteralPath $path -PathType Leaf) {
-                return [System.IO.File]::ReadAllText($path, [System.Text.Encoding]::UTF8)
+                return [System.IO.File]::ReadAllText($path, (New-Object System.Text.UTF8Encoding($false)))
             }
             return ''
         }
@@ -102,7 +102,7 @@ $payload = @{
 }
 
 $json = ConvertTo-Json $payload -Depth 10
-[System.IO.File]::WriteAllText($OutputFile, $json, [System.Text.Encoding]::UTF8)
+[System.IO.File]::WriteAllText($OutputFile, $json, (New-Object System.Text.UTF8Encoding($false)))
 
 Write-Host "============================================================" -ForegroundColor Green
 Write-Host "      [OK] Configuracion de Tenants Exportada con Exito     " -ForegroundColor Green

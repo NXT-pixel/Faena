@@ -164,6 +164,32 @@ class TestDashboardSecurityAndLogic(unittest.TestCase):
             httpd.server_close()
             server.ACTUAL_PORT = orig_port
 
+    def test_ticket_metadata_accepts_both_bold_styles(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            task_dir = Path(tmp) / "task-demo"
+            task_dir.mkdir()
+            (task_dir / "design-demo.md").write_text(
+                "# Demo\n\n**Ticket Origen:** ABC-123\n**Branch:** `feature/abc-123`\n",
+                encoding="utf-8",
+            )
+            (task_dir / "README.md").write_text(
+                "# Demo - Task Index\n\n**Location**: `tenants/x/Proyecto/repo/`\n\n"
+                "| Tarea | Nombre | Fase | Size | Est. Hours | Dependencies | Agent |\n"
+                "|---|---|---|---|---|---|---|\n"
+                "| 01 | Setup | setup | S | 1h | - | npm-workspace-specialist |\n\n"
+                "## Progress Tracking\n\n- [x] Task 01: Setup (setup)\n",
+                encoding="utf-8",
+            )
+            data = server.get_ticket_data(task_dir, "x")
+            self.assertEqual(data["branch"], "feature/abc-123")
+            self.assertEqual(data["raw_ticket_name"], "ABC-123")
+            self.assertEqual(data["repo"], "tenants/x/Proyecto/repo/")
+            self.assertEqual(len(data["tasks"]), 1)
+            self.assertTrue(data["tasks"][0]["completed"])
+
+            (task_dir / "design-demo.md").write_text("**Branch**: `feature/legacy`\n", encoding="utf-8")
+            self.assertEqual(server.get_ticket_data(task_dir, "x")["branch"], "feature/legacy")
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

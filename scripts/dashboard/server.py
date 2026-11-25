@@ -97,7 +97,7 @@ def get_tenant_dir_safely(slug):
 def get_active_tenant_slug():
     if ACTIVE_TENANT_FILE.exists():
         try:
-            val = ACTIVE_TENANT_FILE.read_text(encoding="utf-8").strip()
+            val = ACTIVE_TENANT_FILE.read_text(encoding="utf-8-sig").strip()
             if val:
                 return val
         except Exception:
@@ -185,7 +185,7 @@ def parse_tasks_table(readme_path, task_dir):
                 checkbox_map[task_num] = is_done
 
         for line in lines:
-            if re.match(r"^\|\s*Task\s*\|\s*Name\s*\|\s*Phase\s*\|", line, re.IGNORECASE):
+            if re.match(r"^\|\s*(?:Task|Tarea)\s*\|\s*(?:Name|Nombre)\s*\|\s*(?:Phase|Fase)\s*\|", line, re.IGNORECASE):
                 in_table = True
                 continue
             if in_table and line.strip().startswith("|---"):
@@ -264,7 +264,7 @@ def get_ticket_data(task_dir, tenant_slug):
             first_line = content.splitlines()[0] if content else ""
             if first_line.startswith("#"):
                 title = first_line.lstrip("#").strip()
-            loc_match = re.search(r"\*\*Location\*\*:\s*`([^`]+)`", content)
+            loc_match = re.search(r"\*\*(?:Location|Repositorio)(?::\*\*|\*\*:)\s*`([^`]+)`", content, re.IGNORECASE)
             if loc_match:
                 repo_location = loc_match.group(1)
         except Exception:
@@ -277,11 +277,11 @@ def get_ticket_data(task_dir, tenant_slug):
             try:
                 txt = f.read_text(encoding="utf-8", errors="replace")
                 if not raw_ticket_name and f.name.startswith("design-"):
-                    m_t = re.search(r"\*\*Ticket\*\*:\s*`?([^`\r\n]+)`?", txt)
+                    m_t = re.search(r"\*\*Ticket(?:\s+Origen)?(?::\*\*|\*\*:)\s*`?([^`\r\n]+)`?", txt, re.IGNORECASE)
                     if m_t:
                         raw_ticket_name = m_t.group(1).strip(" `*")
                 if not ticket_branch:
-                    m_b = re.search(r"\*\*(?:Branch|Rama)\*\*:\s*`?([^`\r\n]+)`?", txt, re.IGNORECASE)
+                    m_b = re.search(r"\*\*(?:Branch|Rama)(?::\*\*|\*\*:)\s*`?([^`\r\n]+)`?", txt, re.IGNORECASE)
                     if m_b:
                         ticket_branch = m_b.group(1).strip(" `*")
             except Exception:
@@ -979,7 +979,7 @@ def clone_tenant_repos(slug):
     urls_map = {}
     if LOCAL_JSON_FILE.exists():
         try:
-            data = json.loads(LOCAL_JSON_FILE.read_text(encoding="utf-8"))
+            data = json.loads(LOCAL_JSON_FILE.read_text(encoding="utf-8-sig"))
             for t in data.get("tenants", []):
                 if t.get("slug") == clean:
                     for r in t.get("repos", []):
@@ -1736,7 +1736,7 @@ class DashboardRequestHandler(BaseHTTPRequestHandler):
                 ok, msg, restored = import_tenants_payload(body)
             elif LOCAL_JSON_FILE.exists():
                 try:
-                    raw = LOCAL_JSON_FILE.read_text(encoding="utf-8")
+                    raw = LOCAL_JSON_FILE.read_text(encoding="utf-8-sig")
                     data = json.loads(raw)
                     ok, msg, restored = import_tenants_payload(data)
                 except Exception as e:

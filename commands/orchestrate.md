@@ -16,8 +16,8 @@ Usa este comando cuando quieras arrastrar un ticket al chat o pegar su requerimi
 Cuando el usuario invoque `@commands/orchestrate.md` y proporcione la descripción de un ticket:
 
 1. **NO te detengas a pedir confirmación entre fases** (salvo que se active un disparador del Circuit Breaker / Regla de Parada).
-2. **Aplica rigurosamente todas las invariantes de [PROTOCOL.md](PROTOCOL.md)**:
-   - **Resolución multi-tenant (`.active-tenant` según [PROTOCOL.md](PROTOCOL.md) §1)**: al iniciar, resuelve las 4 raíces lógicas:
+2. **Aplica rigurosamente todas las invariantes de [PROTOCOL.md](../PROTOCOL.md)**:
+   - **Resolución multi-tenant (`.active-tenant` según [PROTOCOL.md](../PROTOCOL.md) §1)**: al iniciar, resuelve las 4 raíces lógicas:
      - Si `.active-tenant` no existe o vale `default` (o si el prompt ya especifica `**Tenant**: \`default\``): `<proyecto_dir>` = `Proyecto`, `<context_dir>` = `tasks/context`, `<tasks_dir>` = `tasks`, `<rules_dir>` = `rules/project`.
      - Si `.active-tenant` contiene `<tenant>` != `default` (o el prompt indica `**Tenant**: \`<tenant>\``): `<proyecto_dir>` = `tenants/<tenant>/Proyecto`, `<context_dir>` = `tenants/<tenant>/context`, `<tasks_dir>` = `tenants/<tenant>/tasks`, `<rules_dir>` = `tenants/<tenant>/rules`.
    - **Aislamiento de código**: todo cambio de producción vive en `<proyecto_dir>/<repo>/`.
@@ -65,7 +65,7 @@ flowchart TD
 1. **Lectura de contexto corporativo**:
    - Lee `<context_dir>/team-context.md` (identifica Tech Lead, QA y DevOps).
    - Lee `<context_dir>/tech-context.md` y `<rules_dir>/company-standards.md` (si existe).
-   - Inspecciona `<proyecto_dir>/` en disco para determinar el repositorio afectado (ej. `<proyecto_dir>/growthhacking.PrototypeZero/`) y obtén su rama actual con `git -C <proyecto_dir>/<repo> branch --show-current`.
+   - Inspecciona `<proyecto_dir>/` en disco (no con `git status` ni búsquedas que respeten `.gitignore`) para determinar el repositorio afectado (ej. `<proyecto_dir>/growthhacking.PrototypeZero/`) y obtén su rama actual con `git -C <proyecto_dir>/<repo> branch --show-current`. Si hay varios repositorios candidatos y el ticket no permite elegir uno con certeza, activa el **Circuit Breaker** (caso 4) antes de escribir nada.
    - Consulta `rules/skills-routing.md` y `skills/README.md` para identificar las skills requeridas.
 2. **Generación de carpeta y diseño**:
    - Extrae un slug descriptivo en minúsculas (ej. `<tasks_dir>/task-recuperacion-carrito/`).
@@ -82,8 +82,10 @@ flowchart TD
 
 ### Fase 2: TRD y Especificación de Pruebas
 
-1. **Adopción de rol**:
+1. **Adopción de rol y plantillas**:
    - Actúa como arquitecto técnico (`agents/design/software-architecture.md` o `agents/coding/dotnet-architect.md` según el stack).
+   - Usa **exactamente** las plantillas de TRD y Test Spec de `commands/2-create-trd.md` (mismas secciones y numeración), para que el resultado sea idéntico al del modo manual. Lo único que se omite es su *Phase 6 — Stop for Review*.
+   - Si se cumple alguno de sus *Edge Cases* (documento Level 1, >15 tareas, varias capas sin fronteras claras) **no esperes la decisión del usuario**: continúa con un único set de tareas y deja la advertencia en el TRD (sección *Summary*) y en el reporte final.
 2. **Generación del TRD (`<tasks_dir>/task-<nombre>/trd-<nombre>.md`)**:
    - Objetivos y alcance técnico detallado.
    - Diagramas de arquitectura Mermaid (componentes y flujo).
@@ -99,14 +101,14 @@ flowchart TD
 
 ### Fase 3: Desglose Atómico de Tareas y README
 
-1. **Generación de archivos de tarea**:
+1. **Generación de archivos de tarea** (plantillas *Setup*, *RED*, *GREEN* y *README* de `commands/3-create-tasks.md`, sin variaciones):
    - Lee la Sección 6 del TRD y genera los archivos individuales en `<tasks_dir>/task-<nombre>/`:
      - `task01-setup-<descripcion>.md` (si requiere configuración o baseline).
      - `taskNN-red-<descripcion>.md` (fase RED: tests que deben fallar).
      - `taskNN-green-<descripcion>.md` (fase GREEN + VERIFY: implementación y calidad).
 2. **Generación del `README.md` del ticket (`<tasks_dir>/task-<nombre>/README.md`)**:
-   - Cabecera con `**Branch:** \`<rama-git-actual>\`` y `**Repositorio:** \`<proyecto_dir>/<repo>/\`` para tracking preciso en el dashboard.
-   - Tabla general de tareas (Task, Nombre, Fase, Tamaño, Horas est., Dependencias, Agente asignado de `agents/coding/`).
+   - Cabecera con `**Location**: \`<proyecto_dir>/<repo>/\`` y `**Branch**: \`<rama-git-actual>\`` (el dashboard lee estos campos).
+   - Tabla general de tareas con las columnas de la plantilla (`| Task | Name | Phase | Size | Est. Hours | Dependencies | Agent |`) y agentes que existan en `agents/coding/`.
    - **Quality Gates obligatorios** (comandos reales verificados para el repo en `<proyecto_dir>/<repo>/`):
      - `verify:quick`: comando de test aislado de la feature.
      - `verify`: suite de pruebas del componente afectado.
@@ -131,21 +133,23 @@ Mientras existan tareas con "- [ ]" en <tasks_dir>/task-<nombre>/README.md:
 - Configurar rutas, dependencias o baseline en `<proyecto_dir>/<repo>/`.
 - Ejecutar el comando de verificación baseline.
 
-#### Para tareas RED (`taskNN-red-*.md`):
+#### Para tareas RED (`taskNN-red-*.md`) — sub-tarea X.1:
 - Adoptar el agente de pruebas (ej. `agents/coding/xunit-tester.md`, `agents/coding/jest-tester.md`, `agents/coding/pytest-tester.md`).
 - Escribir el test en `<proyecto_dir>/<repo>/` siguiendo `test-spec-*.md`.
 - Ejecutar el test de forma aislada en la terminal dentro de `<proyecto_dir>/<repo>/`.
 - **Validar fallo esperado**: El test DEBE fallar por ausencia de la implementación requerida (no por syntax error, imports rotos ajenos o fallo de compilación previo).
-- Registrar la salida del fallo.
+- Registrar la salida del fallo en el archivo de la tarea.
+- **Criterio de cierre RED**: la tarea se marca `[x]` cuando el test falla por la razón esperada. En RED **no** se exige que pase ningún Quality Gate (fallaría por diseño). Si el test pasa de inmediato o falla por otra razón, corrige el test (nunca el requisito) con hasta 3 intentos; después, Circuit Breaker.
 
-#### Para tareas GREEN (`taskNN-green-*.md`):
+#### Para tareas GREEN (`taskNN-green-*.md`) — sub-tareas X.2 y X.3:
 - Adoptar el agente de implementación (ej. `agents/coding/aspnet-webapi-backend.md`, `agents/coding/angular-developer.md`, etc.).
 - Escribir el código mínimo necesario para satisfacer el test en `<proyecto_dir>/<repo>/`.
 - Ejecutar el test del ticket para confirmar que pasa a verde.
-- Ejecutar el Quality Gate `verify:quick` o `verify` indicado en el `README.md`.
+- X.2: ejecutar `verify:quick` del `README.md`.
+- X.3 (VERIFY): ejecutar `verify` del `README.md`; en la última tarea GREEN, también `verify:full`.
 
 #### Finalización de cada tarea:
-- Si el Quality Gate pasa exitosamente:
+- Si se cumple el criterio de cierre de la tarea (RED: falla esperada registrada; SETUP/GREEN: gates en verde con su salida pegada):
   1. Marcar `[x]` dentro del archivo de la tarea `<tasks_dir>/task-<nombre>/taskNN-*.md`.
   2. Marcar `[x]` en el `<tasks_dir>/task-<nombre>/README.md` del ticket.
   3. **Avanzar automáticamente a la siguiente tarea sin detenerse ni pedir confirmación.**
@@ -159,10 +163,11 @@ El orquestador interrumpe la ejecución autónoma y solicita intervención human
 1. **Fallo persistente de Quality Gate**:
    - El orquestador tiene hasta **3 intentos de auto-remediación** para corregir un fallo de compilación o de test en una tarea GREEN.
    - Si tras 3 intentos el Quality Gate sigue fallando, **DETENERSE**, presentar el log de error exacto y pedir instrucciones.
-2. **Regla *When Tests Disagree* ([rules/process-task-list.md](rules/process-task-list.md#L77-L88))**:
+2. **Regla *When Tests Disagree* ([rules/process-task-list.md](../rules/process-task-list.md#when-tests-disagree-pause-and-report))**:
    - Si dos tests entran en contradicción directa sobre el comportamiento de negocio.
    - Si las expectativas del test violan el esquema, DTOs o la arquitectura definida en el TRD.
-3. **Bloqueo externo**: Falta de credenciales, secretos inexistentes o comandos de repo ausentes.
+3. **Bloqueo externo**: Falta de credenciales, secretos inexistentes o comandos de repo ausentes (un gate del `README.md` que el repo no define).
+4. **Ambigüedad de destino**: no se puede determinar con certeza el repositorio afectado dentro de `<proyecto_dir>/`.
 
 ---
 
@@ -193,5 +198,6 @@ Una vez marcadas todas las tareas `[x]` en el `README.md`:
 Si el entorno soporta subagentes (como Antigravity / Claude Code / Swarms):
 - El Orquestador actúa como coordinador central.
 - Para cada tarea `taskNN`, delega la ejecución de la tarea a un subagente worker dedicado con contexto limpio.
-- El worker lee únicamente el TRD, el archivo de tarea y el repo `<proyecto_dir>/<repo>/`, ejecuta el ciclo RED/GREEN, corre el Quality Gate y devuelve el resultado.
+- Los subagentes **no** heredan `CLAUDE.md`/`AGENTS.md`: pásale al worker las rutas de `PROTOCOL.md`, `rules/process-task-list.md`, el `README.md` del ticket (sección **Quality Gates**), el TRD, el test spec, el archivo de tarea y las raíces resueltas (`<proyecto_dir>`, `<context_dir>`, `<rules_dir>`).
+- El worker ejecuta solo esa tarea en `<proyecto_dir>/<repo>/`, corre sus gates y devuelve el resultado con la salida de terminal. El coordinador es quien marca `[x]` en el archivo de tarea y en el `README.md`, para que no haya dos escritores del mismo checklist.
 - Esto garantiza **cero contaminación de contexto** y máxima precisión en tickets con muchas tareas.
