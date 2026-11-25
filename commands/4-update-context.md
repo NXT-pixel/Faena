@@ -1,7 +1,7 @@
 ---
 name: update-context
 description: Actualiza la documentación de contexto en tasks/context/ para reflejar el estado actual de los repositorios en Proyecto/ y del equipo.
-agent: /agents/design/project-context-analyst.md
+agent: agents/design/project-context-analyst.md
 tools: Read, Write, Bash, LS
 ---
 
@@ -14,7 +14,7 @@ Actualiza los archivos de contexto en `tasks/context/` para mantener sincronizad
 ## 🎯 Instrucciones para el Asistente de IA
 
 ### 1. Ubicación del Contexto
-Todos los archivos de contexto residen en: `tasks/context/`
+Resuelve las rutas según `.active-tenant` (`PROTOCOL.md` §1): por defecto en `tasks/context/` (y `Proyecto/`), o en `tenants/<tenant>/context/` (y `tenants/<tenant>/Proyecto/`) si existe un tenant activo distinto de `default`:
 - `tasks/context/team-context.md` (Organigrama del equipo, roles y delegación)
 - `tasks/context/tech-context.md` (Stack tecnológico real detectado en `Proyecto/`)
 - `tasks/context/project-structure.md` (Estructura de carpetas y repositorios en `Proyecto/`)
@@ -31,11 +31,11 @@ En Faena, el código fuente del cliente se encuentra **exclusivamente dentro de 
 ### 1.1 Detección de Repositorios en `Proyecto/`
 - Inspecciona las subcarpetas dentro de `Proyecto/`:
   - ¿Qué repositorios o proyectos están clonados? (ej. `Proyecto/backend-api`, `Proyecto/frontend-web`, etc.)
-- Para cada repositorio en `Proyecto/`:
+- Para cada repositorio en `<proyecto_dir>/` (`Proyecto/` o `tenants/<tenant>/Proyecto/` según `.active-tenant`):
   - Si tiene su propio `.git`, consulta sus cambios recientes:
     ```bash
-    git -C Proyecto/<repo> status --short
-    git -C Proyecto/<repo> log --oneline -5
+    git -C <proyecto_dir>/<repo> status --short
+    git -C <proyecto_dir>/<repo> log --oneline -5
     ```
 
 ### 1.2 Detección de Cambios en Dependencias en `Proyecto/`

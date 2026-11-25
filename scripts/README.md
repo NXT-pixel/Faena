@@ -1,6 +1,6 @@
 # 🛠️ Scripts del harness
 
-Cuatro utilidades de mantenimiento y un dashboard visual en vivo. **Ninguna hace falta para trabajar un ticket**: el flujo por chat no ejecuta scripts.
+Utilidades de mantenimiento, gestión multi-tenant y un dashboard visual en vivo. **Ninguna hace falta para trabajar un ticket**: el flujo por chat no ejecuta scripts.
 
 ```powershell
 .\scripts\doctor.cmd           # ¿está bien mi entorno? (con el arreglo de cada aviso)

@@ -142,9 +142,18 @@ catch {
 }
 
 # --------------------------------------------------------------------------
-# 7. Repositorios del cliente
+# 7. Repositorios del cliente (resuelve segun .active-tenant si existe)
 # --------------------------------------------------------------------------
-$proyectoPath = Join-Path $repoRoot 'Proyecto'
+$activeTenantFile = Join-Path $repoRoot '.active-tenant'
+$activeTenant = ''
+if (Test-Path -LiteralPath $activeTenantFile -PathType Leaf) {
+    $activeTenant = (Get-Content -LiteralPath $activeTenantFile -Raw).Trim()
+}
+
+$useTenantScope = ($activeTenant -and $activeTenant -ne 'default' -and (Test-Path -LiteralPath (Join-Path (Join-Path $repoRoot 'tenants') $activeTenant) -PathType Container))
+$proyectoPath = if ($useTenantScope) { Join-Path (Join-Path (Join-Path $repoRoot 'tenants') $activeTenant) 'Proyecto' } else { Join-Path $repoRoot 'Proyecto' }
+$proyectoLabel = if ($useTenantScope) { "tenants/$activeTenant/Proyecto/" } else { 'Proyecto/' }
+
 $repoDirs = @()
 if (Test-Path -LiteralPath $proyectoPath -PathType Container) {
     $repoDirs = @(Get-ChildItem -LiteralPath $proyectoPath -Directory | Where-Object { $_.Name -notlike '.*' })
@@ -153,26 +162,27 @@ if ($repoDirs.Count -gt 0) {
     Add-Diagnostic -Name 'proyecto' -Status 'PASS' -Detail (($repoDirs | ForEach-Object { $_.Name }) -join ', ')
 }
 else {
-    Add-Diagnostic -Name 'proyecto' -Status 'WARN' -Detail 'Proyecto/ no tiene repositorios clonados' `
-        -Fix 'git clone <url-del-repo> Proyecto/<repo>'
+    Add-Diagnostic -Name 'proyecto' -Status 'WARN' -Detail ($proyectoLabel + ' no tiene repositorios clonados') `
+        -Fix ("git clone <url-del-repo> " + $proyectoLabel + "<repo>")
 }
 
 # --------------------------------------------------------------------------
 # 8. team-context sin rellenar
 # --------------------------------------------------------------------------
-$teamContext = Join-Path $repoRoot 'tasks\context\team-context.md'
+$teamContext = if ($useTenantScope) { Join-Path (Join-Path (Join-Path $repoRoot 'tenants') $activeTenant) 'context\team-context.md' } else { Join-Path $repoRoot 'tasks\context\team-context.md' }
+$teamContextLabel = if ($useTenantScope) { "tenants/$activeTenant/context/team-context.md" } else { 'tasks/context/team-context.md' }
 if (Test-Path -LiteralPath $teamContext -PathType Leaf) {
     $content = [System.IO.File]::ReadAllText($teamContext, [System.Text.Encoding]::UTF8)
     if ($content -match '\[Nombre|\[ej\.|\[Nombre de la Empresa') {
-        Add-Diagnostic -Name 'team-context' -Status 'WARN' -Detail 'todavia tiene marcadores de plantilla' `
-            -Fix 'Edita tasks/context/team-context.md: equipo, Tech Lead, QA, DevOps e identidad Git corporativa.'
+        Add-Diagnostic -Name 'team-context' -Status 'WARN' -Detail ($teamContextLabel + ' todavia tiene marcadores de plantilla') `
+            -Fix ('Edita ' + $teamContextLabel + ': equipo, Tech Lead, QA, DevOps e identidad Git corporativa.')
     }
     else {
-        Add-Diagnostic -Name 'team-context' -Status 'PASS' -Detail 'relleno'
+        Add-Diagnostic -Name 'team-context' -Status 'PASS' -Detail ('relleno (' + $teamContextLabel + ')')
     }
 }
 else {
-    Add-Diagnostic -Name 'team-context' -Status 'FAIL' -Detail 'falta tasks/context/team-context.md' `
+    Add-Diagnostic -Name 'team-context' -Status 'FAIL' -Detail ('falta ' + $teamContextLabel) `
         -Fix 'Recuperalo con: git checkout -- tasks/context/team-context.md'
 }
 

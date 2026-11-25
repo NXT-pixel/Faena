@@ -24,7 +24,20 @@ Principio rector: **nada se implementa sin contexto leído y sin un test que fal
 | `agents/` | Personas y roles especializados. | Al adoptar el rol de una fase. |
 | `commands/` | Procedimientos que el usuario arrastra (`@commands/...`). | Los invoca el usuario, no tú por iniciativa propia. |
 | `tasks/task-<nombre>/` | Todos los artefactos de un ticket, juntos. | Durante todo el flujo. |
-| `tenants/<tenant>/` | Espacios aislados por empresa o proyecto (contexto, repositorios y tareas). | En proyectos multi-tenant. |
+| `tenants/<tenant>/` | Espacios aislados por empresa o proyecto (contexto, reglas, repositorios y tareas). | En proyectos multi-tenant. |
+
+### Resolución del espacio activo (`.active-tenant`)
+
+Antes de leer contexto o tocar código, comprueba si existe `.active-tenant` en la raíz:
+
+- **Si `.active-tenant` no existe o vale `default`**: usa las rutas raíz (`Proyecto/`, `tasks/context/`, `tasks/task-<nombre>/`, `rules/project/`).
+- **Si `.active-tenant` contiene `<tenant>`** (y existe `tenants/<tenant>/`): todas las rutas lógicas del flujo se resuelven dentro de ese tenant:
+  - `Proyecto/` → `tenants/<tenant>/Proyecto/`
+  - `tasks/context/` → `tenants/<tenant>/context/` (ADRs en `tenants/<tenant>/context/adrs/`)
+  - `tasks/task-<nombre>/` → `tenants/<tenant>/tasks/task-<nombre>/`
+  - `rules/project/` → `tenants/<tenant>/rules/`
+
+Las skills (`skills/`), agentes (`agents/`), comandos (`commands/`) y reglas globales (`rules/*.md`, `rules/security/`) son únicos y compartidos en la raíz del harness.
 
 ---
 
@@ -58,8 +71,8 @@ El flujo puede ejecutarse en dos modalidades:
 | 5 | (cierre) | (automático) | diff completo | review de seguridad + handoff QA + `learnings.md` |
 
 ### Paso 1 — Intake del ticket
-1. Lee `tasks/context/team-context.md` e identifica Tech Lead, QA y DevOps.
-2. Identifica el repositorio afectado dentro de `Proyecto/`.
+1. Lee `tasks/context/team-context.md` e identifica Tech Lead, QA y DevOps (resolviendo la ruta según `.active-tenant`).
+2. Identifica el repositorio afectado dentro de `Proyecto/` y anota en `design-<nombre>.md` la rama Git de trabajo (`**Branch**: \`<rama>\``) si ya existe o se crea para el ticket.
 3. Identifica las skills necesarias. Si la tecnología no está en `skills/`, búscala en el repositorio ECC local (`C:\Users\santi\Documents\GitHub\ECC\skills\`) o remoto (`https://github.com/affaan-m/ECC`) y aplica sus mejores prácticas sin copiarlas al repo.
 4. Crea `tasks/task-<nombre>/design-<nombre>.md` con alcance, criterios de aceptación y handoffs.
 

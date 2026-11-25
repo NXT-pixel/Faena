@@ -23,7 +23,7 @@ A GREEN file never starts before its RED file has failed **for the expected reas
 1. Read the TRD and the test spec in the same folder.
 2. Read the folder's `README.md` and locate its **Quality Gates** section: that is where the real commands for this repository live.
 3. Work the file's sub-tasks in order: X.1 test -> X.2 implementation -> X.3 quality gate.
-4. Run all tests and gates inside the client repo at `Proyecto/<repo>/`, never from the harness root.
+4. Run all tests and gates inside the client repo (`Proyecto/<repo>/` or `tenants/<tenant>/Proyecto/<repo>/` per `.active-tenant` in `PROTOCOL.md` §1), never from the harness root.
 5. Mark `[x]` in the folder `README.md` **and** in the task file, then update `todo_write`.
 6. Report the result and stop: one task file per turn in manual step-by-step mode. In autonomous mode (`@commands/orchestrate.md`), mark the task complete and immediately proceed to the next unchecked task in `README.md` until all tasks are finished.
 

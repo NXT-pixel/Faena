@@ -1,13 +1,13 @@
 ---
 name: load-context
 description: Loads and synthesizes project context from tasks/context/ for design discussions. Reads all context files in priority order and provides a comprehensive project understanding summary.
-agent: /agents/design/project-context-analyst.md
+agent: agents/design/project-context-analyst.md
 tools: Read, Bash, LS
 ---
 
-This command loads existing project context documentation from `tasks/context/` to prime an AI session with comprehensive project understanding. Optimized for design discussions and strategic planning.
+This command loads existing project context documentation from `tasks/context/` (or `tenants/<tenant>/context/` when `.active-tenant` points to a non-default tenant per `PROTOCOL.md` §1) to prime an AI session with comprehensive project understanding. Optimized for design discussions and strategic planning.
 
-**Agent Expertise**: This command invokes the **project-context-analyst** agent (see `/agents/design/project-context-analyst.md`) who brings expertise in codebase analysis and context synthesis for effective design discussions.
+**Agent Expertise**: This command invokes the **project-context-analyst** agent (see `agents/design/project-context-analyst.md`) who brings expertise in codebase analysis and context synthesis for effective design discussions.
 
 ## Purpose
 
@@ -22,18 +22,23 @@ Use this command at the start of design discussions to:
 Complete these validation steps silently (don't report individual checks to user):
 
 ### 1. Context Availability Check
-- Run: `ls -la tasks/context/ 2>/dev/null`
+- Resolve the active context directory per `.active-tenant` (`PROTOCOL.md` §1):
+  ```bash
+  TENANT=$(tr -d '[:space:]' < .active-tenant 2>/dev/null || echo default)
+  CONTEXT_DIR=$([ "$TENANT" != "default" ] && [ -d "tenants/$TENANT/context" ] && echo "tenants/$TENANT/context" || echo "tasks/context")
+  ls -la "$CONTEXT_DIR/" 2>/dev/null
+  ```
 - If directory doesn't exist or is empty:
-  - Tell user: "❌ No context found. Please run /create-context first to establish project context."
+  - Tell user: "❌ No context found. Please drag `@commands/create-context.md` first to establish project context."
   - Exit gracefully
-- Count available context files: `ls -1 tasks/context/*.md 2>/dev/null | wc -l`
+- Count available context files: `ls -1 "$CONTEXT_DIR"/*.md 2>/dev/null | wc -l`
 - Expected: 6 context files (team, learnings, tech, project-structure, progress, system-patterns)
 - Minimum: 4 for partial context
 
 ### 2. File Integrity Check
 For each expected context file:
-- Verify file is readable: `test -r "tasks/context/{file}" && echo "readable"`
-- Check file has content: `test -s "tasks/context/{file}" && echo "has content"`
+- Verify file is readable: `test -r "$CONTEXT_DIR/{file}" && echo "readable"`
+- Check file has content: `test -s "$CONTEXT_DIR/{file}" && echo "has content"`
 - Check for valid frontmatter (should start with `---`)
 
 Report any issues:
@@ -215,7 +220,7 @@ Provide comprehensive summary optimized for design discussions:
 💡 Next Steps:
   - Proceed with design discussion
   - Reference loaded context for decisions
-  - Suggest running /update-context after session
+  - Suggest running `@commands/4-update-context.md` after session
 ```
 
 ### 8. Partial Context Handling
@@ -231,7 +236,7 @@ If some files fail to load or are missing:
 - Fewer than 4/6 files loaded
 - Missing critical files: team-context.md, tech-context.md or project-structure.md
 - Tell user: "⚠️ Context is incomplete. Design decisions may not align with project goals."
-- Suggest: "Run /create-context to rebuild the detectable context files"
+- Suggest: "Run `@commands/create-context.md` to rebuild the detectable context files"
 
 **For each missing/failed file:**
 - Note what information is unavailable
@@ -319,7 +324,7 @@ Report quality concerns:
 ## Usage Pattern
 
 Typical workflow:
-1. User runs `/load-context` at start of design discussion
+1. User runs `@commands/load-context.md` at start of design discussion
 2. Agent loads and synthesizes all context
 3. Agent provides comprehensive summary
 4. Agent is now primed for design discussion with full project understanding

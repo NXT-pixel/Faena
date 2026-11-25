@@ -209,37 +209,66 @@ Add-CheckResult -Name 'protocol-adapters' -Ok ($adapterProblems.Count -eq 0) `
     -Lines @($adapterProblems)
 
 # --------------------------------------------------------------------------
-# 6. Repositorios de Proyecto/ documentados
+# 6. Repositorios de Proyecto/ documentados (raiz + tenant activo si existe)
 # --------------------------------------------------------------------------
 
-$proyectoDirectory = Join-Path $repoRoot 'Proyecto'
-$structureDocument = Join-Path $repoRoot 'tasks\context\project-structure.md'
-$undocumented = New-Object System.Collections.ArrayList
-
-$clonedRepositories = @()
-if (Test-Path -LiteralPath $proyectoDirectory -PathType Container) {
-    $clonedRepositories = @(Get-ChildItem -LiteralPath $proyectoDirectory -Directory |
-        Where-Object { $_.Name -notlike '.*' })
+$activeTenantPath = Join-Path $repoRoot '.active-tenant'
+$activeTenant = ''
+if (Test-Path -LiteralPath $activeTenantPath -PathType Leaf) {
+    $activeTenant = (Read-FaenaText -Path $activeTenantPath).Trim()
 }
 
-if ($clonedRepositories.Count -gt 0) {
-    $structureText = ''
-    if (Test-Path -LiteralPath $structureDocument -PathType Leaf) {
-        $structureText = Read-FaenaText -Path $structureDocument
-    }
-    else {
-        [void] $undocumented.Add('falta tasks/context/project-structure.md')
-    }
+$undocumented = New-Object System.Collections.ArrayList
+$totalClonedCount = 0
 
-    foreach ($repository in $clonedRepositories) {
-        if ($structureText -notmatch [regex]::Escape($repository.Name)) {
-            [void] $undocumented.Add(('Proyecto/{0} no aparece en tasks/context/project-structure.md' -f $repository.Name))
+$rootsToCheck = @(
+    [pscustomobject] @{
+        Label = 'Proyecto/'
+        Proy  = (Join-Path $repoRoot 'Proyecto')
+        Doc   = (Join-Path $repoRoot 'tasks\context\project-structure.md')
+        DocLabel = 'tasks/context/project-structure.md'
+    }
+)
+
+if ($activeTenant -and $activeTenant -ne 'default') {
+    $tenantDir = Join-Path (Join-Path $repoRoot 'tenants') $activeTenant
+    if (Test-Path -LiteralPath $tenantDir -PathType Container) {
+        $rootsToCheck += [pscustomobject] @{
+            Label = ('tenants/{0}/Proyecto/' -f $activeTenant)
+            Proy  = (Join-Path $tenantDir 'Proyecto')
+            Doc   = (Join-Path $tenantDir 'context\project-structure.md')
+            DocLabel = ('tenants/{0}/context/project-structure.md' -f $activeTenant)
+        }
+    }
+}
+
+foreach ($scope in $rootsToCheck) {
+    $clonedRepositories = @()
+    if (Test-Path -LiteralPath $scope.Proy -PathType Container) {
+        $clonedRepositories = @(Get-ChildItem -LiteralPath $scope.Proy -Directory |
+            Where-Object { $_.Name -notlike '.*' })
+    }
+    $totalClonedCount += $clonedRepositories.Count
+
+    if ($clonedRepositories.Count -gt 0) {
+        $structureText = ''
+        if (Test-Path -LiteralPath $scope.Doc -PathType Leaf) {
+            $structureText = Read-FaenaText -Path $scope.Doc
+        }
+        else {
+            [void] $undocumented.Add(('falta {0}' -f $scope.DocLabel))
+        }
+
+        foreach ($repository in $clonedRepositories) {
+            if ($structureText -notmatch [regex]::Escape($repository.Name)) {
+                [void] $undocumented.Add(('{0}{1} no aparece en {2}' -f $scope.Label, $repository.Name, $scope.DocLabel))
+            }
         }
     }
 }
 
 Add-CheckResult -Name 'proyecto-visibility' -Ok ($undocumented.Count -eq 0) `
-    -Detail ('{0} repositorio(s) en Proyecto/, {1} sin documentar' -f $clonedRepositories.Count, $undocumented.Count) `
+    -Detail ('{0} repositorio(s) en Proyecto/, {1} sin documentar' -f $totalClonedCount, $undocumented.Count) `
     -Lines @($undocumented)
 
 # --------------------------------------------------------------------------

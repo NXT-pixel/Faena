@@ -53,8 +53,9 @@ $importedCount = 0
 $restoredSlugs = @()
 
 foreach ($t in $data.tenants) {
-    $slug = [string]$t.slug
-    if (-not $slug) { continue }
+    $rawSlug = [string]$t.slug
+    $slug = ($rawSlug.Trim().ToLower() -replace '[^a-z0-9_-]', '-').Trim('-')
+    if (-not $slug -or $slug -eq 'default' -or $slug.Contains('..')) { continue }
 
     $tenantDir = Join-Path $tenantsDir $slug
     $contextDir = Join-Path $tenantDir 'context'
@@ -81,6 +82,18 @@ foreach ($t in $data.tenants) {
     Write-FileSafe (Join-Path $contextDir 'progress.md') $t.progress
     Write-FileSafe (Join-Path $contextDir 'system-patterns.md') $t.system_patterns
 
+    # ADRs
+    if ($t.adrs) {
+        $adrsDir = Join-Path $contextDir 'adrs'
+        New-Item -ItemType Directory -Path $adrsDir -Force | Out-Null
+        foreach ($adr in $t.adrs) {
+            $afName = [System.IO.Path]::GetFileName([string]$adr.filename)
+            if ($afName -and -not $afName.Contains('..')) {
+                Write-FileSafe (Join-Path $adrsDir $afName) ([string]$adr.content)
+            }
+        }
+    }
+
     # Gitkeeps
     $keepTasks = Join-Path $tasksDir '.gitkeep'
     $keepProy = Join-Path $proyDir '.gitkeep'
@@ -90,16 +103,16 @@ foreach ($t in $data.tenants) {
     # Repositories
     if ($t.repos) {
         foreach ($r in $t.repos) {
-            $repoName = [string]$r.name
-            $remoteUrl = [string]$r.remote_url
-            if (-not $repoName) { continue }
+            $repoName = [System.IO.Path]::GetFileName(([string]$r.name).Trim())
+            $remoteUrl = ([string]$r.remote_url).Trim()
+            if (-not $repoName -or $repoName.Contains('..')) { continue }
 
             $repoFolder = Join-Path $proyDir $repoName
             if (-not (Test-Path -LiteralPath $repoFolder)) {
-                if ($CloneRepos -and $remoteUrl) {
+                if ($CloneRepos -and $remoteUrl -and -not $remoteUrl.StartsWith('-') -and -not $remoteUrl.ToLower().StartsWith('ext::')) {
                     Write-Host "  -> Clonando repo $repoName desde $remoteUrl..." -ForegroundColor Cyan
                     try {
-                        git clone $remoteUrl $repoFolder
+                        git clone -- $remoteUrl $repoFolder
                     } catch {
                         Write-Host "     [!] No se pudo clonar automaticamente. Creando carpeta vacia." -ForegroundColor Yellow
                         New-Item -ItemType Directory -Path $repoFolder -Force | Out-Null

@@ -20,12 +20,35 @@
     .\scripts\build-tasks-index.ps1
 #>
 [CmdletBinding()]
-param()
+param(
+    [string] $Tenant = ''
+)
 
 $ErrorActionPreference = 'Stop'
 
 $repoRoot = Split-Path -Parent $PSScriptRoot
-$tasksRoot = Join-Path $repoRoot 'tasks'
+if (-not $Tenant) {
+    $activeFile = Join-Path $repoRoot '.active-tenant'
+    if (Test-Path -LiteralPath $activeFile -PathType Leaf) {
+        $Tenant = ([System.IO.File]::ReadAllText($activeFile, [System.Text.Encoding]::UTF8)).Trim()
+    }
+}
+
+if ($Tenant -and $Tenant -ne 'default') {
+    $tenantDir = Join-Path (Join-Path $repoRoot 'tenants') $Tenant
+    if (Test-Path -LiteralPath $tenantDir -PathType Container) {
+        $tasksRoot = Join-Path $tenantDir 'tasks'
+        $indexRel = "tenants/$Tenant/tasks/INDEX.md"
+    }
+    else {
+        $tasksRoot = Join-Path $repoRoot 'tasks'
+        $indexRel = 'tasks/INDEX.md'
+    }
+}
+else {
+    $tasksRoot = Join-Path $repoRoot 'tasks'
+    $indexRel = 'tasks/INDEX.md'
+}
 $indexPath = Join-Path $tasksRoot 'INDEX.md'
 
 function Get-CheckboxCounts {
@@ -122,4 +145,4 @@ else {
 $content = ($lines -join "`n")
 [System.IO.File]::WriteAllText($indexPath, $content, (New-Object System.Text.UTF8Encoding($false)))
 
-Write-Host ('Indice escrito: tasks/INDEX.md ({0} ticket(s))' -f $rows.Count) -ForegroundColor Green
+Write-Host ('Indice escrito: {0} ({1} ticket(s))' -f $indexRel, $rows.Count) -ForegroundColor Green

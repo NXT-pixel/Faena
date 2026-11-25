@@ -1,4 +1,4 @@
-Create an ADR markdown file in `docs/tech/ADRs` (create the directory if it does not exist) that is based on the template in this document that starts after the text `--- ADR Template Starts Here ---`. The file name should follow the pattern in the `FILE NAME, **IMPORTANT**` section below.
+Create an ADR markdown file in `tasks/context/adrs/` — or `tenants/<tenant>/context/adrs/` when `.active-tenant` points to a non-default tenant (create the directory if it does not exist) — based on the template in this document that starts after the text `--- ADR Template Starts Here ---`. The file name should follow the pattern in the `FILE NAME, **IMPORTANT**` section below.
 
 If the content of the ADR isn't clear, ask the user to answer questions one at a time until it is.
 
@@ -6,24 +6,24 @@ You should expect the user to provide you existing documents or a prompt to help
 
 # FILE NAME, **IMPORTANT**
 
-The file name of the ADR should be `ADR-<four digit number with leading zeros>-<topic summary in snake case>.md`
+The file name of the ADR should be `ADR-<four digit number with leading zeros>-<topic summary in kebab case>.md`
 
-The number you use should always be one more than the last one in `/docs/tech/ADRs`.
+The number you use should always be one more than the last one in `tasks/context/adrs/` (or the active tenant's `context/adrs/`).
 
-GOOD FILE NAMES ✅
+GOOD FILE NAMES ✅ (inside `tasks/context/adrs/` or active tenant `context/adrs/`)
 ```
-/docs/tech/ADRs/ADR-0001-authentication.md
-/docs/tech/ADRs/ADR-0002-authorization.md
-/docs/tech/ADRs/ADR-0003-production-builds.md
+ADR-0001-authentication.md
+ADR-0002-authorization.md
+ADR-0003-production-builds.md
 ```
 
 BAD FILE NAMES ❌
 ```
-/docs/tech/ADRs/authentication.md
-/docs/tech/ADRs/ADR-2-authorization.md
-/docs/tech/ADRs/ADR-00099-production-builds.md
-/docs/ADR-0009-api-client.md
-/docs/tech/ADRs/ADR-0004.md
+authentication.md
+ADR-2-authorization.md
+ADR-00099-production-builds.md
+../ADR-0009-api-client.md
+ADR-0004.md
 ```
 # ADR Template 
 Sourced from https://github.com/joelparkerhenderson/architecture-decision-record/tree/main/locales/en/templates/decision-record-template-of-the-madr-project

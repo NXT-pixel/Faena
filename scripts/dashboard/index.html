@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="faena-csrf" content="__FAENA_CSRF_TOKEN__">
   <title>Faena Hub — Companion Dashboard</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏭</text></svg>">
   <style>
@@ -234,9 +235,9 @@
       transition: all 0.15s ease;
     }
     .filter-pill:hover, .filter-pill.active {
-      color: #fff;
+      color: var(--text);
       border-color: var(--border-accent);
-      background: rgba(56, 189, 248, 0.12);
+      background: var(--primary-glow);
     }
     .search-input {
       background: var(--surface);
@@ -365,7 +366,7 @@
       transition: all 0.15s ease;
     }
     .tab-btn:hover { color: var(--text); background: var(--card-hover); }
-    .tab-btn.active { color: #fff; background: var(--surface); border: 1px solid var(--border); }
+    .tab-btn.active { color: var(--text); background: var(--surface); border: 1px solid var(--border-accent); }
 
     /* Task Items */
     .task-item {
@@ -434,7 +435,7 @@
       color: var(--text-muted);
       cursor: pointer;
     }
-    .editor-tab-btn.active { color: #fff; border-color: var(--primary); background: rgba(59, 130, 246, 0.15); }
+    .editor-tab-btn.active { color: var(--text); border-color: var(--primary); background: var(--primary-glow); }
     .editor-textarea {
       width: 100%;
       height: 300px;
@@ -528,7 +529,7 @@
       text-transform: uppercase;
       letter-spacing: 0.05em;
     }
-    .onboarding-title { font-size: 26px; font-weight: 800; color: #fff; max-width: 650px; line-height: 1.3; }
+    .onboarding-title { font-size: 26px; font-weight: 800; color: var(--text); max-width: 650px; line-height: 1.3; }
     .onboarding-desc { color: var(--text-muted); max-width: 580px; font-size: 14px; line-height: 1.6; }
     .workflow-cards {
       display: grid;
@@ -549,7 +550,7 @@
       padding: 16px;
     }
     .wf-icon { font-size: 20px; margin-bottom: 8px; }
-    .wf-title { font-weight: 700; font-size: 13px; color: #fff; margin-bottom: 4px; }
+    .wf-title { font-weight: 700; font-size: 13px; color: var(--text); margin-bottom: 4px; }
     .wf-text { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
 
     /* Tenant Empty State Box */
@@ -614,7 +615,7 @@
       box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
       padding: 12px 18px;
       border-radius: 10px;
-      color: #fff;
+      color: var(--text);
       font-size: 13px;
       font-weight: 600;
       display: flex;
@@ -634,7 +635,7 @@
       font-family: Consolas, monospace;
       font-size: 12px;
       line-height: 1.5;
-      color: #cbd5e1;
+      color: var(--text);
       max-height: 380px;
       overflow-y: auto;
       white-space: pre-wrap;
@@ -669,7 +670,7 @@
       border-radius: 4px;
       cursor: pointer;
     }
-    .copy-btn:hover { color: #fff; border-color: var(--border-accent); }
+    .copy-btn:hover { color: var(--text); border-color: var(--border-accent); }
 
     /* Deep Link Buttons (Cursor / VS Code) */
     .deep-link-group { display: inline-flex; gap: 4px; align-items: center; }
@@ -689,7 +690,7 @@
     }
     .deep-link-btn:hover {
       border-color: var(--border-accent);
-      color: #fff;
+      color: var(--text);
       background: var(--card-hover);
     }
 
@@ -750,7 +751,7 @@
       flex-direction: column;
       gap: 5px;
       font-size: 12px;
-      color: #cbd5e1;
+      color: var(--text-muted);
     }
     .gotchas-list li {
       display: flex;
@@ -1190,6 +1191,32 @@
   </div>
 
   <script>
+    const FAENA_CSRF_TOKEN = document.querySelector('meta[name="faena-csrf"]')?.getAttribute('content') || '';
+
+    function escapeHtml(value) {
+      return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function getTenantPrefix(slug) {
+      return (!slug || slug === 'default') ? '' : `tenants/${slug}/`;
+    }
+
+    function apiPost(url, payload) {
+      return fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Faena-Token': FAENA_CSRF_TOKEN
+        },
+        body: JSON.stringify(payload || {})
+      });
+    }
+
     let currentActiveTenant = '';
     let selectedTicketSlug = null;
     let currentRepoBranch = null;
@@ -1197,6 +1224,9 @@
     let currentContextTab = 'team';
     let cachedContextFiles = {};
     let latestServerData = null;
+    let lastStructuralSnapshot = null;
+    let contextDirty = false;
+    let toastTimer = null;
 
     // Accessible native dialog helpers
     const tenantDialog = document.getElementById('createTenantModal');
@@ -1283,40 +1313,54 @@
         .catch(err => console.warn('Detect gates err:', err));
     }
 
+    function runGateFromButton(btn) {
+      const cmd = btn?.dataset?.command || '';
+      const repo = btn?.dataset?.repo || '';
+      runQualityGateFromUI(cmd, repo);
+    }
+
+    function copyGateFromButton(btn) {
+      const cmd = btn?.dataset?.command || '';
+      copyToClipboard(cmd, btn);
+    }
+
+    function renderGateRunResultHtml(data) {
+      if (!data) return '';
+      const isPass = !!data.success;
+      return `
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; flex-wrap: wrap; gap: 6px;">
+          <span class="badge ${isPass ? 'badge-green' : 'badge-red'}" style="font-size: 12px; padding: 4px 10px;">
+            ${isPass ? '✓ PASS (VERIFY OK)' : '✗ FAIL (RED)'}
+          </span>
+          <span style="font-size: 11px; color: var(--text-muted); font-family: monospace;">
+            ⚡ ${escapeHtml(data.elapsed_ms || 0)}ms &bull; cwd: ${escapeHtml(data.cwd || '')}
+          </span>
+        </div>
+        <div class="gate-result-box">${escapeHtml(data.output || '(Comando ejecutado sin salida en terminal)')}</div>
+      `;
+    }
+
     function runQualityGateFromUI(command, repo = '') {
       if (!command) return;
       showToast(`Ejecutando Quality Gate: ${command}...`, '⏳');
       const runBox = document.getElementById('gateRunResultContainer');
       if (runBox) {
         runBox.style.display = 'block';
-        runBox.innerHTML = `<div style="color: var(--warning); animation: pulse 1s infinite;">⚡ Ejecutando: <code>${command}</code> en Proyecto/${repo}...</div>`;
+        runBox.innerHTML = `<div style="color: var(--warning); animation: pulse 1s infinite;">⚡ Ejecutando: <code>${escapeHtml(command)}</code> en ${escapeHtml(getTenantPrefix(currentActiveTenant))}Proyecto/${escapeHtml(repo)}...</div>`;
       }
 
-      fetch('/api/run_quality_gate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          tenant: currentActiveTenant,
-          command: command,
-          repo: repo
-        })
+      apiPost('/api/run_quality_gate', {
+        tenant: currentActiveTenant,
+        command: command,
+        repo: repo
       })
       .then(res => res.json())
       .then(data => {
         latestGateRunResult = data;
-        if (runBox) {
-          const isPass = data.success;
-          runBox.innerHTML = `
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-              <span class="badge ${isPass ? 'badge-green' : 'badge-red'}" style="font-size: 12px; padding: 4px 10px;">
-                ${isPass ? '✓ PASS (VERIFY OK)' : '✗ FAIL (RED)'}
-              </span>
-              <span style="font-size: 11px; color: var(--text-muted); font-family: monospace;">
-                ⚡ ${data.elapsed_ms || 0}ms &bull; cwd: ${data.cwd}
-              </span>
-            </div>
-            <div class="gate-result-box">${data.output || '(Comando ejecutado sin salida en terminal)'}</div>
-          `;
+        const box = document.getElementById('gateRunResultContainer');
+        if (box) {
+          box.style.display = 'block';
+          box.innerHTML = renderGateRunResultHtml(data);
         }
         if (data.success) {
           playSuccessChime();
@@ -1366,7 +1410,7 @@
               const isMod = f.startsWith('M');
               const isAdd = f.startsWith('A') || f.startsWith('?');
               let color = isMod ? '#f59e0b' : (isAdd ? '#10b981' : '#ef4444');
-              filesHtml += `<div style="font-family: monospace; font-size: 11px; color: ${color};">${f}</div>`;
+              filesHtml += `<div style="font-family: monospace; font-size: 11px; color: ${color};">${escapeHtml(f)}</div>`;
             });
           } else {
             filesHtml = '<div style="font-size: 11px; color: var(--text-dim);">No hay cambios sin commit en este repositorio.</div>';
@@ -1384,14 +1428,10 @@
     function createTicketBranch(branchName, repo = '') {
       if (!branchName) return;
       showToast(`Creando rama ${branchName}...`, '🌿');
-      fetch('/api/git/create_branch', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          tenant: currentActiveTenant,
-          branch: branchName,
-          repo: repo
-        })
+      apiPost('/api/git/create_branch', {
+        tenant: currentActiveTenant,
+        branch: branchName,
+        repo: repo
       })
       .then(res => res.json())
       .then(data => {
@@ -1456,14 +1496,10 @@
       const content = document.getElementById('adrContent').value;
       if (!filename || !content) return;
 
-      fetch('/api/save_adr', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          tenant: currentActiveTenant,
-          filename: filename,
-          content: content
-        })
+      apiPost('/api/save_adr', {
+        tenant: currentActiveTenant,
+        filename: filename,
+        content: content
       })
       .then(res => res.json())
       .then(data => {
@@ -1503,12 +1539,12 @@
         listHtml += `
           <div class="adr-card ${isSel ? 'active' : ''}" onclick="selectAdr(${idx})">
             <div style="display: flex; justify-content: space-between; align-items: center;">
-              <strong style="font-size: 12px; color: #fff;">${a.title}</strong>
-              <span class="adr-status-badge ${stClass}">${a.status}</span>
+              <strong style="font-size: 12px; color: var(--text);">${escapeHtml(a.title)}</strong>
+              <span class="adr-status-badge ${stClass}">${escapeHtml(a.status)}</span>
             </div>
             <div style="font-size: 10px; color: var(--text-dim); margin-top: 4px; display: flex; justify-content: space-between;">
-              <span>${a.filename}</span>
-              <span>${a.date}</span>
+              <span>${escapeHtml(a.filename)}</span>
+              <span>${escapeHtml(a.date)}</span>
             </div>
           </div>
         `;
@@ -1527,13 +1563,15 @@
           </div>
           <div>
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-              <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-dim);">Vista y Edición: ${activeAdr.filename}</span>
+              <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-dim);">Vista y Edición: ${escapeHtml(activeAdr.filename)}</span>
               <button class="btn-secondary" onclick="saveActiveAdr()" style="font-size: 11px; padding: 4px 10px;">💾 Guardar ADR</button>
             </div>
-            <textarea id="adrEditorText" class="editor-textarea" style="height: 420px;">${activeAdr.content || ''}</textarea>
+            <textarea id="adrEditorText" class="editor-textarea" style="height: 420px;"></textarea>
           </div>
         </div>
       `;
+      const adrEditor = document.getElementById('adrEditorText');
+      if (adrEditor) adrEditor.value = activeAdr.content || '';
     }
 
     function selectAdr(idx) {
@@ -1547,14 +1585,10 @@
       const editor = document.getElementById('adrEditorText');
       if (!editor) return;
 
-      fetch('/api/save_adr', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          tenant: currentActiveTenant,
-          filename: activeAdr.filename,
-          content: editor.value
-        })
+      apiPost('/api/save_adr', {
+        tenant: currentActiveTenant,
+        filename: activeAdr.filename,
+        content: editor.value
       })
       .then(res => res.json())
       .then(data => {
@@ -1655,6 +1689,8 @@
     });
 
     function openCreateTenantModal() {
+      const form = tenantDialog?.querySelector('form');
+      if (form) form.reset();
       tenantDialog.showModal();
     }
 
@@ -1785,10 +1821,11 @@
 
       if (latestServerData && latestServerData.tenants) {
         const cur = latestServerData.tenants.find(t => t.slug === currentActiveTenant);
+        const prefixLabel = (cur && cur.slug === 'default') ? 'raíz' : `tenants/${cur ? cur.slug : ''}/`;
         if (cur && cur.repos && cur.repos.length > 0) {
           cur.repos.forEach(r => {
             const rName = typeof r === 'string' ? r : r.name;
-            select.innerHTML += `<option value="${rName}">Proyecto/${rName} (en tenants/${cur.slug}/)</option>`;
+            select.innerHTML += `<option value="${escapeHtml(rName)}">Proyecto/${escapeHtml(rName)} (en ${escapeHtml(prefixLabel)})</option>`;
           });
         } else {
           select.innerHTML = '<option value="">(No hay repositorios clonados aún)</option>';
@@ -1804,15 +1841,16 @@
 
     function updateGeneratedPrompt() {
       const title = document.getElementById('promptTicketTitle').value.trim() || 'TITULO-O-ID-DEL-TICKET';
-      const repo = document.getElementById('promptTargetRepo').value || 'Proyecto/<repositorio>';
+      const repo = document.getElementById('promptTargetRepo').value || '<repositorio>';
       const rawReqs = document.getElementById('promptRequirements').value;
       const reqs = (rawReqs && rawReqs.trim().length > 0) ? rawReqs.replace(/^\s*\n/, '') : 'Describe aquí los requerimientos del ticket...';
       const tenant = currentActiveTenant || 'default';
+      const prefix = getTenantPrefix(tenant);
 
       const prompt = `@commands/orchestrate.md
 
 **Tenant**: \`${tenant}\`
-**Repositorio Destino**: \`tenants/${tenant}/Proyecto/${repo}\`
+**Repositorio Destino**: \`${prefix}Proyecto/${repo}\`
 **Ticket**: \`${title}\`
 
 ## Requerimientos y Criterios de Aceptación:
@@ -1832,11 +1870,7 @@ ${reqs}`;
     function cloneTenantRepos(slug) {
       if (!slug) return;
       showToast('Iniciando clonación de repositorios...', '⏳');
-      fetch('/api/clone_repos', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ slug: slug })
-      })
+      apiPost('/api/clone_repos', { slug: slug })
       .then(res => res.json())
       .then(data => {
         if (data.success) {
@@ -1878,11 +1912,7 @@ ${reqs}`;
       btn.innerText = 'Eliminando...';
       btn.disabled = true;
 
-      fetch('/api/delete_tenant', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ slug: stagedDeleteSlug })
-      })
+      apiPost('/api/delete_tenant', { slug: stagedDeleteSlug })
       .then(res => res.json())
       .then(data => {
         btn.innerText = 'Eliminar Definitivamente';
@@ -1946,11 +1976,7 @@ ${reqs}`;
       btn.innerText = 'Importando...';
       btn.disabled = true;
 
-      fetch('/api/tenants/import', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(stagedImportJson)
-      })
+      apiPost('/api/tenants/import', stagedImportJson)
       .then(res => res.json())
       .then(data => {
         btn.innerText = 'Importar Archivo Seleccionado';
@@ -1978,11 +2004,7 @@ ${reqs}`;
       btn.innerText = 'Buscando...';
       btn.disabled = true;
 
-      fetch('/api/tenants/import', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ use_disk: true })
-      })
+      apiPost('/api/tenants/import', { use_disk: true })
       .then(res => res.json())
       .then(data => {
         btn.innerText = 'Restaurar de Raíz';
@@ -2023,7 +2045,8 @@ ${reqs}`;
       document.getElementById('toastIcon').innerText = icon;
       document.getElementById('toastMsg').innerText = msg;
       toast.style.display = 'flex';
-      setTimeout(() => { toast.style.display = 'none'; }, 3200);
+      if (toastTimer) clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => { toast.style.display = 'none'; }, 3200);
     }
 
     function copyToClipboard(text, btn) {
@@ -2054,7 +2077,7 @@ ${reqs}`;
           } catch (err) {}
         };
         liveLogSource.onerror = function() {
-          if (liveLogSource) {
+          if (currentTab !== 'logs' && liveLogSource) {
             liveLogSource.close();
             liveLogSource = null;
           }
@@ -2064,6 +2087,7 @@ ${reqs}`;
 
     function switchTab(tab) {
       currentTab = tab;
+      lastStructuralSnapshot = null;
       if (latestServerData) renderDashboard(latestServerData);
       if (tab === 'context') loadTenantDetails();
       if (tab === 'logs' && latestServerData) {
@@ -2114,10 +2138,12 @@ ${reqs}`;
         .then(res => res.json())
         .then(data => {
           cachedContextFiles = data;
+          contextDirty = false;
           switchContextTab(currentContextTab);
           const help = document.getElementById('cloneHelpCmd');
           if (help) {
-            help.innerText = `git clone <repo_url> tenants/${data.slug}/Proyecto/<repo>`;
+            const prefix = getTenantPrefix(data.slug);
+            help.innerText = `git clone <repo_url> ${prefix}Proyecto/<repo>`;
           }
         });
     }
@@ -2125,18 +2151,15 @@ ${reqs}`;
     function saveContextFile() {
       const editor = document.getElementById('contextEditor');
       if (!editor) return;
-      fetch('/api/save_context', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          slug: currentActiveTenant,
-          file_type: currentContextTab,
-          content: editor.value
-        })
+      apiPost('/api/save_context', {
+        slug: currentActiveTenant,
+        file_type: currentContextTab,
+        content: editor.value
       })
       .then(res => res.json())
       .then(data => {
         if (data.success) {
+          contextDirty = false;
           showToast('Contexto guardado exitosamente');
           loadTenantDetails();
         } else {
@@ -2148,6 +2171,8 @@ ${reqs}`;
     function onSelectTenant(val) {
       currentActiveTenant = val;
       selectedTicketSlug = null;
+      lastStructuralSnapshot = null;
+      contextDirty = false;
       fetch(`/api/switch_tenant?tenant=${encodeURIComponent(val)}`)
         .then(() => {
           showToast(`Tenant activo: ${val}`);
@@ -2157,6 +2182,7 @@ ${reqs}`;
 
     function onSelectTicket(val) {
       selectedTicketSlug = val ? val : 'none';
+      lastStructuralSnapshot = null;
       fetchStatus();
     }
 
@@ -2169,7 +2195,7 @@ ${reqs}`;
             ${latestServerData.gotchas.map(g => `
               <li style="background: var(--surface); padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border); display: flex; align-items: flex-start; gap: 8px;">
                 <span style="font-size: 14px;">💡</span>
-                <span style="line-height: 1.45; color: var(--text);">${g}</span>
+                <span style="line-height: 1.45; color: var(--text);">${escapeHtml(g)}</span>
               </li>
             `).join('')}
           </ul>
@@ -2215,11 +2241,7 @@ ${reqs}`;
         stack: document.getElementById('newTenantStack').value.trim()
       };
 
-      fetch('/api/create_tenant', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      })
+      apiPost('/api/create_tenant', payload)
       .then(res => res.json())
       .then(data => {
         btn.innerText = 'Crear y Activar Tenant';
@@ -2250,6 +2272,36 @@ ${reqs}`;
       const hasTenants = data.tenants && data.tenants.length > 0;
       currentActiveTenant = data.active_tenant || (hasTenants ? data.tenants[0].slug : '');
 
+      const structuralSnapshot = JSON.stringify({
+        tab: currentTab,
+        ctxTab: currentContextTab,
+        filter: taskFilterStatus,
+        search: taskSearchQuery,
+        active_tenant: currentActiveTenant,
+        tenants: data.tenants,
+        tickets: data.tickets,
+        active_ticket: data.active_ticket,
+        gotchas: data.gotchas
+      });
+
+      if (structuralSnapshot === lastStructuralSnapshot) {
+        const liveClock = document.getElementById('liveSyncTime');
+        if (liveClock) liveClock.textContent = data.server_time || '';
+        return;
+      }
+
+      // Preserve active UI state across structural DOM updates
+      const wasLearningsOpen = !!document.getElementById('learningsDetails')?.open;
+      const activeEl = document.activeElement;
+      const focusedId = activeEl ? activeEl.id : '';
+      const selStart = (activeEl && typeof activeEl.selectionStart === 'number') ? activeEl.selectionStart : null;
+      const selEnd = (activeEl && typeof activeEl.selectionEnd === 'number') ? activeEl.selectionEnd : null;
+      const savedContextVal = contextDirty ? document.getElementById('contextEditor')?.value : null;
+      const savedAdrVal = document.getElementById('adrEditorText')?.value ?? null;
+      const savedGateCmd = document.getElementById('customGateCommandInput')?.value ?? '';
+
+      lastStructuralSnapshot = structuralSnapshot;
+
       // 1. Update Tenant Dropdown
       const tenantSelector = document.getElementById('tenantSelector');
       const ticketSelectContainer = document.getElementById('ticket-select-container');
@@ -2258,7 +2310,7 @@ ${reqs}`;
       if (hasTenants) {
         let tOpts = '';
         data.tenants.forEach(t => {
-          tOpts += `<option value="${t.slug}" ${t.slug === currentActiveTenant ? 'selected' : ''}>🏢 ${t.name} (${t.tickets_count})</option>`;
+          tOpts += `<option value="${escapeHtml(t.slug)}" ${t.slug === currentActiveTenant ? 'selected' : ''}>🏢 ${escapeHtml(t.name)} (${t.tickets_count})</option>`;
         });
         tenantSelector.innerHTML = tOpts;
       } else {
@@ -2325,10 +2377,10 @@ ${reqs}`;
       const hasTickets = data.tickets && data.tickets.length > 0;
       if (hasTickets) {
         ticketSelectContainer.style.display = 'flex';
-        let opts = `<option value="">🌿 Rama: ${curRepoBranch || 'actual'} ${data.active_ticket ? '' : '(Sin ticket activo)'}</option>`;
+        let opts = `<option value="">🌿 Rama: ${escapeHtml(curRepoBranch || 'actual')} ${data.active_ticket ? '' : '(Sin ticket activo)'}</option>`;
         data.tickets.forEach(t => {
           const isCurrentActive = data.active_ticket && data.active_ticket.slug === t.slug;
-          opts += `<option value="${t.slug}">${t.title} (${t.pct}%) ${isCurrentActive ? '●' : ''}</option>`;
+          opts += `<option value="${escapeHtml(t.slug)}">${escapeHtml(t.title)} (${t.pct}%) ${isCurrentActive ? '●' : ''}</option>`;
         });
         ticketSelector.innerHTML = opts;
         if (selectedTicketSlug && selectedTicketSlug !== 'none') {
@@ -2345,11 +2397,11 @@ ${reqs}`;
       // 4. Construct Content based on whether an Active Ticket exists
       let contentHtml = '';
 
-      // Continuous memory / gotchas (closed by default)
+      // Continuous memory / gotchas (closed by default, state preserved on poll)
       let gotchasHtml = '';
       if (data.gotchas && data.gotchas.length > 0) {
         gotchasHtml = `
-          <details style="margin-bottom: 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 8px 14px; font-size: 12px;">
+          <details id="learningsDetails" style="margin-bottom: 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 8px 14px; font-size: 12px;">
             <summary style="cursor: pointer; font-weight: 700; color: var(--warning); display: flex; align-items: center; justify-content: space-between; user-select: none;">
               <span style="display: flex; align-items: center; gap: 6px;">
                 <span>🧠</span> Memoria Continua (${data.gotchas.length} notas aprendidas)
@@ -2358,7 +2410,7 @@ ${reqs}`;
             </summary>
             <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border);">
               <ul class="gotchas-list" style="margin: 0; padding-left: 0; gap: 6px;">
-                ${data.gotchas.map(g => `<li style="display: flex; align-items: flex-start; gap: 6px;"><span>💡</span><span>${g}</span></li>`).join('')}
+                ${data.gotchas.map(g => `<li style="display: flex; align-items: flex-start; gap: 6px;"><span>💡</span><span>${escapeHtml(g)}</span></li>`).join('')}
               </ul>
               <div style="margin-top: 10px; text-align: right;">
                 <button class="btn-secondary" onclick="openLearningsModal()" style="font-size: 10px; padding: 4px 8px;">Ampliar en Modal</button>
@@ -2372,21 +2424,21 @@ ${reqs}`;
         <div class="git-ops-bar">
           <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
             <span style="font-size: 11px; font-weight: 700; color: var(--text-muted);">GIT REPO:</span>
-            <span style="font-size: 11px; font-weight: 700; color: #fff;">${curRepoName || 'Proyecto'}</span>
-            <span style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px;">🌿 ${curRepoBranch}</span>
+            <span style="font-size: 11px; font-weight: 700; color: var(--text);">${escapeHtml(curRepoName || 'Proyecto')}</span>
+            <span style="background: rgba(56, 189, 248, 0.15); color: var(--border-accent); font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px;">🌿 ${escapeHtml(curRepoBranch)}</span>
             ${curRepoDirty > 0 ? `<span style="color: var(--warning); font-size: 11px; font-weight: 600;">● ${curRepoDirty} cambios sin commit</span>` : `<span style="color: var(--success); font-size: 11px; font-weight: 600;">✓ Working tree limpio</span>`}
           </div>
           <div style="display: flex; gap: 6px; flex-wrap: wrap;">
             ${data.active_ticket ? `
-              <button class="btn-secondary" onclick="createTicketBranch('feature/${data.active_ticket.slug}', '${curRepoName}')" style="font-size: 11px;" title="Crear rama feature/${data.active_ticket.slug}">
-                🌿 Rama feature/${data.active_ticket.slug}
+              <button class="btn-secondary" data-branch="${escapeHtml('feature/' + data.active_ticket.slug)}" data-repo="${escapeHtml(curRepoName)}" onclick="createTicketBranch(this.dataset.branch, this.dataset.repo)" style="font-size: 11px;" title="Crear rama feature/${escapeHtml(data.active_ticket.slug)}">
+                🌿 Rama feature/${escapeHtml(data.active_ticket.slug)}
               </button>
             ` : `
               <button class="btn-primary" onclick="openPromptGeneratorModal()" style="font-size: 11px;" title="Generar prompt de orquestación">
                 ✨ Orquestar Ticket
               </button>
             `}
-            <button class="btn-secondary" onclick="openGitDiffModal('${curRepoName}')" style="font-size: 11px;" title="Ver cambios pendientes y diff unificado">
+            <button class="btn-secondary" data-repo="${escapeHtml(curRepoName)}" onclick="openGitDiffModal(this.dataset.repo)" style="font-size: 11px;" title="Ver cambios pendientes y diff unificado">
               📊 Ver Git Diff
             </button>
             <button class="btn-secondary" onclick="openLearningsModal()" style="font-size: 11px;" title="Abrir memoria y aprendizajes técnicos de este tenant">
@@ -2478,20 +2530,27 @@ ${reqs}`;
               </div>
             </div>
             <div class="kpi-card">
-              <div class="kpi-label">Última Actividad</div>
-              <div class="kpi-val" style="font-size: 14px;">${data.server_time}</div>
-              <div class="kpi-desc">Monitoreando cambios en disco</div>
+              <div class="kpi-label">Sincronización en Vivo</div>
+              <div class="kpi-val" style="font-size: 14px; color: var(--success); display: flex; align-items: center; gap: 6px;">
+                <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--success); animation: pulse 1.5s infinite;"></span>
+                <span id="liveSyncTime">${escapeHtml(data.server_time)}</span>
+              </div>
+              <div class="kpi-desc">Sondeo activo &bull; En tiempo real</div>
             </div>
           </div>
         `;
       } else {
         // Tenant without active tickets on current branch: Sleek metadata summary
+        const prefix = getTenantPrefix(curTenantObj.slug) || './';
+        const reposText = (curTenantObj.repos && curTenantObj.repos.length > 0)
+          ? curTenantObj.repos.map(r => (typeof r === 'object' ? r.name : r)).join(', ')
+          : '0 repos (clonar en Proyecto/)';
         contentHtml += `
           ${gitOpsBarHtml}
           ${gotchasHtml}
           <div class="stepper-card">
             <div class="section-title">
-              <span>Espacio de Trabajo: <strong>${curTenantObj.name}</strong> &bull; Rama Git: <code>${curRepoBranch}</code></span>
+              <span>Espacio de Trabajo: <strong>${escapeHtml(curTenantObj.name)}</strong> &bull; Rama Git: <code>${escapeHtml(curRepoBranch)}</code></span>
               <div style="display: flex; gap: 8px; align-items: center;">
                 <button class="btn-primary" onclick="openPromptGeneratorModal()" style="font-size: 11px;">✨ Orquestar Ticket</button>
                 <button class="btn-secondary" onclick="openTenantFolder()" style="font-size: 11px;">📁 Abrir Carpeta</button>
@@ -2501,17 +2560,17 @@ ${reqs}`;
             <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;">
               <div style="background: var(--surface); padding: 12px; border-radius: 8px; border: 1px solid var(--border);">
                 <div style="font-size: 11px; color: var(--text-muted); font-weight: 600;">UBICACIÓN EN DISCO</div>
-                <div style="font-family: monospace; font-size: 12px; color: #93c5fd; margin-top: 4px;">tenants/${curTenantObj.slug}/</div>
+                <div style="font-family: monospace; font-size: 12px; color: var(--primary); margin-top: 4px;">${escapeHtml(prefix)}</div>
               </div>
               <div style="background: var(--surface); padding: 12px; border-radius: 8px; border: 1px solid var(--border);">
                 <div style="font-size: 11px; color: var(--text-muted); font-weight: 600;">REPOSITORIOS CLONADOS</div>
-                <div style="font-size: 13px; font-weight: 700; color: #fff; margin-top: 4px;">
-                  ${curTenantObj.repos && curTenantObj.repos.length > 0 ? (typeof curTenantObj.repos[0] === 'object' ? curTenantObj.repos.map(r => r.name).join(', ') : curTenantObj.repos.join(', ')) : '0 repos (clonar en Proyecto/)'}
+                <div style="font-size: 13px; font-weight: 700; color: var(--text); margin-top: 4px;">
+                  ${escapeHtml(reposText)}
                 </div>
               </div>
               <div style="background: var(--surface); padding: 12px; border-radius: 8px; border: 1px solid var(--border);">
                 <div style="font-size: 11px; color: var(--text-muted); font-weight: 600;">ESTADO DE LA RAMA</div>
-                <div style="font-size: 13px; font-weight: 700; color: #38bdf8; margin-top: 4px;">🌿 ${curRepoBranch} (Listo para nuevo ticket)</div>
+                <div style="font-size: 13px; font-weight: 700; color: var(--border-accent); margin-top: 4px;">🌿 ${escapeHtml(curRepoBranch)} (Listo para nuevo ticket)</div>
               </div>
             </div>
           </div>
@@ -2567,6 +2626,42 @@ ${reqs}`;
       `;
 
       main.innerHTML = contentHtml;
+
+      // Restore preserved UI state after structural DOM rebuild
+      const detailsEl = document.getElementById('learningsDetails');
+      if (detailsEl && wasLearningsOpen) detailsEl.open = true;
+
+      const ctxEditor = document.getElementById('contextEditor');
+      if (ctxEditor) {
+        if (savedContextVal !== null) {
+          ctxEditor.value = savedContextVal;
+        } else if (currentTab === 'context') {
+          if (currentContextTab === 'team') ctxEditor.value = cachedContextFiles.team_context || '';
+          else if (currentContextTab === 'tech') ctxEditor.value = cachedContextFiles.tech_context || '';
+          else if (currentContextTab === 'standards') ctxEditor.value = cachedContextFiles.company_standards || '';
+          else if (currentContextTab === 'learnings') ctxEditor.value = cachedContextFiles.learnings || '';
+        }
+        ctxEditor.addEventListener('input', () => { contextDirty = true; });
+      }
+
+      if (currentTab === 'context' && currentContextTab === 'adrs') {
+        renderAdrsView();
+        const adrEditor = document.getElementById('adrEditorText');
+        if (adrEditor && savedAdrVal !== null) adrEditor.value = savedAdrVal;
+      }
+
+      const gateInput = document.getElementById('customGateCommandInput');
+      if (gateInput && savedGateCmd) gateInput.value = savedGateCmd;
+
+      if (focusedId) {
+        const toFocus = document.getElementById(focusedId);
+        if (toFocus && typeof toFocus.focus === 'function') {
+          toFocus.focus();
+          if (selStart !== null && typeof toFocus.setSelectionRange === 'function') {
+            try { toFocus.setSelectionRange(selStart, selEnd ?? selStart); } catch (e) {}
+          }
+        }
+      }
     }
 
     function renderTasksTab(data, tenantObj) {
@@ -2598,7 +2693,7 @@ ${reqs}`;
               <button class="filter-pill ${taskFilterStatus === 'done' ? 'active' : ''}" onclick="setTaskFilter('done')">✓ Hechas</button>
             </div>
             <div>
-              <input type="search" id="taskSearchInput" class="search-input" placeholder="🔍 Filtrar tareas... [/ o Ctrl+K]" value="${taskSearchQuery}" oninput="onTaskSearchInput(this.value)">
+              <input type="search" id="taskSearchInput" class="search-input" placeholder="🔍 Filtrar tareas... [/ o Ctrl+K]" value="${escapeHtml(taskSearchQuery)}" oninput="onTaskSearchInput(this.value)">
             </div>
           </div>
         `;
@@ -2608,25 +2703,26 @@ ${reqs}`;
           return html;
         }
 
+        const taskPrefix = getTenantPrefix(currentActiveTenant);
         tasks.forEach(t => {
           let badgeClass = 'badge-setup';
           let phaseLabel = t.phase.toUpperCase();
           if (t.phase.includes('red')) { badgeClass = 'badge-red'; phaseLabel = 'RED'; }
           else if (t.phase.includes('green')) { badgeClass = 'badge-green'; phaseLabel = 'GREEN'; }
 
-          const taskRelPath = data.active_ticket ? `tenants/${currentActiveTenant}/tasks/${data.active_ticket.slug}/${t.file || 'README.md'}` : '';
+          const taskRelPath = data.active_ticket ? `${taskPrefix}tasks/${data.active_ticket.slug}/${t.file || 'README.md'}` : '';
 
           html += `
             <div class="task-item">
               <div class="task-left">
                 <input type="checkbox" ${t.completed ? 'checked' : ''} class="task-checkbox" disabled>
-                <span class="task-id">task${t.id}</span>
-                <span class="task-name">${t.name}</span>
+                <span class="task-id">task${escapeHtml(t.id)}</span>
+                <span class="task-name">${escapeHtml(t.name)}</span>
               </div>
               <div style="display: flex; gap: 8px; align-items: center; shrink-0; flex-wrap: wrap;">
                 ${getDeepLinks(taskRelPath)}
-                <span class="badge ${badgeClass}">${phaseLabel}</span>
-                <span class="badge-agent">${t.agent}</span>
+                <span class="badge ${badgeClass}">${escapeHtml(phaseLabel)}</span>
+                <span class="badge-agent">${escapeHtml(t.agent)}</span>
                 <span style="font-size: 11px; font-weight: 700; color: ${t.completed ? 'var(--success)' : 'var(--text-dim)'}">
                   ${t.completed ? '✓ DONE' : 'PENDIENTE'}
                 </span>
@@ -2638,14 +2734,15 @@ ${reqs}`;
       }
 
       // Empty State for Tasks: Tenant is ready, waiting for ticket
+      const emptyPrefix = getTenantPrefix(tenantObj.slug);
       return `
         <div class="tenant-ready-box">
           <div style="display: flex; align-items: center; gap: 12px;">
             <div style="font-size: 28px;">🚀</div>
             <div>
-              <div style="font-size: 16px; font-weight: 700; color: #fff;">Tenant "${tenantObj.name}" listo para recibir requerimientos</div>
+              <div style="font-size: 16px; font-weight: 700; color: var(--text);">Tenant "${escapeHtml(tenantObj.name)}" listo para recibir requerimientos</div>
               <div style="font-size: 13px; color: var(--text-muted); margin-top: 2px;">
-                No hay tareas en <code>tenants/${tenantObj.slug}/tasks/</code>. Pega un ticket en tu agente para arrancar la implementación automática.
+                No hay tareas en <code>${escapeHtml(emptyPrefix)}tasks/</code>. Pega un ticket en tu agente para arrancar la implementación automática.
               </div>
             </div>
           </div>
@@ -2671,7 +2768,7 @@ ${reqs}`;
       let html = `
         <div class="portability-bar">
           <div>
-            <div style="font-size: 13px; font-weight: 700; color: #fff;">📦 Portabilidad de Configuración Multi-Tenant</div>
+            <div style="font-size: 13px; font-weight: 700; color: var(--text);">📦 Portabilidad de Configuración Multi-Tenant</div>
             <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">
               Guarda tus tenants en <code>tenants.local.json</code> (excluido de Git). Puedes transferir este archivo a otra PC y restaurar todo en 1 clic.
             </div>
@@ -2699,10 +2796,10 @@ ${reqs}`;
             repoListHtml += `
               <div class="repo-card">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
-                  <strong style="color: #fff; font-size: 11px;">📁 ${rName}</strong>
-                  <span style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px;">🌿 ${rBranch}</span>
+                  <strong style="color: var(--text); font-size: 11px;">📁 ${escapeHtml(rName)}</strong>
+                  <span style="background: rgba(56, 189, 248, 0.15); color: var(--border-accent); font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px;">🌿 ${escapeHtml(rBranch)}</span>
                 </div>
-                ${rCommit ? `<div style="font-size: 10px; color: var(--text-dim); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${rCommit}</div>` : ''}
+                ${rCommit ? `<div style="font-size: 10px; color: var(--text-dim); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(rCommit)}</div>` : ''}
                 <div style="font-size: 10px; margin-top: 2px; color: ${rDirty > 0 ? 'var(--warning)' : 'var(--success)'}; font-weight: 600;">
                   ${rDirty > 0 ? `● ${rDirty} cambios pendientes` : '✓ Working tree limpio'}
                 </div>
@@ -2714,12 +2811,13 @@ ${reqs}`;
           repoListHtml = '<div style="font-size: 11px; color: var(--text-dim); margin-top: 4px;">0 repos (clonar en Proyecto/)</div>';
         }
 
+        const tPrefix = getTenantPrefix(t.slug) || './';
         html += `
           <div class="tenant-card" style="${isAct ? 'border-color: var(--border-accent); background: rgba(56, 189, 248, 0.05);' : ''}">
             <div class="tenant-card-header">
               <div>
-                <div class="tenant-card-title">🏢 ${t.name}</div>
-                <div class="tenant-card-slug">tenants/${t.slug}/</div>
+                <div class="tenant-card-title">🏢 ${escapeHtml(t.name)}</div>
+                <div class="tenant-card-slug">${escapeHtml(tPrefix)}</div>
               </div>
               ${isAct ? '<span class="status-badge">ACTIVO</span>' : ''}
             </div>
@@ -2727,22 +2825,22 @@ ${reqs}`;
               <div>🎫 Tickets de desarrollo: <strong>${t.tickets_count}</strong></div>
               <div>📁 Repositorios en Proyecto/: <strong>${repoCount}</strong></div>
               ${repoListHtml}
-              <div style="margin-top: 4px;">⚡ Actividad: <em>${t.latest_ticket}</em></div>
+              <div style="margin-top: 4px;">⚡ Actividad: <em>${escapeHtml(t.latest_ticket)}</em></div>
             </div>
             <div class="progress-bar-container" style="margin: 6px 0 8px 0;">
               <div class="progress-bar" style="width: ${t.avg_percentage}%;"></div>
             </div>
             <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-              <button class="btn-primary" onclick="onSelectTenant('${t.slug}')" style="flex: 1; justify-content: center; font-size: 11px;">
+              <button class="btn-primary" data-slug="${escapeHtml(t.slug)}" onclick="onSelectTenant(this.dataset.slug)" style="flex: 1; justify-content: center; font-size: 11px;">
                 ${isAct ? '✓ Seleccionado' : 'Activar Tenant'}
               </button>
-              <button class="btn-secondary" onclick="onSelectTenant('${t.slug}'); switchTab('context');" style="font-size: 11px;">
+              <button class="btn-secondary" data-slug="${escapeHtml(t.slug)}" onclick="onSelectTenant(this.dataset.slug); switchTab('context');" style="font-size: 11px;">
                 ⚙️ Contexto
               </button>
-              <button class="btn-secondary" onclick="cloneTenantRepos('${t.slug}')" title="Clonar repositorios si tienen URL remota" style="font-size: 11px;">
+              <button class="btn-secondary" data-slug="${escapeHtml(t.slug)}" onclick="cloneTenantRepos(this.dataset.slug)" title="Clonar repositorios si tienen URL remota" style="font-size: 11px;">
                 ⬇️ Clonar
               </button>
-              ${t.slug !== 'default' ? `<button class="btn-icon-danger" onclick="confirmDeleteTenant('${t.slug}', '${t.name.replace(/'/g, "\\'")}')" title="Eliminar Tenant">🗑️</button>` : ''}
+              ${t.slug !== 'default' ? `<button class="btn-icon-danger" data-slug="${escapeHtml(t.slug)}" data-name="${escapeHtml(t.name)}" onclick="confirmDeleteTenant(this.dataset.slug, this.dataset.name)" title="Eliminar Tenant">🗑️</button>` : ''}
             </div>
           </div>
         `;
@@ -2778,7 +2876,7 @@ ${reqs}`;
               <span>🚀 Cómo clonar repositorios para este tenant:</span>
             </div>
             <div class="gate-code">
-              <span id="cloneHelpCmd">git clone &lt;repo_url&gt; tenants/${tenantObj.slug}/Proyecto/&lt;repo&gt;</span>
+              <span id="cloneHelpCmd">git clone &lt;repo_url&gt; ${escapeHtml(getTenantPrefix(tenantObj.slug))}Proyecto/&lt;repo&gt;</span>
               <button class="copy-btn" onclick="copyToClipboard(document.getElementById('cloneHelpCmd').innerText, this)">Copiar</button>
             </div>
           </div>
@@ -2806,16 +2904,16 @@ ${reqs}`;
             <div class="gate-box">
               <div class="gate-title">
                 <div>
-                  <strong>${g.framework}</strong> &bull; <span style="font-size: 11px; color: var(--text-muted);">${g.type}</span>
-                  ${g.repo ? `<span style="font-size: 10px; color: var(--border-accent); margin-left: 6px;">(Proyecto/${g.repo})</span>` : ''}
+                  <strong>${escapeHtml(g.framework)}</strong> &bull; <span style="font-size: 11px; color: var(--text-muted);">${escapeHtml(g.type)}</span>
+                  ${g.repo ? `<span style="font-size: 10px; color: var(--border-accent); margin-left: 6px;">(Proyecto/${escapeHtml(g.repo)})</span>` : ''}
                 </div>
                 <div style="display: flex; gap: 6px;">
-                  <button class="gate-run-btn" onclick="runQualityGateFromUI('${g.command.replace(/'/g, "\\'")}', '${g.repo || ''}')">▶️ Ejecutar Gate</button>
+                  <button class="gate-run-btn" data-command="${escapeHtml(g.command)}" data-repo="${escapeHtml(g.repo || '')}" onclick="runGateFromButton(this)">▶️ Ejecutar Gate</button>
                 </div>
               </div>
               <div class="gate-code">
-                <span>${g.command}</span>
-                <button class="copy-btn" onclick="copyToClipboard('${g.command.replace(/'/g, "\\'")}', this)">Copiar</button>
+                <span>${escapeHtml(g.command)}</span>
+                <button class="copy-btn" data-command="${escapeHtml(g.command)}" onclick="copyGateFromButton(this)">Copiar</button>
               </div>
             </div>
           `;
@@ -2835,14 +2933,14 @@ ${reqs}`;
           html += `
             <div class="gate-box">
               <div class="gate-title">
-                <span>🛡️ ${g.name}</span>
+                <span>🛡️ ${escapeHtml(g.name)}</span>
                 <div style="display: flex; gap: 6px;">
-                  <button class="gate-run-btn" onclick="runQualityGateFromUI('${g.command.replace(/'/g, "\\'")}')">▶️ Ejecutar Gate</button>
+                  <button class="gate-run-btn" data-command="${escapeHtml(g.command)}" data-repo="" onclick="runGateFromButton(this)">▶️ Ejecutar Gate</button>
                 </div>
               </div>
               <div class="gate-code">
-                <span>${g.command}</span>
-                <button class="copy-btn" onclick="copyToClipboard('${g.command.replace(/'/g, "\\'")}', this)">Copiar</button>
+                <span>${escapeHtml(g.command)}</span>
+                <button class="copy-btn" data-command="${escapeHtml(g.command)}" onclick="copyGateFromButton(this)">Copiar</button>
               </div>
             </div>
           `;
@@ -2862,7 +2960,7 @@ ${reqs}`;
           </div>
         </div>
 
-        <div id="gateRunResultContainer" style="display: none; margin-top: 14px;"></div>
+        <div id="gateRunResultContainer" style="display: ${latestGateRunResult ? 'block' : 'none'}; margin-top: 14px;">${latestGateRunResult ? renderGateRunResultHtml(latestGateRunResult) : ''}</div>
       `;
 
       return html;
@@ -2877,7 +2975,7 @@ ${reqs}`;
           </span>
           <span style="font-size: 11px;">${activeTicket ? activeTicket.last_modified : ''}</span>
         </div>
-        <div class="log-viewer" id="liveLogViewer">${content}</div>
+        <div class="log-viewer" id="liveLogViewer">${escapeHtml(content)}</div>
       `;
     }
 

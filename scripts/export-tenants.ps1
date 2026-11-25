@@ -65,6 +65,17 @@ if (Test-Path -LiteralPath $tenantsDir -PathType Container) {
             }
         }
 
+        $adrsDir = Join-Path $contextDir 'adrs'
+        $adrs = @()
+        if (Test-Path -LiteralPath $adrsDir -PathType Container) {
+            foreach ($af in (Get-ChildItem -LiteralPath $adrsDir -File -Filter '*.md' | Sort-Object Name)) {
+                $adrs += @{
+                    filename = $af.Name
+                    content = (Read-Safe $af.FullName)
+                }
+            }
+        }
+
         $tenantObj = @{
             slug = $slug
             name = ($slug -replace '-', ' ')
@@ -75,6 +86,7 @@ if (Test-Path -LiteralPath $tenantsDir -PathType Container) {
             project_structure = (Read-Safe (Join-Path $contextDir 'project-structure.md'))
             progress = (Read-Safe (Join-Path $contextDir 'progress.md'))
             system_patterns = (Read-Safe (Join-Path $contextDir 'system-patterns.md'))
+            adrs = $adrs
             repos = $repos
         }
 

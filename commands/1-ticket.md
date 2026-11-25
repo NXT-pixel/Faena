@@ -1,7 +1,7 @@
 ---
 name: ticket
 description: Inicia el flujo de trabajo procesando un ticket o requerimiento pegado por el usuario en el chat. Carga el contexto del equipo, identifica los repositorios en Proyecto/ y genera la carpeta del ticket con el documento de diseño y requerimientos en tasks/task-<nombre>/design-<nombre>.md.
-agent: /agents/design/design-facilitator.md
+agent: agents/design/design-facilitator.md
 tools: Read, Write, Bash, LS
 ---
 
@@ -16,13 +16,13 @@ Usa este comando cuando quieras arrastrar un comando al chat y pegar el texto de
 Cuando el usuario invoque o arrastre `@commands/1-ticket.md` y pegue la descripción de un ticket:
 
 ### 1. Lectura Obligatoria de Contexto
-Antes de responder:
-1. **Contexto de Equipo**: Lee `tasks/context/team-context.md` para identificar:
+Antes de responder, resuelve las rutas según `.active-tenant` (`PROTOCOL.md` §1; raíz si no existe o vale `default`, o `tenants/<tenant>/` si hay un tenant activo):
+1. **Contexto de Equipo**: Lee `tasks/context/team-context.md` (o `tenants/<tenant>/context/team-context.md`) para identificar:
    - Quién es el **Tech Lead** (para consultar o alinear decisiones).
    - Quién es el **QA** asignado (para saber qué pruebas delegar o preparar).
    - Quién es el **DevOps** (para configuración de variables o infraestructura).
-2. **Contexto de Código**: Inspecciona la carpeta `Proyecto/` para determinar qué repositorio o proyecto existente será afectado (ej. `Proyecto/backend-api`, `Proyecto/frontend-web`).
-3. **Reglas de la Empresa**: Revisa `rules/project/` para aplicar estándares corporativos obligatorios.
+2. **Contexto de Código**: Inspecciona la carpeta `Proyecto/` (o `tenants/<tenant>/Proyecto/`) para determinar qué repositorio existente será afectado.
+3. **Reglas de la Empresa**: Revisa `rules/project/` (o `tenants/<tenant>/rules/`) para aplicar estándares corporativos obligatorios.
 
 ### 2. Análisis del Ticket
 Extrae del texto pegado:
@@ -45,7 +45,8 @@ Crea la carpeta del ticket y el archivo de diseño dentro de ella:
 
 **Fecha:** [Fecha actual]
 **Ticket Origen:** [Identificador o resumen del ticket]
-**Repositorio Afectado:** `Proyecto/[repo]/`
+**Repositorio Afectado:** `Proyecto/[repo]/` (o `tenants/[tenant]/Proyecto/[repo]/`)
+**Branch:** `[rama Git del ticket, si aplica]`
 
 ---
 
@@ -79,11 +80,11 @@ Crea la carpeta del ticket y el archivo de diseño dentro de ella:
 ## 6. Próximo Paso
 Para generar el TRD (Documento de Requerimientos Técnicos) y la especificación de pruebas:
 Arrastra al chat:
-`@commands/2-create-trd.md tasks/task-[nombre]/design-[nombre].md`
+`@commands/2-create-trd.md <tasks_dir>/task-[nombre]/design-[nombre].md`
 ```
 
 ### 4. Respuesta al Usuario
-1. Confirma la creación de `tasks/task-<nombre>/design-<nombre>.md`.
+1. Confirma la creación de `<tasks_dir>/task-<nombre>/design-<nombre>.md` (en `tasks/` para `default`, o `tenants/<tenant>/tasks/` según `.active-tenant`).
 2. Presenta un breve resumen de lo comprendido (máximo 5-8 viñetas).
 3. Indica el siguiente comando a arrastrar:
-   > 👉 **Siguiente paso:** Arrastra al chat `@commands/2-create-trd.md tasks/task-<nombre>/design-<nombre>.md`
+   > 👉 **Siguiente paso:** Arrastra al chat `@commands/2-create-trd.md <tasks_dir>/task-<nombre>/design-<nombre>.md`

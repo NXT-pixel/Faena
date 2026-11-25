@@ -449,7 +449,7 @@ When invoked:
 **Example (in a command file):**
 ```markdown
 When invoked:
-1. Load project context via /load-context command
+1. Load project context via `@commands/load-context.md`
 2. Review project structure and package configuration
 3. Analyze code style and testing conventions
 4. Execute solution following established patterns
@@ -526,7 +526,7 @@ Steps:
 Execution checklist (PROCEDURAL - belongs in command):
 ```markdown
 Design documentation checklist:
-- [ ] Load project context via /load-context
+- [ ] Load project context via `@commands/load-context.md`
 - [ ] Ask clarifying questions (3-5 initial)
 - [ ] Create design document with diagrams
 - [ ] Write output to tasks/design-{name}.md
@@ -619,9 +619,9 @@ Why: Agents don't need to know where files go
 ```markdown
 <!-- DON'T put this in an agent file -->
 Integration with other agents:
-1. Call /load-context command first
+1. Call `@commands/load-context.md` first
 2. Then invoke design-agent
-3. Finally run /update-context
+3. Finally run `@commands/4-update-context.md`
 ```
 Why: These are orchestration steps for commands
 
@@ -737,13 +737,13 @@ Create both when:
 - Produces structured output in specific locations
 - Has initialization or cleanup steps
 
-**Example scenario:** User says "/create-design for payment system" → command orchestrates: load context, agent facilitates design, write to tasks/
+**Example scenario:** User says "`@commands/1b-design.md` for payment system" → command orchestrates: load context, agent facilitates design, write to tasks/
 
 ### Signals You Need a Command File:
 
 1. **File paths mentioned**: "Write output to tasks/" → needs command
 2. **Workflow steps**: "First load context, then..." → needs command
-3. **Invokes others**: "Call /load-context before..." → needs command
+3. **Invokes others**: "Call `@commands/load-context.md` before..." → needs command
 4. **Specific output structure**: "Create file with template..." → needs command
 5. **Error recovery procedures**: "If X fails, do Y..." → needs command
 
@@ -1059,7 +1059,7 @@ Always approach design as a collaborative discovery process, recognizing that th
 ---
 name: create-design
 description: Facilitates collaborative design conversations through clarifying questions, then creates comprehensive design documentation.
-agent: /agents/design/design-facilitator.md
+agent: agents/design/design-facilitator.md
 tools: Read, Write, Bash, LS
 ---
 
@@ -1076,9 +1076,9 @@ Use this command when you need to:
 
 ### 1. Load Project Context
 
-Invoke the /load-context command to prime the session:
+Invoke `@commands/load-context.md` to prime the session:
 ```bash
-/commands/load-context.md
+@commands/load-context.md
 ```
 
 ### 2. Understand Design Request

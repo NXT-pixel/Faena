@@ -12,6 +12,8 @@ import sys
 import json
 import time
 import re
+import stat
+import secrets
 import shutil
 import webbrowser
 import threading
@@ -23,6 +25,8 @@ from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 from urllib.parse import urlparse, parse_qs
 
 PORT = 3333
+ACTUAL_PORT = PORT
+SESSION_CSRF_TOKEN = secrets.token_hex(24)
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 TENANTS_DIR = REPO_ROOT / "tenants"
 ACTIVE_TENANT_FILE = REPO_ROOT / ".active-tenant"
@@ -40,6 +44,41 @@ def sanitize_slug(slug):
     if not clean or clean.startswith(".") or ".." in clean:
         return ""
     return clean
+
+
+def sanitize_filename_segment(name):
+    """Sanitizes a single path segment (repo name, ticket slug, filename) against traversal."""
+    if not name:
+        return ""
+    raw = str(name).strip()
+    if "/" in raw or "\\" in raw or ".." in raw or raw in (".", ".."):
+        return ""
+    clean = re.sub(r"[^a-zA-Z0-9_.-]", "-", raw).strip(".")
+    if not clean or ".." in clean:
+        return ""
+    return clean
+
+
+def resolve_inside(base_dir, child_name):
+    """Resolves child_name strictly inside base_dir, returning None on traversal."""
+    clean = sanitize_filename_segment(child_name)
+    if not clean:
+        return None
+    base_resolved = Path(base_dir).resolve()
+    target = (base_resolved / clean).resolve()
+    try:
+        target.relative_to(base_resolved)
+        return target
+    except ValueError:
+        return None
+
+
+def is_safe_git_url(url):
+    """Validates git remote URLs and blocks git option injection (leading '-' or 'ext::')."""
+    u = (url or "").strip()
+    if not u or u.startswith("-") or u.lower().startswith("ext::"):
+        return False
+    return bool(re.match(r"^(https?://|ssh://|git://|file://|git@[\w.-]+:)", u, re.IGNORECASE))
 
 
 def get_tenant_dir_safely(slug):
@@ -104,7 +143,21 @@ def get_checkbox_counts(readme_path):
         return done, pending
     try:
         content = readme_path.read_text(encoding="utf-8", errors="replace")
-        for line in content.splitlines():
+        lines = content.splitlines()
+        # Prefer counting only within "## Progress Tracking" if present so checklist examples elsewhere don't skew progress
+        section_lines = []
+        in_progress_section = False
+        for line in lines:
+            if re.match(r"^\s*##\s+Progress\s+Tracking\b", line, re.IGNORECASE):
+                in_progress_section = True
+                continue
+            if in_progress_section and re.match(r"^\s*##\s+", line):
+                break
+            if in_progress_section:
+                section_lines.append(line)
+
+        target_lines = section_lines if section_lines else lines
+        for line in target_lines:
             if re.match(r"^\s*-\s*\[[xX]\]", line):
                 done += 1
             elif re.match(r"^\s*-\s*\[\s\]", line):
@@ -217,6 +270,23 @@ def get_ticket_data(task_dir, tenant_slug):
         except Exception:
             pass
 
+    raw_ticket_name = ""
+    ticket_branch = ""
+    for f in files:
+        if f.name.startswith(("design-", "README")) and f.name.endswith(".md"):
+            try:
+                txt = f.read_text(encoding="utf-8", errors="replace")
+                if not raw_ticket_name and f.name.startswith("design-"):
+                    m_t = re.search(r"\*\*Ticket\*\*:\s*`?([^`\r\n]+)`?", txt)
+                    if m_t:
+                        raw_ticket_name = m_t.group(1).strip(" `*")
+                if not ticket_branch:
+                    m_b = re.search(r"\*\*(?:Branch|Rama)\*\*:\s*`?([^`\r\n]+)`?", txt, re.IGNORECASE)
+                    if m_b:
+                        ticket_branch = m_b.group(1).strip(" `*")
+            except Exception:
+                pass
+
     phase1 = "completed" if has_design else "pending"
     phase2 = "completed" if (has_trd and has_spec) else ("in_progress" if (has_trd or has_spec) else "pending")
     phase3 = "completed" if (has_readme and len(task_files) > 0) else "pending"
@@ -259,6 +329,8 @@ def get_ticket_data(task_dir, tenant_slug):
     return {
         "slug": slug,
         "title": title,
+        "raw_ticket_name": raw_ticket_name,
+        "branch": ticket_branch,
         "tenant": tenant_slug,
         "repo": repo_location,
         "done": done,
@@ -311,35 +383,75 @@ def is_base_branch(branch_name):
     return clean in {"main", "master", "develop", "dev", "trunk", "release", "unknown", "no-git"}
 
 
+def split_branch_words(s):
+    if not s:
+        return []
+    s = re.sub(r"^(?:feature|fix|bugfix|chore|refactor|task|ticket)[/-]+", "", s, flags=re.IGNORECASE)
+    s = re.sub(r"([a-z0-9])([A-Z])", r"\1 \2", s)
+    s = re.sub(r"[^a-zA-Z0-9]+", " ", s)
+    words = [w.lower() for w in s.split() if len(w) >= 3]
+    stop_words = {"feature", "task", "ticket", "branch", "repo", "default", "index", "prototypezero", "and", "the", "for"}
+    return [w for w in words if w not in stop_words]
+
+
 def find_matching_ticket_for_branch(branch_name, tickets):
     if not branch_name or is_base_branch(branch_name) or not tickets:
         return None
-    clean_branch = re.sub(r"^(feature|fix|bugfix|chore|refactor|task|ticket)/", "", branch_name.lower().strip())
 
-    # 1. Exact match with ticket slug or stripped slug
+    branch_words = set(split_branch_words(branch_name))
+    clean_branch_str = "".join(split_branch_words(branch_name))
+
+    best_match = None
+    best_score = 0
+
     for t in tickets:
+        score = 0
         t_slug = t["slug"].lower()
-        clean_slug = re.sub(r"^(task|ticket)-", "", t_slug)
-        if clean_branch == t_slug or clean_branch == clean_slug:
-            return t
+        clean_slug = re.sub(r"^(task|ticket)-", "", t_slug).replace("-", "")
 
-    # 2. Substring match
-    for t in tickets:
-        t_slug = t["slug"].lower()
-        clean_slug = re.sub(r"^(task|ticket)-", "", t_slug)
-        if clean_slug in clean_branch or clean_branch in clean_slug:
-            return t
-        if t_slug in clean_branch or clean_branch in t_slug:
-            return t
+        # 0. Explicit branch metadata match
+        t_branch = (t.get("branch") or "").strip().lower()
+        if t_branch and t_branch == branch_name.strip().lower():
+            score += 200
 
-    # 3. Numeric ID match (e.g. task-001 vs branch 001)
-    m_branch = re.search(r"(\d{2,})", clean_branch)
-    if m_branch:
-        num = m_branch.group(1)
-        for t in tickets:
-            m_t = re.search(r"(\d{2,})", t["slug"])
-            if m_t and m_t.group(1) == num:
-                return t
+        # 1. Exact string match or substring match on slug
+        if clean_branch_str and (clean_branch_str in clean_slug or clean_slug in clean_branch_str):
+            score += 100
+
+        # 2. Overlap with slug words (e.g. payment, receipts)
+        slug_words = set(split_branch_words(t_slug))
+        common_slug = branch_words & slug_words
+        score += len(common_slug) * 30
+
+        # 3. Overlap with ticket title words
+        title_words = set(split_branch_words(t.get("title", "")))
+        common_title = branch_words & title_words
+        score += len(common_title) * 20
+
+        # 4. Overlap with raw ticket name from design-*.md (e.g. Generate and Share Payment Receipts)
+        raw_name = t.get("raw_ticket_name", "")
+        if raw_name:
+            raw_words = set(split_branch_words(raw_name))
+            common_raw = branch_words & raw_words
+            score += len(common_raw) * 35
+
+        # 5. Numeric match (e.g. PAY-104 vs 104)
+        m_b = re.findall(r"\d{2,}", branch_name)
+        m_t = re.findall(r"\d{2,}", t_slug)
+        if m_b and m_t and (set(m_b) & set(m_t)):
+            score += 60
+
+        # 6. Small tie-breaker for in-progress ticket (< 100%)
+        if score > 0 and t.get("percentage", 0) < 100:
+            score += 10
+
+        if score > best_score:
+            best_score = score
+            best_match = t
+
+    # Only return a ticket when there is genuine semantic/branch evidence
+    if best_score >= 20:
+        return best_match
 
     return None
 
@@ -435,14 +547,15 @@ def scan_all_tenants():
                 })
 
     root_tickets = scan_tickets_for_tenant("default")
-    if root_tickets:
+    proy_root = REPO_ROOT / "Proyecto"
+    root_repos = []
+    if proy_root.exists():
+        root_repos = [inspect_git_repo(r) for r in sorted(proy_root.iterdir()) if r.is_dir() and not r.name.startswith(".")]
+
+    if root_tickets or root_repos or (REPO_ROOT / "tasks" / "context").exists():
         total_root = len(root_tickets)
         avg_pct = int(sum(t["percentage"] for t in root_tickets) / total_root) if total_root > 0 else 0
         latest_ticket = root_tickets[0]["title"] if total_root > 0 else "Sin tickets"
-        proy_root = REPO_ROOT / "Proyecto"
-        root_repos = []
-        if proy_root.exists():
-            root_repos = [inspect_git_repo(r) for r in sorted(proy_root.iterdir()) if r.is_dir() and not r.name.startswith(".")]
 
         tenants.insert(0, {
             "slug": "default",
@@ -531,6 +644,11 @@ Todo ticket debe culminar con un resumen de handoff claro para QA y DevOps.
     return True, slug
 
 
+def _remove_readonly(func, path, _exc):
+    os.chmod(path, stat.S_IWRITE)
+    func(path)
+
+
 def delete_tenant_structure(slug):
     slug = sanitize_slug(slug)
     if not slug or slug == "default":
@@ -541,7 +659,10 @@ def delete_tenant_structure(slug):
         return False, f"El tenant '{slug}' no existe"
 
     try:
-        shutil.rmtree(tenant_dir)
+        if sys.version_info >= (3, 12):
+            shutil.rmtree(tenant_dir, onexc=_remove_readonly)
+        else:
+            shutil.rmtree(tenant_dir, onerror=_remove_readonly)
     except Exception as e:
         return False, f"Error al eliminar carpeta: {str(e)}"
 
@@ -682,6 +803,15 @@ def export_tenants_payload():
                                 "remote_url": remote_url
                             })
 
+                adrs_list = []
+                adrs_dir = ctx_dir / "adrs"
+                if adrs_dir.exists():
+                    for af in sorted(adrs_dir.glob("*.md")):
+                        adrs_list.append({
+                            "filename": af.name,
+                            "content": read_safe(af)
+                        })
+
                 tenants_list.append({
                     "slug": slug,
                     "name": slug.replace("-", " ").title(),
@@ -692,6 +822,7 @@ def export_tenants_payload():
                     "project_structure": read_safe(ctx_dir / "project-structure.md"),
                     "progress": read_safe(ctx_dir / "progress.md"),
                     "system_patterns": read_safe(ctx_dir / "system-patterns.md"),
+                    "adrs": adrs_list,
                     "repos": repos
                 })
 
@@ -722,11 +853,10 @@ def import_tenants_payload(payload):
     restored = []
 
     for t in tenants:
-        slug = t.get("slug")
-        if not slug:
+        slug = sanitize_slug(t.get("slug", ""))
+        tdir = get_tenant_dir_safely(slug)
+        if not tdir:
             continue
-        slug = re.sub(r"[^a-z0-9_-]", "-", slug.strip().lower())
-        tdir = TENANTS_DIR / slug
         ctx = tdir / "context"
         rules = tdir / "rules"
         tasks = tdir / "tasks"
@@ -752,11 +882,23 @@ def import_tenants_payload(payload):
         write_if_present(ctx / "progress.md", t.get("progress", ""))
         write_if_present(ctx / "system-patterns.md", t.get("system_patterns", ""))
 
+        adrs = t.get("adrs", [])
+        if isinstance(adrs, list) and adrs:
+            adrs_dir = ctx / "adrs"
+            adrs_dir.mkdir(parents=True, exist_ok=True)
+            for adr in adrs:
+                if not isinstance(adr, dict):
+                    continue
+                safe_adr = resolve_inside(adrs_dir, adr.get("filename", ""))
+                if safe_adr and safe_adr.name.endswith(".md"):
+                    write_if_present(safe_adr, adr.get("content", ""))
+
         repos = t.get("repos", [])
         for r in repos:
             rname = r.get("name") if isinstance(r, dict) else str(r)
-            if rname:
-                (proy / rname).mkdir(parents=True, exist_ok=True)
+            safe_repo = resolve_inside(proy, rname)
+            if safe_repo:
+                safe_repo.mkdir(parents=True, exist_ok=True)
 
         restored.append(slug)
 
@@ -853,11 +995,17 @@ def clone_tenant_repos(slug):
     errors = []
 
     for name, url in urls_map.items():
-        target = proy_dir / name
+        target = resolve_inside(proy_dir, name)
+        if not target:
+            errors.append(f"{name}: Nombre de repositorio inválido")
+            continue
+        if not is_safe_git_url(url):
+            errors.append(f"{name}: URL remota no permitida")
+            continue
         if target.exists() and (target / ".git").exists():
             continue
         try:
-            res = subprocess.run(["git", "clone", url, str(target)], capture_output=True, text=True, timeout=60)
+            res = subprocess.run(["git", "clone", "--", url.strip(), str(target)], capture_output=True, text=True, timeout=60)
             if res.returncode == 0:
                 cloned.append(name)
             else:
@@ -1037,8 +1185,8 @@ def git_create_branch(slug, repo_name, branch_name):
         else:
             return False, "No se encontró ningún repositorio Git en Proyecto/"
 
-    clean_branch = re.sub(r"[^a-zA-Z0-9_./-]", "-", (branch_name or "").strip()).strip("-")
-    if not clean_branch:
+    clean_branch = re.sub(r"[^a-zA-Z0-9_./-]", "-", (branch_name or "").strip()).lstrip("-").strip("/")
+    if not clean_branch or ".." in clean_branch:
         return False, "Nombre de rama inválido"
 
     try:
@@ -1173,12 +1321,15 @@ def save_tenant_adr(slug, filename, content):
     if not adrs_dir:
         return False, "Directorio de ADRs inválido"
 
-    clean_name = re.sub(r"[^a-zA-Z0-9_.-]", "-", filename.strip().lower())
-    clean_name = re.sub(r"-+", "-", clean_name).strip("-")
+    clean_name = sanitize_filename_segment(filename.lower())
+    if not clean_name:
+        return False, "Nombre de ADR inválido"
     if not clean_name.endswith(".md"):
         clean_name += ".md"
 
-    target = adrs_dir / clean_name
+    target = resolve_inside(adrs_dir, clean_name)
+    if not target:
+        return False, "Ruta de ADR no permitida"
     try:
         target.write_text(content, encoding="utf-8")
         return True, f"ADR '{clean_name}' guardado correctamente"
@@ -1198,10 +1349,8 @@ def create_tenant_backup_zip(slug):
     mem = io.BytesIO()
     with zipfile.ZipFile(mem, "w", zipfile.ZIP_DEFLATED) as zf:
         for root, dirs, files in os.walk(tdir):
+            dirs[:] = [d for d in dirs if d not in ("Proyecto", ".git", "__pycache__", "node_modules")]
             rel_root = Path(root).relative_to(tdir)
-            parts = rel_root.parts
-            if parts and parts[0] in ("Proyecto", ".git", "__pycache__"):
-                continue
             for file in files:
                 if file.endswith((".pyc", ".tmp")):
                     continue
@@ -1234,18 +1383,57 @@ class DashboardRequestHandler(BaseHTTPRequestHandler):
     def log_message(self, format, *args):
         return
 
+    def _send_security_headers(self, is_html=False):
+        self.send_header("X-Content-Type-Options", "nosniff")
+        self.send_header("X-Frame-Options", "DENY")
+        self.send_header("Referrer-Policy", "strict-origin-when-cross-origin")
+        self.send_header("Cross-Origin-Resource-Policy", "same-origin")
+        if is_html:
+            self.send_header(
+                "Content-Security-Policy",
+                "frame-ancestors 'none'; object-src 'none'; base-uri 'none';"
+            )
+
+    def _validate_local_post(self):
+        allowed_hosts = {f"localhost:{ACTUAL_PORT}", f"127.0.0.1:{ACTUAL_PORT}", "localhost", "127.0.0.1"}
+        host = (self.headers.get("Host") or "").strip().lower()
+        if host not in allowed_hosts:
+            return False, 403, "Host no permitido"
+
+        allowed_origins = (f"http://localhost:{ACTUAL_PORT}", f"http://127.0.0.1:{ACTUAL_PORT}")
+        origin = (self.headers.get("Origin") or "").strip().lower()
+        referer = (self.headers.get("Referer") or "").strip().lower()
+        if origin:
+            if origin not in allowed_origins:
+                return False, 403, "Origen cross-site bloqueado"
+        elif referer:
+            if not any(referer.startswith(o + "/") or referer == o for o in allowed_origins):
+                return False, 403, "Referer cross-site bloqueado"
+
+        ctype = (self.headers.get("Content-Type") or "").split(";")[0].strip().lower()
+        if ctype != "application/json":
+            return False, 415, "Content-Type debe ser application/json"
+
+        token = (self.headers.get("X-Faena-Token") or "").strip()
+        if not token or not secrets.compare_digest(token, SESSION_CSRF_TOKEN):
+            return False, 403, "Token CSRF inválido o ausente"
+
+        return True, 200, ""
+
     def _send_json(self, data, status=200):
         resp = json.dumps(data, ensure_ascii=False).encode("utf-8")
         self.send_response(status)
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Content-Length", str(len(resp)))
         self.send_header("Cache-Control", "no-cache")
+        self._send_security_headers()
         self.end_headers()
         self.wfile.write(resp)
 
     def do_OPTIONS(self):
         self.send_response(204)
         self.send_header("Cache-Control", "no-cache")
+        self._send_security_headers()
         self.end_headers()
 
     def do_GET(self):
@@ -1255,11 +1443,14 @@ class DashboardRequestHandler(BaseHTTPRequestHandler):
 
         if path in ("/", "/index.html"):
             if INDEX_HTML_PATH.exists():
-                content = INDEX_HTML_PATH.read_bytes()
+                content = INDEX_HTML_PATH.read_bytes().replace(
+                    b"__FAENA_CSRF_TOKEN__", SESSION_CSRF_TOKEN.encode("ascii")
+                )
                 self.send_response(200)
                 self.send_header("Content-Type", "text/html; charset=utf-8")
                 self.send_header("Content-Length", str(len(content)))
                 self.send_header("Cache-Control", "no-cache")
+                self._send_security_headers(is_html=True)
                 self.end_headers()
                 self.wfile.write(content)
             else:
@@ -1314,12 +1505,7 @@ class DashboardRequestHandler(BaseHTTPRequestHandler):
                 if active_branch and not is_base_branch(active_branch):
                     # Check if the active branch corresponds to an existing ticket
                     matched = find_matching_ticket_for_branch(active_branch, tickets)
-                    if matched:
-                        active_ticket = matched
-                    else:
-                        # User switched to a new branch for another ticket where task-* doesn't exist yet!
-                        # Do NOT show the past ticket from an old branch.
-                        active_ticket = None
+                    active_ticket = matched if matched else None
                 elif is_base_branch(active_branch):
                     # User is on main/master: only show an in-progress ticket (< 100%), never an old 100% finished one
                     in_progress = [t for t in tickets if t.get("percentage", 0) < 100]
@@ -1335,7 +1521,7 @@ class DashboardRequestHandler(BaseHTTPRequestHandler):
                 gotchas = extract_gotchas_from_text(td_ctx.get("learnings", ""))
 
             data = {
-                "server_time": time.strftime("%H:%M:%S"),
+                "server_time": time.strftime("%I:%M:%S %p"),
                 "repo_path": str(REPO_ROOT),
                 "active_tenant": active_tenant_slug,
                 "tenants": all_tenants,
@@ -1406,8 +1592,8 @@ class DashboardRequestHandler(BaseHTTPRequestHandler):
 
             target_dir = None
             if ticket_slug:
-                cand = tdir / ticket_slug
-                if cand.exists():
+                cand = resolve_inside(tdir, ticket_slug)
+                if cand and cand.exists() and cand.is_dir():
                     target_dir = cand
             if not target_dir and tdir.exists():
                 dirs = [d for d in tdir.iterdir() if d.is_dir() and d.name.startswith("task-")]
@@ -1419,6 +1605,7 @@ class DashboardRequestHandler(BaseHTTPRequestHandler):
             self.send_header("Content-Type", "text/event-stream; charset=utf-8")
             self.send_header("Cache-Control", "no-cache")
             self.send_header("Connection", "keep-alive")
+            self._send_security_headers()
             self.end_headers()
 
             log_file = None
@@ -1428,16 +1615,22 @@ class DashboardRequestHandler(BaseHTTPRequestHandler):
                     log_file = logs[0]
 
             try:
-                for _ in range(15):
+                last_sent = None
+                for tick in range(180):
                     if log_file and log_file.exists():
                         txt = log_file.read_text(encoding="utf-8", errors="replace")
                         lines = txt.splitlines()
                         chunk = "\n".join(lines[-45:]) if len(lines) > 45 else txt
-                        msg = json.dumps({"file": log_file.name, "content": chunk}, ensure_ascii=False)
-                        self.wfile.write(f"data: {msg}\n\n".encode("utf-8"))
-                        self.wfile.flush()
+                        payload = json.dumps({"file": log_file.name, "content": chunk}, ensure_ascii=False)
                     else:
-                        self.wfile.write(b"data: {\"file\":\"\", \"content\":\"Sin logs activos\"}\n\n")
+                        payload = json.dumps({"file": "", "content": "Sin logs activos"}, ensure_ascii=False)
+
+                    if payload != last_sent:
+                        self.wfile.write(f"data: {payload}\n\n".encode("utf-8"))
+                        self.wfile.flush()
+                        last_sent = payload
+                    elif tick % 15 == 0:
+                        self.wfile.write(b": keepalive\n\n")
                         self.wfile.flush()
                     time.sleep(1.0)
             except (BrokenPipeError, ConnectionResetError, OSError):
@@ -1482,6 +1675,11 @@ class DashboardRequestHandler(BaseHTTPRequestHandler):
             self.send_error(404, "Not Found")
 
     def do_POST(self):
+        ok_req, err_status, err_msg = self._validate_local_post()
+        if not ok_req:
+            self._send_json({"success": False, "error": err_msg}, status=err_status)
+            return
+
         parsed = urlparse(self.path)
         path = parsed.path
 
@@ -1602,6 +1800,7 @@ class DashboardRequestHandler(BaseHTTPRequestHandler):
 
 
 def run_server():
+    global ACTUAL_PORT
     httpd = None
     actual_port = PORT
     for p in range(PORT, PORT + 20):
@@ -1609,6 +1808,7 @@ def run_server():
             server_address = ("localhost", p)
             httpd = ThreadingHTTPServer(server_address, DashboardRequestHandler)
             actual_port = p
+            ACTUAL_PORT = p
             break
         except OSError:
             continue
@@ -1635,7 +1835,8 @@ def run_server():
         time.sleep(0.6)
         webbrowser.open(url)
 
-    threading.Thread(target=open_browser, daemon=True).start()
+    if "--no-browser" not in sys.argv:
+        threading.Thread(target=open_browser, daemon=True).start()
 
     try:
         httpd.serve_forever()

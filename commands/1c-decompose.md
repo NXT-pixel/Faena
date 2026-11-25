@@ -44,8 +44,10 @@ When invoked with a document path:
 ## Command Invocation
 
 ```bash
-/decompose /path/to/document.md
+@commands/1c-decompose.md <path/to/document.md>
 ```
+
+*(Resolve `<tasks_dir>`, `<context_dir>`, and `<rules_dir>` per `.active-tenant` in `PROTOCOL.md` §1: root `tasks/` for `default`, or `tenants/<tenant>/tasks/` when active.)*
 
 **Parameters**:
 - Document path (required): Path to the document to decompose
@@ -55,10 +57,10 @@ When invoked with a document path:
 
 ### Top-Level Decomposition
 
-When run on `/tasks/data-model-migration.md`:
+When run on `<tasks_dir>/data-model-migration.md`:
 
 ```
-/tasks/feature-data-model-migration/
+<tasks_dir>/feature-data-model-migration/
   overview.md
   phase01-schema-updates.md
   phase02-api-changes.md
@@ -67,10 +69,10 @@ When run on `/tasks/data-model-migration.md`:
 
 ### Recursive Decomposition
 
-When run on `/tasks/feature-data-model/phase01-schema-updates.md`:
+When run on `<tasks_dir>/feature-data-model/phase01-schema-updates.md`:
 
 ```
-/tasks/feature-data-model/
+<tasks_dir>/feature-data-model/
   overview.md
   phase01-schema-updates.md  ← remains as high-level summary
   feature-phase01-schema-updates/  ← nested decomposition
@@ -206,7 +208,7 @@ This feature is decomposed into the following phases:
 
 ## Project Context References
 
-**Architectural Patterns**: See [system-patterns.md](/tasks/context/system-patterns.md) for established patterns
+**Architectural Patterns**: See `<context_dir>/system-patterns.md` for established patterns
 
 Example from project (Schema-First Validation):
 ```typescript
@@ -215,11 +217,11 @@ export const modelSchema = z.object({...}).strict()
 export type Model = z.infer<typeof modelSchema>
 ```
 
-Full pattern details: [system-patterns.md](/tasks/context/system-patterns.md)
+Full pattern details: `<context_dir>/system-patterns.md`
 
-**Technology Stack**: [tech-context.md](/tasks/context/tech-context.md)
+**Technology Stack**: `<context_dir>/tech-context.md`
 
-**Coding Conventions**: `rules/project/` (company standards) + the domain skill in `skills/<domain>/SKILL.md`
+**Coding Conventions**: `<rules_dir>/` (`rules/project/` or `tenants/<tenant>/rules/`) + the domain skill in `skills/<domain>/SKILL.md`
 
 ---
 
@@ -334,10 +336,10 @@ Full pattern details: [system-patterns.md](/tasks/context/system-patterns.md)
 
 ## Project Context
 
-See project context for implementation guidance:
-- Architecture patterns: [system-patterns.md](/tasks/context/system-patterns.md)
-- Technology choices: [tech-context.md](/tasks/context/tech-context.md)
-- Coding standards: `rules/project/` (company) + `rules/` (technical rules)
+See project context for implementation guidance (resolved via `.active-tenant` per `PROTOCOL.md` §1):
+- Architecture patterns: `<context_dir>/system-patterns.md`
+- Technology choices: `<context_dir>/tech-context.md`
+- Coding standards: `<rules_dir>/` (company) + `rules/` (technical rules)
 
 ---
 
@@ -360,10 +362,12 @@ See project context for implementation guidance:
 
 ### Step 0: Context Availability Check (Optional)
 
-Before analysis, check for project context:
+Before analysis, check for project context (resolving `.active-tenant` per `PROTOCOL.md` §1):
 
 ```bash
-ls -la tasks/context/ 2>/dev/null
+TENANT=$(tr -d '[:space:]' < .active-tenant 2>/dev/null || echo default)
+CONTEXT_DIR=$([ "$TENANT" != "default" ] && [ -d "tenants/$TENANT/context" ] && echo "tenants/$TENANT/context" || echo "tasks/context")
+ls -la "$CONTEXT_DIR/" 2>/dev/null
 ```
 
 If context exists:
@@ -372,7 +376,7 @@ If context exists:
 
 If context missing:
 - Continue with decomposition
-- Suggest to user: "💡 Tip: Run /create-context for richer phase documentation"
+- Suggest to user: "💡 Tip: Run `@commands/create-context.md` for richer phase documentation"
 
 ### Step 1: Analyze Document
 
@@ -437,8 +441,8 @@ Create a detailed proposal showing:
 ### Step 3: Write Proposal to File
 
 Write the proposal to:
-- New decomposition: `/tasks/feature-<name>/_phase-breakdown.md`
-- Nested decomposition: `/tasks/feature-<parent>/feature-phase0X-<name>/_phase-breakdown.md`
+- New decomposition: `<tasks_dir>/feature-<name>/_phase-breakdown.md`
+- Nested decomposition: `<tasks_dir>/feature-<parent>/feature-phase0X-<name>/_phase-breakdown.md`
 
 **Check for existing file**: If `_phase-breakdown.md` exists, ask user for permission to overwrite.
 
@@ -469,7 +473,7 @@ Reply with:
 
 Once approved:
 
-1. **Create feature folder**: `/tasks/feature-<name>/`
+1. **Create feature folder**: `<tasks_dir>/feature-<name>/`
 2. **Create overview.md**: Extract shared context (architecture, tech stack, modules, testing strategy)
 3. **Create phase files**: Generate phase01-name.md, phase02-name.md, etc.
    - Level 2 phases: Use TRD-ready template with unit test specs
@@ -489,7 +493,7 @@ Once approved:
 ```
 Feature decomposition complete!
 
-Created: /tasks/feature-[name]/
+Created: <tasks_dir>/feature-[name]/
 ├── overview.md (shared context for all phases)
 ├── _phase-breakdown.md (approved proposal)
 ├── phase01-[name].md (Level 2 - TRD Ready)
@@ -643,7 +647,7 @@ decompose → feature-<name>/phase01.md (Level 1)
 
 ### Example 1: Top-Level Decomposition
 
-**Command**: `/decompose /tasks/data-model-migration.md`
+**Command**: `@commands/1c-decompose.md <tasks_dir>/data-model-migration.md`
 
 **Analysis**: Document describes major system overhaul with 5 architectural layers
 
@@ -654,11 +658,11 @@ decompose → feature-<name>/phase01.md (Level 1)
 - Phase 04: Frontend Integration (Level 1 - needs breakdown)
 - Phase 05: Migration Scripts (Level 2 - 3 scripts identified)
 
-**Output**: `/tasks/feature-data-model-migration/` with 5 phase files + overview
+**Output**: `<tasks_dir>/feature-data-model-migration/` with 5 phase files + overview
 
 ### Example 2: Recursive Decomposition
 
-**Command**: `/decompose /tasks/feature-data-model/phase02-api-layer-changes.md`
+**Command**: `@commands/1c-decompose.md <tasks_dir>/feature-data-model/phase02-api-layer-changes.md`
 
 **Analysis**: Phase 02 is too broad (15+ endpoints across 3 services)
 
@@ -667,11 +671,11 @@ decompose → feature-<name>/phase01.md (Level 1)
 - Phase 02: Edge API Endpoints (Level 2)
 - Phase 03: Graph Query API (Level 2)
 
-**Output**: `/tasks/feature-data-model/feature-phase02-api-layer-changes/` with 3 phase files + overview
+**Output**: `<tasks_dir>/feature-data-model/feature-phase02-api-layer-changes/` with 3 phase files + overview
 
 ### Example 3: Already TRD-Ready
 
-**Command**: `/decompose /tasks/implement-vertex-validation.md`
+**Command**: `@commands/1c-decompose.md <tasks_dir>/implement-vertex-validation.md`
 
 **Analysis**: Document already describes 3 specific classes with methods
 

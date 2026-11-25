@@ -1,7 +1,7 @@
 ---
 name: design
 description: Facilitates collaborative design conversations through clarifying questions, then creates comprehensive design documentation. Loads project context, explores requirements through dialogue, and produces implementation-ready design docs in tasks/ folder.
-agent: /agents/design/design-facilitator.md
+agent: agents/design/design-facilitator.md
 tools: Read, Write, Bash, LS
 ---
 
@@ -23,7 +23,7 @@ Use this command when you need to:
 
 **Attempt to load project context:**
 
-Try to read and execute the `load-context.md` command (located in `commands/load-context.md`) to prime the session with project understanding. This loads available context from `tasks/context/` to align the design with existing architecture, patterns, and conventions.
+Try to read and execute `@commands/load-context.md` to prime the session with project understanding. This resolves `.active-tenant` per `PROTOCOL.md` §1 (`tasks/context/` for `default`, or `tenants/<tenant>/context/` when active) to align the design with existing architecture, patterns, and conventions.
 
 **If context is available, use it to:**
 - Align with existing architecture patterns
@@ -301,7 +301,7 @@ tasks/task-{brief-descriptive-name}/design-{brief-descriptive-name}.md
 
 Show the user:
 ```
-✅ Design document created: tasks/task-{name}/design-{name}.md
+✅ Design document created: <tasks_dir>/task-{name}/design-{name}.md
 
 📋 Document includes:
   - Problem statement and goals
@@ -366,19 +366,19 @@ Show the user:
 ## Usage Pattern
 
 Typical flow:
-1. User: `/design [their design request]`
-2. Agent: Loads context via load-context command
+1. User: `@commands/1b-design.md [their design request]`
+2. Agent: Loads context via `@commands/load-context.md`
 3. Agent: Asks 3-5 initial clarifying questions
 4. User: Provides answers
 5. Agent: Asks follow-up questions as needed
 6. User: Provides more details
 7. Agent: Synthesizes design with diagrams
-8. Agent: Writes design document to tasks/task-{name}/design-{name}.md
+8. Agent: Writes design document to `<tasks_dir>/task-{name}/design-{name}.md` (`tasks/` or `tenants/<tenant>/tasks/` per `.active-tenant`)
 9. User: Reviews and may request changes
 10. Agent: Iterates on design as needed
 11. After approval: 
     - Output next step for user:
-      > 👉 **Siguiente paso:** Arrastra al chat `@commands/2-create-trd.md tasks/task-{name}/design-{name}.md`
+      > 👉 **Siguiente paso:** Arrastra al chat `@commands/2-create-trd.md <tasks_dir>/task-{name}/design-{name}.md`
     - User can run `@commands/4-update-context.md` to capture design in project context
 
 ## Exit Conditions

@@ -7,7 +7,7 @@ tools: Read, Write, Bash, LS
 
 # 🧭 Comando: create-context (Bootstrap del contexto)
 
-Crea los archivos de contexto que **el resto del harness realmente consume**. No inventa archivos nuevos ni rutas: si algo no se puede detectar, lo deja marcado como pendiente en lugar de rellenarlo con supuestos.
+Crea los archivos de contexto que **el resto del harness realmente consume**, resolviendo las rutas según `.active-tenant` (`PROTOCOL.md` §1: raíz para `default`, o `tenants/<tenant>/context/` y `tenants/<tenant>/Proyecto/` cuando hay un tenant activo). No inventa archivos nuevos ni rutas: si algo no se puede detectar, lo deja marcado como pendiente en lugar de rellenarlo con supuestos.
 
 ## 1. Archivos que gestiona
 
@@ -26,13 +26,15 @@ Las convenciones de código **no** viven aquí. Viven en `rules/project/` y en l
 
 ## 2. Preflight
 
-1. Comprueba que `Proyecto/` tenga repositorios. Lista el **disco**, nunca `git status` (está en `.gitignore`):
+1. Comprueba que la carpeta de repositorios del tenant activo (`Proyecto/` para `default`, o `tenants/<tenant>/Proyecto/` según `.active-tenant`) tenga repositorios. Lista el **disco**, nunca `git status` (está en `.gitignore`):
 
    ```powershell
-   Get-ChildItem Proyecto -Directory | Select-Object -ExpandProperty Name
+   $tenant = if (Test-Path .active-tenant) { (Get-Content .active-tenant -Raw).Trim() } else { "default" }
+   $proyectoDir = if ($tenant -and $tenant -ne "default" -and (Test-Path "tenants/$tenant/Proyecto")) { "tenants/$tenant/Proyecto" } else { "Proyecto" }
+   Get-ChildItem $proyectoDir -Directory | Select-Object -ExpandProperty Name
    ```
 
-   Si no hay ningún repositorio clonado, detente y pide al usuario que clone los repos en `Proyecto/`.
+   Si no hay ningún repositorio clonado, detente y pide al usuario que clone los repos en `$proyectoDir/`.
 
 2. Si ya existen `tech-context.md`, `project-structure.md`, `progress.md` o `system-patterns.md`, pregunta: *"Encontré N archivos de contexto. ¿Sobrescribo los detectables? (sí/no)"*. Sin un "sí" explícito, actualiza solo los que falten.
 

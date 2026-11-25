@@ -1,22 +1,22 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-TENANT="${1:-}"
+RAW_TENANT="${1:-}"
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 ACTIVE_FILE="$REPO_ROOT/.active-tenant"
 TENANTS_DIR="$REPO_ROOT/tenants"
 
-if [ -z "$TENANT" ]; then
+if [ -z "$RAW_TENANT" ]; then
     echo "============================================================"
-    echo "              🏢 Tenants Disponibles en Faena"
+    echo "              Tenants Disponibles en Faena"
     echo "============================================================"
     CURRENT=""
     if [ -f "$ACTIVE_FILE" ]; then
-        CURRENT="$(cat "$ACTIVE_FILE" | tr -d '[:space:]')"
+        CURRENT="$(tr -d '[:space:]' < "$ACTIVE_FILE")"
     fi
 
     if [ ! -d "$TENANTS_DIR" ]; then
-        echo "No hay tenants creados todavía en tenants/."
+        echo "No hay tenants creados todavia en tenants/."
     else
         for dir in "$TENANTS_DIR"/*; do
             if [ -d "$dir" ]; then
@@ -30,7 +30,19 @@ if [ -z "$TENANT" ]; then
         done
     fi
     echo "------------------------------------------------------------"
-    echo "Uso: $0 <nombre-del-tenant> para activar uno."
+    echo "Uso: $0 <nombre-del-tenant> para activar uno (o 'default')."
+    exit 0
+fi
+
+TENANT="$(printf '%s' "$RAW_TENANT" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9_-]+/-/g; s/^-+//; s/-+$//')"
+if [ -z "$TENANT" ]; then
+    echo "Error: Nombre de tenant invalido." >&2
+    exit 1
+fi
+
+if [ "$TENANT" = "default" ]; then
+    printf 'default' > "$ACTIVE_FILE"
+    echo "[OK] Tenant activo cambiado a: default (raiz)"
     exit 0
 fi
 
@@ -41,7 +53,6 @@ if [ ! -d "$TARGET_DIR" ]; then
     exit 1
 fi
 
-echo "$TENANT" > "$ACTIVE_FILE"
+printf '%s' "$TENANT" > "$ACTIVE_FILE"
 echo "[OK] Tenant activo cambiado a: $TENANT"
-echo "  Ubicación: tenants/$TENANT/"
-EOF
+echo "  Ubicacion: tenants/$TENANT/"

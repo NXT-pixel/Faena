@@ -1,6 +1,6 @@
 ﻿---
 name: ux-ui-designer
-description: Creates design task files from requirements. Invoked as /design-ux-ui command. Generates executable task files that reference @ux-ui-design agent for execution.
+description: Creates design task files from requirements. Invoked as `@commands/design-ux-ui.md`. Generates executable task files that reference `agents/design/` for execution.
 tools: Read, Write, grep, codebase_search
 model: sonnet
 ---
@@ -11,7 +11,7 @@ model: sonnet
 
 **Architecture:**
 ```
-User: /design-ux-ui [requirements files]
+User: @commands/design-ux-ui.md [requirements files]
   ↓
 Phase 0-2: Discovery → Blueprint → Task File Generation
   ↓
@@ -173,7 +173,7 @@ Output: flows/01-XX-flows.md + screens/01-XX.html, 02-XX.html, etc.
 
 **Example Directory Structure:**
 ```
-/tasks/UI-UX_<feature_name>/
+<tasks_dir>/UI-UX_<feature_name>/
 ├── README.md                     # ⭐ Phase 1: Blueprint & navigation
 ├── 00-discovery.md               # Phase 0: Optional discovery
 ├── task01-[feature].md           # ⭐ Phase 2: Task files (numbered)
@@ -485,7 +485,7 @@ User: "Create the flows and mockups for this task"
 ## Project Structure
 
 ```
-/tasks/UI-UX_<feature_name>/
+<tasks_dir>/UI-UX_<feature_name>/
 ├── README.md                            # This file - project blueprint
 ├── 00-discovery.md                      # Requirements analysis
 ├── task01-[feature].md                  # Task files (numbered, self-contained)
@@ -621,7 +621,7 @@ User: "Create the flows and mockups for this task"
 ```markdown
 # Design Task ##: [Feature Area]
 
-**Process Guide:** [UX/UI Design Process](/commands/design-ux-ui.md)  
+**Process Guide:** `commands/design-ux-ui.md`  
 **File:** `task##-[feature-area].md`
 
 > **Self-Contained Task:** This file contains all context needed for execution.  
@@ -721,7 +721,7 @@ User: "Create the flows and mockups for this task"
 - Shadcn UI component mapping
 - Links to related screens
 
-**Template:** Follow Flow Documentation Template in [/commands/design-ux-ui.md](/commands/design-ux-ui.md)
+**Template:** Follow Flow Documentation Template in `commands/design-ux-ui.md`
 
 ### 2. HTML Mockup Files
 
@@ -736,7 +736,7 @@ User: "Create the flows and mockups for this task"
 - Accessibility documentation
 - Demo state toggle functions
 
-**Template:** Follow HTML Mockup Template in [/commands/design-ux-ui.md](/commands/design-ux-ui.md)
+**Template:** Follow HTML Mockup Template in `commands/design-ux-ui.md`
 
 ---
 
@@ -786,7 +786,7 @@ When this task file is attached in a new chat:
 3. **Create HTML Mockups:** Generate `screens/XX-*.html` for EACH screen (one file per screen)
 4. **Verify:** Check all links work, requirements covered, accessibility compliant
 
-**Process Guide:** See [design-ux-ui.md](/commands/design-ux-ui.md) for detailed templates
+**Process Guide:** See `commands/design-ux-ui.md` for detailed templates
 
 ---
 
@@ -1184,5 +1184,5 @@ flowchart LR
 
 ---
 
-**For agent persona and behavioral traits, see `/agents/design/ux-ui-design.md`**
+**For agent persona and behavioral traits, see `agents/design/ux-ui-design.md`**
 

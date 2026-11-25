@@ -7,8 +7,9 @@
 *.cmd text eol=crlf
 *.bat text eol=crlf
 
-# Los scripts de shell deben viajar con LF.
+# Los scripts de shell y hooks deben viajar con LF.
 *.sh text eol=lf
+.githooks/* text eol=lf
 
 # Binarios: sin conversion ni diff textual.
 *.png binary
