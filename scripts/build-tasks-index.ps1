@@ -57,7 +57,20 @@ function Get-CheckboxCounts {
     $done = 0
     $pending = 0
     if (Test-Path -LiteralPath $Path -PathType Leaf) {
-        foreach ($line in ([System.IO.File]::ReadAllText($Path, [System.Text.Encoding]::UTF8) -split "\r?\n")) {
+        $allLines = [System.IO.File]::ReadAllText($Path, [System.Text.Encoding]::UTF8) -split "\r?\n"
+
+        # Igual que el dashboard: si existe "## Progress Tracking", solo se cuentan
+        # sus checkboxes, para que las checklists de ejemplo no alteren el progreso.
+        $sectionLines = New-Object System.Collections.ArrayList
+        $inSection = $false
+        foreach ($line in $allLines) {
+            if ($line -match '^\s*##\s+Progress\s+Tracking\b') { $inSection = $true; continue }
+            if ($inSection -and $line -match '^\s*##\s+') { break }
+            if ($inSection) { [void] $sectionLines.Add($line) }
+        }
+        $targetLines = if ($sectionLines.Count -gt 0) { $sectionLines } else { $allLines }
+
+        foreach ($line in $targetLines) {
             if ($line -match '^\s*-\s*\[[xX]\]') { $done++ }
             elseif ($line -match '^\s*-\s*\[\s\]') { $pending++ }
         }

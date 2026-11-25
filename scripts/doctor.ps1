@@ -6,7 +6,7 @@
 .DESCRIPTION
     No modifica nada: solo mira y aconseja. Comprueba repositorio, PowerShell,
     git, politica de ejecucion, hook, catalogo de skills, repositorios clonados,
-    team-context y backend TLS.
+    team-context, ruta local de ECC (faena.local.json) y backend TLS.
 
     Pensado para correr antes de pedir ayuda y para el primer dia de una
     instalacion nueva.
@@ -187,7 +187,36 @@ else {
 }
 
 # --------------------------------------------------------------------------
-# 9. Backend TLS / acceso al remoto
+# 9. Ruta local de ECC (faena.local.json, ignorado por git)
+# --------------------------------------------------------------------------
+$localConfigPath = Join-Path $repoRoot 'faena.local.json'
+if (Test-Path -LiteralPath $localConfigPath -PathType Leaf) {
+    try {
+        $localConfig = [System.IO.File]::ReadAllText($localConfigPath) | ConvertFrom-Json
+        $eccPath = [string] $localConfig.eccPath
+        if (-not $eccPath) {
+            Add-Diagnostic -Name 'ecc' -Status 'PASS' -Detail 'faena.local.json sin eccPath: se usa el ECC remoto'
+        }
+        elseif (Test-Path -LiteralPath (Join-Path $eccPath 'skills') -PathType Container) {
+            Add-Diagnostic -Name 'ecc' -Status 'PASS' -Detail ('ECC local: {0}' -f $eccPath)
+        }
+        else {
+            Add-Diagnostic -Name 'ecc' -Status 'WARN' -Detail ('eccPath no existe o no tiene skills/: {0}' -f $eccPath) `
+                -Fix 'Corrige eccPath en faena.local.json o borra la clave para usar el ECC remoto.'
+        }
+    }
+    catch {
+        Add-Diagnostic -Name 'ecc' -Status 'WARN' -Detail ('faena.local.json no es JSON valido: {0}' -f $_.Exception.Message) `
+            -Fix 'Copia faena.local.example.json a faena.local.json y ajusta eccPath.'
+    }
+}
+else {
+    Add-Diagnostic -Name 'ecc' -Status 'PASS' -Detail 'sin faena.local.json: se usa el ECC remoto' `
+        -Fix 'Opcional: copia faena.local.example.json a faena.local.json para usar un clon local de ECC.'
+}
+
+# --------------------------------------------------------------------------
+# 10. Backend TLS / acceso al remoto
 # --------------------------------------------------------------------------
 $sslBackend = (& git config --get http.sslBackend 2>$null)
 if ($sslBackend -eq 'schannel') {

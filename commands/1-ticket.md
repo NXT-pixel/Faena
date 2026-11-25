@@ -43,10 +43,10 @@ Crea la carpeta del ticket y el archivo de diseño dentro de ella:
 ```markdown
 # Requerimientos y Diseño: [Nombre del Requerimiento]
 
-**Fecha:** [Fecha actual]
-**Ticket Origen:** [Identificador o resumen del ticket]
-**Repositorio Afectado:** `Proyecto/[repo]/` (o `tenants/[tenant]/Proyecto/[repo]/`)
-**Branch:** `[rama Git del ticket, si aplica]`
+**Fecha**: [Fecha actual]
+**Ticket Origen**: [Identificador o resumen del ticket]
+**Repositorio Afectado**: `Proyecto/[repo]/` (o `tenants/[tenant]/Proyecto/[repo]/`)
+**Branch**: `[rama Git del ticket, si aplica]`
 
 ---
 

@@ -9,7 +9,7 @@
 
 .EXAMPLE
     .\scripts\export-tenants.ps1
-    .\scripts\export-tenants.ps1 -OutputFile "C:\Users\santi\Desktop\mis-tenants.json"
+    .\scripts\export-tenants.ps1 -OutputFile "$HOME\Desktop\mis-tenants.json"
 #>
 [CmdletBinding()]
 param(

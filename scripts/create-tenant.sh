@@ -33,6 +33,7 @@ cat <<EOF > "$TENANT_DIR/context/team-context.md"
 ## 1. Identidad Git Corporativa
 - **Email Corporativo:** \`developer@$TENANT.local\` (configurar en Proyecto/<repo> con git config --local user.email)
 - **Nombre:** Desarrollador Faena
+- **Prefijo de rama:** \`feature/\`
 
 ## 2. Organigrama y Roles
 - **Tech Lead:** [Nombre del Tech Lead] (alineacion tecnica y arquitectura)

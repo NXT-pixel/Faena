@@ -4,7 +4,7 @@
     Verifica la integridad interna del harness Faena.
 
 .DESCRIPTION
-    Siete chequeos, pensados para correr en local y en CI:
+    Ocho chequeos, pensados para correr en local y en CI:
 
       1. skill-location   Todo SKILL.md vive en skills/<nombre>/ o skills/project/<nombre>/.
       2. skill-metadata   Cada SKILL.md tiene name y description, y name == nombre de la carpeta.
@@ -22,6 +22,9 @@
                           a carpetas son indistinguibles de prosa como "agents/commands".
                           Los docs bajo skills/ describen el repo del cliente, asi que sus
                           rutas scripts/ no se validan contra el harness.
+      8. template-metadata  Los campos de cabecera que lee el dashboard (Branch, Rama, Ticket,
+                          Ticket Origen, Location, Repositorio, Repositorio Afectado, Base Commit)
+                          se escriben como **Campo**: en las plantillas del flujo, nunca **Campo:**.
 
     Las referencias rotas historicas se listan en scripts/faena-known-refs.txt y se
     reportan como [WARN]: arreglar una referencia significa borrar su linea del archivo.
@@ -344,6 +347,43 @@ foreach ($path in ($knownBrokenRefs.Keys | Sort-Object)) {
 Add-CheckResult -Name 'path-references' -Ok ($brokenRefs.Count -eq 0) `
     -Detail ('{0} documentos escaneados, {1} rutas rotas nuevas, {2} conocidas' -f $scannedCount, $brokenRefs.Count, $knownBrokenRefs.Count) `
     -Lines @($brokenLines)
+
+# --------------------------------------------------------------------------
+# 8. Metadatos de cabecera con un solo formato
+# --------------------------------------------------------------------------
+# El dashboard y los comandos se ponen de acuerdo en **Campo**: valor. Si una
+# plantilla vuelve a **Campo:** valor, los tickets nuevos dejan de enlazarse con su
+# rama sin que nada falle en voz alta, asi que se detecta aqui.
+
+$metadataTemplates = @(
+    'PROTOCOL.md',
+    'commands/1-ticket.md',
+    'commands/1b-design.md',
+    'commands/2-create-trd.md',
+    'commands/3-create-tasks.md',
+    'commands/orchestrate.md'
+)
+$metadataPattern = [regex] '\*\*(Branch|Rama|Ticket Origen|Ticket|Location|Repositorio Afectado|Repositorio|Base Commit):\*\*'
+$metadataLines = New-Object System.Collections.ArrayList
+foreach ($template in $metadataTemplates) {
+    $templatePath = Join-Path $repoRoot $template
+    if (-not (Test-Path -LiteralPath $templatePath -PathType Leaf)) {
+        [void] $metadataLines.Add(('FALTA  {0}' -f $template))
+        continue
+    }
+    $lineNumber = 0
+    foreach ($line in ([System.IO.File]::ReadAllText($templatePath) -split "\r?\n")) {
+        $lineNumber++
+        $hit = $metadataPattern.Match($line)
+        if ($hit.Success) {
+            [void] $metadataLines.Add(('{0}:{1}  usa **{2}:** en vez de **{2}**:' -f $template, $lineNumber, $hit.Groups[1].Value))
+        }
+    }
+}
+
+Add-CheckResult -Name 'template-metadata' -Ok ($metadataLines.Count -eq 0) `
+    -Detail ('{0} plantillas revisadas, {1} campos con formato distinto' -f $metadataTemplates.Count, $metadataLines.Count) `
+    -Lines @($metadataLines)
 
 # --------------------------------------------------------------------------
 # Reporte

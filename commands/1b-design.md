@@ -1,6 +1,6 @@
 ---
 name: design
-description: Facilitates collaborative design conversations through clarifying questions, then creates comprehensive design documentation. Loads project context, explores requirements through dialogue, and produces implementation-ready design docs in tasks/ folder.
+description: Facilitates collaborative design conversations through clarifying questions, then creates comprehensive design documentation. Loads project context, explores requirements through dialogue, and produces implementation-ready design docs in the active tasks folder (`tasks/` or `tenants/<tenant>/tasks/`).
 agent: agents/design/design-facilitator.md
 tools: Read, Write, Bash, LS
 ---
@@ -208,18 +208,18 @@ graph TB
 
 ### 5. Design Documentation Output
 
-**Write the design document inside a dedicated task folder under tasks/.**
+**Write the design document inside a dedicated task folder under `<tasks_dir>/`** (`tasks/` for `default`, or `tenants/<tenant>/tasks/` per `.active-tenant` in `PROTOCOL.md` §1).
 
 **Filename convention:**
 ```
-tasks/task-{brief-descriptive-name}/design-{brief-descriptive-name}.md
+<tasks_dir>/task-{brief-descriptive-name}/design-{brief-descriptive-name}.md
 ```
 
 **Examples:**
-- `tasks/task-user-authentication/design-user-authentication.md`
-- `tasks/task-payment-processing-api/design-payment-processing-api.md`
-- `tasks/task-real-time-notifications/design-real-time-notifications.md`
-- `tasks/task-reporting-dashboard/design-reporting-dashboard.md`
+- `<tasks_dir>/task-user-authentication/design-user-authentication.md`
+- `<tasks_dir>/task-payment-processing-api/design-payment-processing-api.md`
+- `<tasks_dir>/task-real-time-notifications/design-real-time-notifications.md`
+- `<tasks_dir>/task-reporting-dashboard/design-reporting-dashboard.md`
 
 **Document structure:**
 
@@ -324,7 +324,7 @@ Show the user:
 
 1. **Discuss the changes** - Understand what needs adjustment
 2. **Update the design** - Modify the approach based on feedback
-3. **Update the document** - Edit the file in tasks/
+3. **Update the document** - Edit the file in `<tasks_dir>/`
 4. **Explain changes** - Note what was modified and why
 
 **Support multiple rounds of refinement until design is ready.**
@@ -360,7 +360,7 @@ Show the user:
 - **Document rationale** - Explain the "why" not just the "what"
 - **Use diagrams** - Visual aids clarify complex designs
 - **Consider implementation** - Designs should be buildable
-- **Write to tasks/** - Persistent documentation for reference
+- **Write to `<tasks_dir>/`** - Persistent documentation for reference
 - **Suggest context update** - Capture design decisions in project context
 
 ## Usage Pattern
@@ -383,7 +383,7 @@ Typical flow:
 
 ## Exit Conditions
 
-**Success**: Design document written to tasks/, user satisfied with design
+**Success**: Design document written to `<tasks_dir>/`, user satisfied with design
 **Incomplete**: User decides to pause (document saved for later)
 **Redirect**: Design scope requires different approach or specialist
 

@@ -20,7 +20,7 @@ Los `.cmd` son wrappers de una línea sobre los `.ps1`: **no pasan por la polít
 
 ## `doctor.ps1`
 
-Diagnóstico del entorno. No modifica nada: mira y aconseja. Nueve comprobaciones:
+Diagnóstico del entorno. No modifica nada: mira y aconseja. Diez comprobaciones:
 
 | Comprobación | Qué mira |
 | :--- | :--- |
@@ -32,6 +32,7 @@ Diagnóstico del entorno. No modifica nada: mira y aconseja. Nueve comprobacione
 | `skills-catalog` | Si `skills/README.md` está al día |
 | `proyecto` | Repositorios clonados en `Proyecto/` |
 | `team-context` | Si `tasks/context/team-context.md` sigue con marcadores de plantilla |
+| `ecc` | Si `faena.local.json` define `eccPath`, que esa carpeta exista y tenga `skills/` |
 | `tls-backend` | Backend TLS de git (avisa si es `schannel`) |
 
 Con `-Network` añade una prueba real de acceso al remoto (`git ls-remote --heads origin`).
@@ -40,7 +41,7 @@ Sale con código 1 solo si algo es `FAIL`; los avisos (`WARN`) no rompen nada.
 
 ## `validate-faena.ps1`
 
-Siete chequeos, pensados para local y para CI:
+Ocho chequeos, pensados para local y para CI:
 
 | Chequeo | Qué verifica |
 | :--- | :--- |
@@ -51,6 +52,7 @@ Siete chequeos, pensados para local y para CI:
 | `protocol-adapters` | `PROTOCOL.md` existe y los cinco adaptadores lo referencian |
 | `proyecto-visibility` | Cada repositorio presente en `Proyecto/` aparece documentado en `tasks/context/project-structure.md` |
 | `path-references` | Toda ruta `skills/`, `rules/`, `agents/`, `commands/`, `scripts/` o `tasks/context/` citada en la documentación existe, con mayúsculas exactas |
+| `template-metadata` | Los campos de cabecera que lee el dashboard (`Branch`, `Ticket Origen`, `Location`, `Base Commit`…) usan el formato `**Campo**:` en las plantillas del flujo |
 
 Sale con código 1 si algo falla, así que sirve tal cual en un pre-commit o en CI.
 

@@ -52,7 +52,7 @@ Las skills (`skills/`), agentes (`agents/`), comandos (`commands/`) y reglas glo
 6. **Seguridad antes de entregar.** Audita el `git diff` con `rules/security/` y `agents/coding/security-reviewer.md`: secretos quemados, inyección SQL, OWASP Top 10.
 7. **Memoria.** Registra convenciones, trampas y decisiones en `tasks/context/learnings.md`. Es lo que hace que el siguiente ticket cueste menos.
 8. **Honestidad sobre el estado del repo.** Si un archivo, comando o convención no existe, dilo explícitamente en lugar de inventarlo o citar una ruta que no existe.
-9. **Un archivo de tarea por turno (Modo manual).** En modo paso a paso ejecutas la tarea que el usuario arrastra, la cierras, actualizas checkboxes y te detienes. **Excepción (Modo Autónomo):** cuando el usuario invoca `@commands/orchestrate.md` o solicita ejecución autónoma E2E, el orquestador ejecuta el pipeline completo y el bucle de tareas TDD de principio a fin, pausando únicamente ante fallos no recuperables de Quality Gates o por la regla *When Tests Disagree*.
+9. **Un archivo de tarea por turno (Modo manual).** En modo paso a paso ejecutas la tarea que el usuario arrastra, la cierras, actualizas checkboxes y te detienes. **Excepción (Modo Autónomo):** cuando el usuario invoca `@commands/orchestrate.md` o solicita ejecución autónoma E2E, el orquestador (`agents/design/orchestrator.md`) ejecuta el pipeline completo y el bucle de tareas TDD de principio a fin, pausando únicamente ante los disparadores del *Circuit Breaker* de `commands/orchestrate.md`. En ese modo trabaja siempre en una rama propia (nunca en `main`/`master`/`develop`), y **nunca** hace commit ni push: deja el cambio en el árbol de trabajo para que una persona lo revise y lo commitee.
 
 ---
 
@@ -73,7 +73,7 @@ El flujo puede ejecutarse en dos modalidades:
 ### Paso 1 — Intake del ticket
 1. Lee `tasks/context/team-context.md` e identifica Tech Lead, QA y DevOps (resolviendo la ruta según `.active-tenant`).
 2. Identifica el repositorio afectado dentro de `Proyecto/` y anota en `design-<nombre>.md` la rama Git de trabajo (`**Branch**: \`<rama>\``) si ya existe o se crea para el ticket.
-3. Identifica las skills necesarias. Si la tecnología no está en `skills/`, búscala en el repositorio ECC local (`C:\Users\santi\Documents\GitHub\ECC\skills\`) o remoto (`https://github.com/affaan-m/ECC`) y aplica sus mejores prácticas sin copiarlas al repo.
+3. Identifica las skills necesarias. Si la tecnología no está en `skills/`, búscala en el repositorio ECC local (la ruta `eccPath` de `faena.local.json`, archivo por máquina e ignorado por git; ver `faena.local.example.json`) o, si no está configurado, en el remoto (`https://github.com/affaan-m/ECC`) y aplica sus mejores prácticas sin copiarlas al repo.
 4. Crea `tasks/task-<nombre>/design-<nombre>.md` con alcance, criterios de aceptación y handoffs.
 
 ### Paso 2 — TRD y especificación de pruebas
@@ -113,13 +113,13 @@ El flujo obligatorio usa tres comandos, pero el repo tiene más. No los ejecutes
 ## 5. Skills y agentes
 
 - **Skills**: la regla de enrutamiento es `rules/skills-routing.md`. El catálogo es `skills/README.md` (generado). Antes de escribir código en un dominio, abre el `SKILL.md` que corresponda. Si ninguna skill aplica, dilo.
-- **Agentes**: adoptas la persona de la fase. Arquitectura: `agents/design/software-architecture.md`, `agents/coding/dotnet-architect.md`. RED: `agents/coding/jest-tester.md`, `agents/coding/xunit-tester.md`, `agents/coding/pytest-tester.md`. GREEN: `agents/coding/angular-developer.md`, `agents/coding/aspnet-webapi-backend.md`, `agents/coding/abp-fullstack-developer.md`, `agents/coding/azure-cloud-specialist.md`. Review: `agents/coding/security-reviewer.md`, `agents/coding/code-reviewer.md`, `agents/coding/build-error-resolver.md`.
+- **Agentes**: adoptas la persona de la fase. Orquestación autónoma: `agents/design/orchestrator.md`. Arquitectura: `agents/design/software-architecture.md`, `agents/coding/dotnet-architect.md`. RED: `agents/coding/jest-tester.md`, `agents/coding/xunit-tester.md`, `agents/coding/pytest-tester.md`. GREEN: `agents/coding/angular-developer.md`, `agents/coding/aspnet-webapi-backend.md`, `agents/coding/abp-fullstack-developer.md`, `agents/coding/azure-cloud-specialist.md`. Review: `agents/coding/security-reviewer.md`, `agents/coding/code-reviewer.md`, `agents/coding/build-error-resolver.md`.
 
 ---
 
 ## 6. Mantenimiento de este harness
 
 - `scripts/build-skills-index.ps1` regenera `skills/README.md` desde los `SKILL.md`.
-- `scripts/validate-faena.ps1` verifica ubicación y metadata de skills, catálogo al día, ausencia de `.mdc` sueltos, referencias de rutas y que este protocolo siga siendo el referenciado por los adaptadores.
+- `scripts/validate-faena.ps1` verifica ubicación y metadata de skills, catálogo al día, ausencia de `.mdc` sueltos, referencias de rutas, que los campos de cabecera de las plantillas (`**Branch**:`, `**Location**:`…) mantengan el formato que lee el dashboard y que este protocolo siga siendo el referenciado por los adaptadores.
 - CI: `.github/workflows/validate-faena.yml`. Hook opcional: `git config core.hooksPath .githooks`.
 - **Regla de oro**: ninguna política se escribe en los adaptadores ni se duplica en dos archivos. Este archivo manda.

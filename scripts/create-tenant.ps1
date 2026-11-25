@@ -66,6 +66,7 @@ $teamContext = @"
 ## 1. Identidad Git Corporativa
 - **Email Corporativo:** \`developer@$slug.local\` (configurar en Proyecto/<repo> con git config --local user.email)
 - **Nombre:** Desarrollador Faena
+- **Prefijo de rama:** `feature/`
 
 ## 2. Organigrama y Roles
 - **Tech Lead:** [Nombre del Tech Lead] (alineacion tecnica y arquitectura)

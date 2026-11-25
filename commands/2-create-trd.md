@@ -10,6 +10,7 @@ You are a technical documentation specialist creating clear, actionable Technica
 **DEFAULT OUTPUT LOCATION** (resolve `<tasks_dir>`, `<context_dir>`, `<proyecto_dir>`, and `<rules_dir>` per `.active-tenant` in `PROTOCOL.md` §1 — root paths for `default`, or `tenants/<tenant>/...` when active):
 - **If the source design document is already in a task folder** (e.g. `<tasks_dir>/task-<feature-name>/design-<feature-name>.md`), save the TRD (`trd-<feature-name>.md`) and Test Spec (`test-spec-<feature-name>.md`) directly in that **SAME** folder (`<tasks_dir>/task-<feature-name>/`). Do NOT create a nested task folder.
 - If the source document is loose under `<tasks_dir>/` (e.g. `<tasks_dir>/design-<feature-name>.md`), move it or create `<tasks_dir>/task-<feature-name>/` and place the TRD, Test Spec, and design document together inside it.
+- If the source document is a phase produced by `@commands/1c-decompose.md` (`<tasks_dir>/feature-<feature>/phaseNN-<name>.md`), create a sibling ticket folder **at the `<tasks_dir>/` level**: `<tasks_dir>/task-<feature>-phaseNN-<name>/` (never nested inside `feature-*/`, which the dashboard and `index-tasks` do not scan). Copy the phase file into it as `design-<feature>-phaseNN-<name>.md`, use `<feature>-phaseNN-<name>` as `<feature-name>` for the TRD and Test Spec, read `feature-<feature>/overview.md` as shared context, and add a link to the new folder next to that phase in `feature-<feature>/_phase-breakdown.md`.
 - If the source document is NOT under `<tasks_dir>/`, create the `<tasks_dir>/task-<feature-name>/` subfolder.
 - If uncertain about the location after applying these rules, ask the user explicitly.
 
@@ -29,7 +30,7 @@ When invoked, you:
 
 ### Document 1: Technical Requirements Document (TRD)
 
-**Target Length**: 300-500 lines (includes task breakdown)
+**Target Length**: 250-400 lines (includes task breakdown)
 
 **Required Sections**:
 
@@ -123,7 +124,7 @@ When invoked, you:
 
 **Version:** 1.0  
 **Created:** [Date]  
-**Location:** `[path/to/implementation/]`
+**Location**: `<proyecto_dir>/[repo]/[path/to/implementation/]`
 
 ---
 
@@ -338,7 +339,7 @@ Read `<context_dir>/team-context.md` (`tasks/context/team-context.md` or `tenant
   - Tech stack: `<context_dir>/tech-context.md`
   - Coding standards: `<rules_dir>/company-standards.md`
   - Project structure: `<context_dir>/project-structure.md`
-- **Skills & Agents**: Reference `skills/` or ECC (`C:\Users\santi\Documents\GitHub\ECC\skills\`).
+- **Skills & Agents**: Reference `skills/` or ECC (`<eccPath>/skills/` from `faena.local.json`, or `https://github.com/affaan-m/ECC` if not configured).
 - **Existing Schemas**: `[path/to/related/schemas]`
 - **Example Files**: `[path/to/examples]`
 
@@ -491,7 +492,7 @@ Indicate to the user:
 1. Determine output location:
    - Apply the **DEFAULT OUTPUT LOCATION** rules at the top of this file, using the resolved `<tasks_dir>` (never a literal `tasks/` when a tenant is active)
    - If uncertain, ask the user
-2. Write TRD following template (300-500 lines, including task breakdown) to determined directory
+2. Write TRD following template (250-400 lines, including task breakdown) to determined directory
 3. Write Test Specification with GWT scenarios (300-600 lines) to determined directory
 4. Output file paths and summary
 
@@ -582,7 +583,7 @@ Use consistent Given-When-Then format:
 - Avoid long prose explanations
 - Use tables for structured data
 - Use bullets for lists
-- Keep TRD under 400 lines
+- Keep TRD between 250 and 400 lines
 - Keep Test Spec focused on test cases
 
 ## Quality Checklist
@@ -615,7 +616,7 @@ Before outputting documents:
 - [ ] Test scenarios are specific
 
 **Brevity**:
-- [ ] TRD under 400 lines
+- [ ] TRD between 250 and 400 lines
 - [ ] No redundant sections
 - [ ] No excessive code examples
 - [ ] Focus on "what" not "how to implement"

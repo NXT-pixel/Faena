@@ -34,7 +34,7 @@ Si `doctor` no marca ningún fallo y el smoke test devuelve `PROTOCOLO CARGADO: 
 Un **harness de contexto**: el código del cliente vive en `Proyecto/`, y todo lo demás es el contexto que el modelo necesita para trabajar como alguien del equipo.
 
 - **Un protocolo, cinco adaptadores.** La política (invariantes, flujo, comandos) vive en [`PROTOCOL.md`](PROTOCOL.md). `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `OPENCODE.md` y `.cursorrules` son archivos de ~20 líneas que apuntan ahí y añaden notas del host. Si el flujo cambia, se edita un solo archivo.
-- **Aislamiento multi-cliente.** Un clon de Faena por empresa; los repos del cliente dentro de `Proyecto/`, que está en `.gitignore`. El cliente conserva sus ramas, remotos y reglas; Faena nunca los mezcla.
+- **Aislamiento multi-cliente.** Un tenant por empresa dentro del mismo clon (`tenants/<empresa>/`, con su contexto, reglas, tareas y `Proyecto/`), o un clon de Faena por empresa si prefieres separarlas del todo. Los repos del cliente viven en `Proyecto/` (o `tenants/<empresa>/Proyecto/`) y están en `.gitignore`. El cliente conserva sus ramas, remotos y reglas; Faena nunca los mezcla.
 - **TDD estricto.** Cada ticket se descompone en tests que fallan primero (**RED**), implementación mínima (**GREEN**) y gates de calidad (**VERIFY**). El detalle operativo está en [`rules/process-task-list.md`](rules/process-task-list.md).
 - **Conocimiento por dominio.** 29 skills en [`skills/`](skills/), indexadas por un catálogo generado: el agente abre la que corresponde antes de escribir código.
 - **Memoria entre tickets.** Convenciones, trampas y decisiones se acumulan en `tasks/context/learnings.md`, no en la cabeza de quien resolvió el ticket anterior.
@@ -109,10 +109,10 @@ Analiza `Proyecto/`, detecta stack, gestores de paquetes y comandos reales de te
 
 ```powershell
 .\scripts\doctor.cmd      # diagnóstico del entorno, con el arreglo de cada aviso
-.\scripts\validate.cmd    # siete chequeos de integridad del harness
+.\scripts\validate.cmd    # ocho chequeos de integridad del harness
 ```
 
-Los siete chequeos: ubicación y metadata de skills, catálogo al día, ausencia de `.mdc` sueltos, adaptadores apuntando a `PROTOCOL.md`, repositorios de `Proyecto/` documentados en `project-structure.md` y referencias de rutas existentes. Sale con código 1 si algo está roto, así que sirve igual en local que en CI.
+Los ocho chequeos: ubicación y metadata de skills, catálogo al día, ausencia de `.mdc` sueltos, adaptadores apuntando a `PROTOCOL.md`, repositorios de `Proyecto/` documentados en `project-structure.md`, referencias de rutas existentes y formato único de los campos de cabecera que lee el dashboard. Sale con código 1 si algo está roto, así que sirve igual en local que en CI.
 
 Los wrappers `.cmd` existen para que la política de ejecución de Windows no te bloquee: un `.cmd` no la consulta.
 

@@ -1,7 +1,7 @@
 ---
 name: orchestrate
 description: Orquestador E2E autónomo. Procesa un ticket desde la ingesta hasta el cierre sin intervención manual continua: genera diseño, TRD, especificación de pruebas, desglose atómico de tareas y ejecuta en bucle todas las tareas TDD (RED -> GREEN -> VERIFY) hasta que todos los Quality Gates pasen.
-agent: agents/design/design-facilitator.md
+agent: agents/design/orchestrator.md
 tools: Read, Write, Bash, LS
 ---
 
@@ -25,7 +25,8 @@ Cuando el usuario invoque `@commands/orchestrate.md` y proporcione la descripci�
    - **Contexto leído antes de actuar**: desde `<context_dir>/`.
    - **TDD estricto**: test RED antes de código GREEN.
    - **Quality Gates reales**: nunca inventes comandos ni debilites tests.
-   - **Identidad Git corporativa** antes de commits (`<context_dir>/team-context.md`).
+   - **Identidad Git corporativa** configurada en el repo al cierre (`<context_dir>/team-context.md`), para que el commit que haga la persona salga con la cuenta correcta.
+   - **Rama propia, sin commits y sin push**: nunca se trabaja sobre una rama base, y el orquestador **nunca** ejecuta `git commit` ni `git push` (ver *Política Git del modo autónomo*). Los commits los hace siempre una persona.
    - **Revisión de seguridad** previa al cierre.
    - **Actualización de memoria** en `<context_dir>/learnings.md`.
 
@@ -66,11 +67,12 @@ flowchart TD
    - Lee `<context_dir>/team-context.md` (identifica Tech Lead, QA y DevOps).
    - Lee `<context_dir>/tech-context.md` y `<rules_dir>/company-standards.md` (si existe).
    - Inspecciona `<proyecto_dir>/` en disco (no con `git status` ni búsquedas que respeten `.gitignore`) para determinar el repositorio afectado (ej. `<proyecto_dir>/growthhacking.PrototypeZero/`) y obtén su rama actual con `git -C <proyecto_dir>/<repo> branch --show-current`. Si hay varios repositorios candidatos y el ticket no permite elegir uno con certeza, activa el **Circuit Breaker** (caso 4) antes de escribir nada.
+   - Aplica la **Política Git del modo autónomo** (abajo): rama de trabajo y commit base. La rama resultante es la que se anota en `**Branch**:`.
    - Consulta `rules/skills-routing.md` y `skills/README.md` para identificar las skills requeridas.
 2. **Generación de carpeta y diseño**:
    - Extrae un slug descriptivo en minúsculas (ej. `<tasks_dir>/task-recuperacion-carrito/`).
    - Crea `<tasks_dir>/task-<nombre>/design-<nombre>.md` siguiendo la estructura estándar de `commands/1-ticket.md`, incluyendo los metadatos de cabecera para sincronización con el dashboard:
-     - `**Ticket Origen:**` (título o ID del ticket), `**Repositorio Afectado:** \`<proyecto_dir>/<repo>/\``, y `**Branch:** \`<rama-git-actual>\``.
+     - `**Ticket Origen**:` (título o ID del ticket), `**Repositorio Afectado**: \`<proyecto_dir>/<repo>/\``, `**Branch**: \`<rama-de-trabajo>\`` y `**Base Commit**: \`<sha>\`` (ver *Política Git del modo autónomo*).
      - Resumen ejecutivo y objetivos.
      - Personas y actores (con asignaciones reales de `<context_dir>/team-context.md`).
      - Criterios de aceptación (Gherkin: Dado-Cuando-Entonces).
@@ -156,6 +158,20 @@ Mientras existan tareas con "- [ ]" en <tasks_dir>/task-<nombre>/README.md:
 
 ---
 
+## 🌿 Política Git del Modo Autónomo
+
+Se aplica al final de la Fase 1, antes de tocar código:
+
+1. **Rama de trabajo.** Lee `**Prefijo de rama**` en `<context_dir>/team-context.md` (por defecto `feature/`) y la convención de ramas de `<rules_dir>/company-standards.md` si existe (esa manda).
+   - Si la rama actual es base (`main`, `master`, `develop`, `dev`, `trunk`, `release/*`) o está en *detached HEAD*: `git -C <proyecto_dir>/<repo> checkout -b <prefijo><slug>` (si ya existe, `git checkout <prefijo><slug>`).
+   - Si ya estás en una rama de feature, úsala tal cual.
+   - Si el árbol de trabajo tiene cambios sin commitear que no son del ticket, **no** cambies de rama: Circuit Breaker (caso 3).
+2. **Commit base.** Guarda `git -C <proyecto_dir>/<repo> rev-parse HEAD` en el `design-<nombre>.md` como `**Base Commit**: \`<sha>\``. Es la referencia de la auditoría de la Fase 5 y permite a la persona que revisa ver todo el cambio con `git diff <sha>`.
+3. **Sin commits.** El orquestador **nunca** ejecuta `git commit` (ni `git add` para preparar uno). Todo el cambio queda en el árbol de trabajo de la rama del ticket para revisión humana.
+4. **Nunca push, nunca PR, nunca reescritura de historia** (`push`, `rebase`, `reset`, `commit --amend`, `stash`).
+
+---
+
 ## 🛑 Circuit Breaker (Regla de Parada y Control de Fallos)
 
 El orquestador interrumpe la ejecución autónoma y solicita intervención humana **ÚNICAMENTE** en estos casos:
@@ -166,7 +182,7 @@ El orquestador interrumpe la ejecución autónoma y solicita intervención human
 2. **Regla *When Tests Disagree* ([rules/process-task-list.md](../rules/process-task-list.md#when-tests-disagree-pause-and-report))**:
    - Si dos tests entran en contradicción directa sobre el comportamiento de negocio.
    - Si las expectativas del test violan el esquema, DTOs o la arquitectura definida en el TRD.
-3. **Bloqueo externo**: Falta de credenciales, secretos inexistentes o comandos de repo ausentes (un gate del `README.md` que el repo no define).
+3. **Bloqueo externo**: Falta de credenciales, secretos inexistentes, comandos de repo ausentes (un gate del `README.md` que el repo no define), o cambios ajenos sin commitear en el repo.
 4. **Ambigüedad de destino**: no se puede determinar con certeza el repositorio afectado dentro de `<proyecto_dir>/`.
 
 ---
@@ -177,16 +193,18 @@ Una vez marcadas todas las tareas `[x]` en el `README.md`:
 
 1. **Quality Gate Final**: Ejecutar `verify:full` en `<proyecto_dir>/<repo>/` y confirmar código de salida 0.
 2. **Verificación de Identidad Git**:
-   - Comprobar `git config --local user.email` dentro de `<proyecto_dir>/<repo>/` contra el correo corporativo indicado en `<context_dir>/team-context.md`.
-   - Si falta, configurarlo antes de cualquier operación Git.
+   - Comprobar `git config --local user.email` dentro de `<proyecto_dir>/<repo>/` contra el correo corporativo indicado en `<context_dir>/team-context.md`, porque la persona hará el commit y el push desde esa misma configuración.
+   - Si falta, configurarlo con `git config --local`.
 3. **Auditoría de Seguridad**:
-   - Inspeccionar el `git diff` del repositorio contra `rules/security/security.md` y con la perspectiva de `agents/coding/security-reviewer.md`.
+   - Inspeccionar `git diff <Base Commit>` (incluye archivos nuevos: revisa también `git status --porcelain`) contra `rules/security/security.md` y con la perspectiva de `agents/coding/security-reviewer.md`. Las correcciones se dejan en el árbol de trabajo, igual que el resto del cambio.
    - Verificar: sin secretos quemados, sin SQL injection, sin bypass de autorizaciones, sin prints de depuración.
 4. **Memoria y Aprendizaje**:
    - Registrar cualquier convención, trampa resuelta o ajuste técnico en `<context_dir>/learnings.md`.
 5. **Reporte Consolidado al Usuario**:
    - Presentar el resumen ejecutivo final:
+     - Rama de trabajo y commit base (el cambio queda sin commitear, listo para revisión).
      - Archivos modificados y creados en `<proyecto_dir>/<repo>/`.
+     - Comandos sugeridos para que la persona revise y publique: `git -C <proyecto_dir>/<repo> diff <Base Commit>`, luego su propio `git add` / `git commit` y `git push -u origin <rama>`.
      - Evidencia de Quality Gates en verde.
      - Sección de **QA Handoff** lista para copiar (endpoints, payloads, escenarios clave).
      - Sección de **DevOps Handoff** (si aplica).

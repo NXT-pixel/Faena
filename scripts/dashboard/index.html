@@ -69,6 +69,17 @@
     .container { max-width: 1200px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
 
     /* Top Navigation Bar */
+    .tenant-notice {
+      margin: 10px 0 0;
+      padding: 10px 16px;
+      border: 1px solid var(--warning);
+      border-left-width: 4px;
+      border-radius: 10px;
+      background: var(--card);
+      color: var(--warning);
+      font-size: 13px;
+      font-weight: 600;
+    }
     .header {
       background: var(--card);
       border: 1px solid var(--border);
@@ -896,6 +907,9 @@
         </div>
       </div>
     </div>
+
+    <!-- Aviso: tenant en el que trabajan los agentes (PROTOCOL.md §1) -->
+    <div id="tenant-notice" class="tenant-notice" role="status" style="display: none;"></div>
 
     <!-- Main Dynamic Area: Changes between (A) Zero Tenants, (B) Tenant Ready, (C) Active Ticket -->
     <div id="main-view-container">
@@ -2265,8 +2279,26 @@ ${reqs}`;
     }
 
     /* Core Render Function */
+    function renderTenantNotice(data) {
+      const box = document.getElementById('tenant-notice');
+      if (!box) return;
+      const info = data.agent_tenant || {};
+      const agentSlug = info.slug || 'default';
+      let msg = '';
+      if (info.source === 'missing') {
+        msg = '⚠️ No hay .active-tenant: los agentes trabajan en la raíz (Default). Elige un tenant en el selector para activarlo.';
+      } else if (info.source === 'invalid') {
+        msg = `⚠️ .active-tenant apunta a "${info.raw}", que no existe en tenants/: los agentes trabajan en la raíz (Default).`;
+      } else if (data.active_tenant && data.active_tenant !== agentSlug) {
+        msg = `⚠️ Estás viendo "${data.active_tenant}", pero los agentes trabajan en "${agentSlug}".`;
+      }
+      box.textContent = msg;
+      box.style.display = msg ? 'block' : 'none';
+    }
+
     function renderDashboard(data) {
       latestServerData = data;
+      renderTenantNotice(data);
       checkTicketCompletionNotification(data.active_ticket);
       const main = document.getElementById('main-view-container');
       const hasTenants = data.tenants && data.tenants.length > 0;

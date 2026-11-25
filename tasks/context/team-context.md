@@ -21,6 +21,7 @@ Para evitar que se filtren cuentas personales de GitHub o correos personales (ej
 - **Nombre Git Corporativo (`user.name`)**: [ej. Santiago Guerrero]
 - **Email Git Corporativo (`user.email`)**: [ej. santiago.guerrero@pevaar.com]
 - **Dominio Corporativo Permitido**: [ej. @pevaar.com]
+- **Prefijo de rama**: `feature/` (el orquestador crea `<prefijo><slug-del-ticket>` si el repo está en una rama base como `main`, `master` o `develop`)
 
 > ⚠️ **Regla de Oro**: Antes de ejecutar cualquier `git commit` o `git push` en cualquier repositorio en `Proyecto/`, el agente DEBE verificar con `git -C Proyecto/<repo> config --local user.email` que la identidad local corresponda a la corporativa aquí indicada. Si no está configurada, debe configurarse a nivel `--local` antes de commitear. NUNCA depender de la configuración `--global`.
 

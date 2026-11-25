@@ -94,19 +94,28 @@ def get_tenant_dir_safely(slug):
         return None
 
 
-def get_active_tenant_slug():
+def get_agent_tenant_info():
+    """Resuelve el tenant exactamente como PROTOCOL.md §1: sin archivo, vacío,
+    `default` o un tenant inexistente => raíz (`default`). Nunca se elige un
+    tenant por cuenta propia, para que agente y dashboard miren el mismo sitio."""
+    raw = ""
     if ACTIVE_TENANT_FILE.exists():
         try:
-            val = ACTIVE_TENANT_FILE.read_text(encoding="utf-8-sig").strip()
-            if val:
-                return val
+            raw = ACTIVE_TENANT_FILE.read_text(encoding="utf-8-sig").strip()
         except Exception:
-            pass
-    if TENANTS_DIR.exists():
-        subdirs = [d.name for d in TENANTS_DIR.iterdir() if d.is_dir() and not d.name.startswith(".")]
-        if subdirs:
-            return subdirs[0]
-    return ""
+            raw = ""
+    if not raw:
+        return {"slug": "default", "source": "missing", "raw": ""}
+    clean = sanitize_slug(raw)
+    if clean == "default":
+        return {"slug": "default", "source": "file", "raw": raw}
+    if clean and (TENANTS_DIR / clean).is_dir():
+        return {"slug": clean, "source": "file", "raw": raw}
+    return {"slug": "default", "source": "invalid", "raw": raw}
+
+
+def get_active_tenant_slug():
+    return get_agent_tenant_info()["slug"]
 
 
 def set_active_tenant_slug(slug):
@@ -606,6 +615,7 @@ def create_tenant_structure(slug, email="developer@tenant.local", tech_lead="Tec
 ## 1. Identidad Git Corporativa
 - **Email Corporativo:** `{email}`
 - **Nombre:** Desarrollador Faena
+- **Prefijo de rama:** `feature/`
 
 ## 2. Organigrama y Roles
 - **Tech Lead:** {tech_lead} (arquitectura y decisiones)
@@ -669,9 +679,9 @@ def delete_tenant_structure(slug):
     current_active = get_active_tenant_slug()
     new_active = ""
     if current_active == slug:
-        remaining = [d.name for d in sorted(TENANTS_DIR.iterdir()) if d.is_dir() and not d.name.startswith(".")]
-        new_active = remaining[0] if remaining else ""
-        set_active_tenant_slug(new_active)
+        # Al borrar el tenant activo se vuelve a la raíz, igual que el protocolo.
+        new_active = "default"
+        set_active_tenant_slug("")
     else:
         new_active = current_active
 
@@ -1475,7 +1485,7 @@ class DashboardRequestHandler(BaseHTTPRequestHandler):
 
             valid_slugs = {t["slug"] for t in all_tenants}
             if active_tenant_slug not in valid_slugs:
-                active_tenant_slug = all_tenants[0]["slug"] if all_tenants else ""
+                active_tenant_slug = "default" if "default" in valid_slugs else (all_tenants[0]["slug"] if all_tenants else "")
 
             selected_ticket_slug = params.get("ticket", [None])[0]
             tickets = scan_tickets_for_tenant(active_tenant_slug) if active_tenant_slug else []
@@ -1524,6 +1534,7 @@ class DashboardRequestHandler(BaseHTTPRequestHandler):
                 "server_time": time.strftime("%I:%M:%S %p"),
                 "repo_path": str(REPO_ROOT),
                 "active_tenant": active_tenant_slug,
+                "agent_tenant": get_agent_tenant_info(),
                 "tenants": all_tenants,
                 "tickets": [{"slug": t["slug"], "title": t["title"], "pct": t["percentage"]} for t in tickets],
                 "active_ticket": active_ticket,

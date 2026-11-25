@@ -503,11 +503,13 @@ Created: <tasks_dir>/feature-[name]/
 Next Steps:
 
 Level 2 (TRD-Ready) Phases:
-- phase01-[name].md → Arrastra: @commands/2-create-trd.md phase01-[name].md
-- phase03-[name].md → Arrastra: @commands/2-create-trd.md phase03-[name].md
+- phase01-[name].md → Arrastra: @commands/2-create-trd.md <tasks_dir>/feature-[name]/phase01-[name].md
+- phase03-[name].md → Arrastra: @commands/2-create-trd.md <tasks_dir>/feature-[name]/phase03-[name].md
+
+Each phase becomes its own ticket folder `<tasks_dir>/task-[name]-phaseNN-[phase-name]/` (created by `2-create-trd`), so it shows up in the dashboard and in `index-tasks`. `feature-[name]/` keeps only the overview and the breakdown.
 
 Level 1 (Feature Spec) Phases - Need Further Decomposition:
-- phase02-[name].md → Arrastra: @commands/1c-decompose.md phase02-[name].md
+- phase02-[name].md → Arrastra: @commands/1c-decompose.md <tasks_dir>/feature-[name]/phase02-[name].md
 
 Original document preserved: [original path]
 ```

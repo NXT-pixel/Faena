@@ -190,6 +190,30 @@ class TestDashboardSecurityAndLogic(unittest.TestCase):
             (task_dir / "design-demo.md").write_text("**Branch**: `feature/legacy`\n", encoding="utf-8")
             self.assertEqual(server.get_ticket_data(task_dir, "x")["branch"], "feature/legacy")
 
+    def test_active_tenant_resolution_follows_protocol(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "tenants" / "acme").mkdir(parents=True)
+            orig = (server.ACTIVE_TENANT_FILE, server.TENANTS_DIR)
+            server.ACTIVE_TENANT_FILE = root / ".active-tenant"
+            server.TENANTS_DIR = root / "tenants"
+            try:
+                # Sin archivo: default (raiz), nunca el primer tenant encontrado.
+                self.assertEqual(server.get_active_tenant_slug(), "default")
+                self.assertEqual(server.get_agent_tenant_info()["source"], "missing")
+                # Tenant valido, con BOM incluido.
+                server.ACTIVE_TENANT_FILE.write_bytes("\ufeffacme".encode("utf-8"))
+                self.assertEqual(server.get_active_tenant_slug(), "acme")
+                self.assertEqual(server.get_agent_tenant_info()["source"], "file")
+                # Tenant inexistente: default, marcado como invalido.
+                server.ACTIVE_TENANT_FILE.write_text("fantasma", encoding="utf-8")
+                self.assertEqual(server.get_active_tenant_slug(), "default")
+                info = server.get_agent_tenant_info()
+                self.assertEqual(info["source"], "invalid")
+                self.assertEqual(info["raw"], "fantasma")
+            finally:
+                server.ACTIVE_TENANT_FILE, server.TENANTS_DIR = orig
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
